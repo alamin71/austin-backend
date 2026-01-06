@@ -1,0 +1,2 @@
+Wed Jun 18 2025 2:0:47 [SERVER-NAME] error: [31mDatabase connection error[39m connect ECONNREFUSED 127.0.0.1:27017
+Wed Jun 18 2025 2:12:27 [SERVER-NAME] error: [31mDatabase connection error[39m connect ECONNREFUSED 127.0.0.1:27017
