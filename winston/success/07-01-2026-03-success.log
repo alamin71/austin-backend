@@ -1,0 +1,7 @@
+Wed Jan 07 2026 3:45:7 [SERVER-NAME] info: [32mConfig validation successful.[39m
+Wed Jan 07 2026 3:45:7 [SERVER-NAME] info: [46m🚀 Database connected successfully[49m
+Wed Jan 07 2026 3:45:7 [SERVER-NAME] info: [33m♻️  Socket is listening on 10.0.60.126:6002[39m
+Wed Jan 07 2026 3:55:49 [SERVER-NAME] info: [32mConfig validation successful.[39m
+Wed Jan 07 2026 3:55:50 [SERVER-NAME] info: [46m🚀 Database connected successfully[49m
+Wed Jan 07 2026 3:55:50 [SERVER-NAME] info: [33m♻️  Socket is listening on 10.0.60.126:6002[39m
+Wed Jan 07 2026 3:56:13 [SERVER-NAME] info: [34mSIGINT received. Shutting down gracefully...[39m
