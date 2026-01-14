@@ -6,9 +6,14 @@
     "auditLog": "C:\\Projects\\austin-backend\\winston\\success\\.7806dc59e0ac32db9bb100f397e0733d0f608cb5-audit.json",
     "files": [
         {
-            "date": 1767735879952,
-            "name": "C:\\Projects\\austin-backend\\winston\\success\\07-01-2026-03-success.log",
-            "hash": "a7a51e5837000096d12cc693e92c9715c65f26ab71d3462bb1b65bad0e5d22ea"
+            "date": 1767988001746,
+            "name": "C:\\Projects\\austin-backend\\winston\\success\\10-01-2026-01-success.log",
+            "hash": "305ab8f2409a0b3d39d3b266e430bc6658d5433129e502881f854f8510a8a29a"
+        },
+        {
+            "date": 1767999758860,
+            "name": "C:\\Projects\\austin-backend\\winston\\success\\10-01-2026-05-success.log",
+            "hash": "20fceecceaa9f63889be4b03e64eac736881f1cfa22c7b42b547027506df9bd9"
         }
     ],
     "hashType": "sha256"
