@@ -230,3 +230,84 @@
 ## Next Step
 
 - Schema sample (Mongoose) or visual ERD can be provided if needed.
+
+### 19. Challenge
+
+- \_id
+- title
+- description
+- reward
+- level
+- participants (array of User refs)
+- completionPercent
+- status (active, ended)
+- createdAt
+
+### 20. Category
+
+- \_id
+- title
+- image
+- description
+- streams (array of Stream refs)
+- products (array of Product refs)
+
+### 21. Feedback
+
+- \_id
+- user (ref: User)
+- feedback
+- rating
+- createdAt
+
+### 22. Documentation
+
+- \_id
+- type (faq, privacy, terms, about)
+- content
+- createdAt
+
+### 23. Admin
+
+- \_id
+- name
+- email
+- password
+- role (admin, superadmin)
+- permissions (array)
+- activityLogs (array of Log refs)
+- createdAt
+
+### 24. Log
+
+- \_id
+- admin (ref: Admin)
+- action
+- details
+- createdAt
+
+## Admin Dashboard Entities
+
+- Approvals (business, marketplace)
+- Earnings (commission, share)
+- Live Monitoring (active streams, viewers)
+- Top Performers (streamers, products)
+- Report Monitoring (live, users, business, moments)
+- Feedback (user feedback)
+- Documentation (FAQ, privacy, terms, about)
+
+## Advanced Indexing & Search
+
+- Use compound indexes for search (name, category, tags)
+- Text indexes for FAQ, documentation, feedback
+- Analytics collections for dashboard stats
+
+## API Response Optimization
+
+- Always return minimal, required fields
+- Use pagination, filtering, and projection
+
+## Security & Crash Protection
+
+- Rate limiting, circuit breaker, health checks
+- Audit logs for admin actions

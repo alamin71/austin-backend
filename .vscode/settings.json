@@ -1,0 +1,13 @@
+{
+     "files.exclude": {
+          "**/.env": true,
+          "**/logs": true,
+          "**/uploads": true
+     },
+     "workbench.editor.restoreViewState": false,
+     "workbench.startupEditor": "none",
+     "editor.largeFileOptimizations": true,
+     "files.autoSave": "off",
+     "search.followSymlinks": false,
+     "explorer.autoReveal": false
+}

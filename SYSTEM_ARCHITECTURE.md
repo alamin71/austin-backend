@@ -60,8 +60,33 @@ Svc      Svc         Svc      Svc      Svc      Svc
 - Pagination, filtering, search optimization
 - MongoDB indexes for fast query
 
----
-
 ## Next Step
 
+## 6. Admin Dashboard & Extended Modules
+
+- **Admin Dashboard:** Approvals, earnings, live monitoring, top performers, report monitoring, feedback, documentation management
+- **Challenge Service:** Create, manage, and track user challenges
+- **Category Service:** Manage stream/product categories
+- **Feedback Service:** Collect and analyze user feedback
+- **Documentation Service:** FAQ, privacy, terms, about management
+
+## 7. Advanced Indexing & Search
+
+- Compound indexes for search (name, category, tags)
+- Text indexes for FAQ, documentation, feedback
+- Analytics collections for dashboard stats
+
+## 8. API Response Optimization
+
+- Always return minimal, required fields
+- Use pagination, filtering, and projection
+
+## 9. Security & Crash Protection
+
+- Rate limiting, circuit breaker, health checks
+- Audit logs for admin actions
+
+## 10. Feature Mapping (Figma Screens)
+
+- All user, business, admin, challenge, marketplace, feedback, documentation, and analytics features are mapped to backend modules and collections
 - ERD diagram (database structure) will be provided next.
