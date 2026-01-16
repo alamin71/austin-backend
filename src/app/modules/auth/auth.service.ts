@@ -6,8 +6,9 @@ import { emailHelper } from '../../../helpers/emailHelper';
 import { jwtHelper } from '../../../helpers/jwtHelper';
 import { emailTemplate } from '../../../shared/emailTemplate';
 import { IAuthResetPassword, IChangePassword, ILoginData, IVerifyEmail } from '../../../types/auth';
-import { ResetToken } from '../resetToken/resetToken.model';
+// import { ResetToken } from '../resetToken/resetToken.model';
 import { User } from '../user/user.model';
+const ResetToken = require('../resetToken/resetToken.model');
 import AppError from '../../../errors/AppError';
 import generateOTP from '../../../utils/generateOTP';
 import cryptoToken from '../../../utils/cryptoToken';
@@ -155,7 +156,7 @@ const verifyEmailToDB = async (payload: IVerifyEmail) => {
 
           //create token ;
           const createToken = cryptoToken();
-          await ResetToken.create({ user: isExistUser._id, token: createToken, expireAt: new Date(Date.now() + 5 * 60000) });
+          // await ResetToken.create({ user: isExistUser._id, token: createToken, expireAt: new Date(Date.now() + 5 * 60000) });
           message = 'Verification Successful: Please securely store and utilize this code for reset password';
           verifyToken = createToken;
      }
