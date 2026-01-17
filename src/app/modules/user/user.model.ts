@@ -33,6 +33,18 @@ const userSchema = new Schema<IUser, UserModel>(
                type: String,
                default: '',
           },
+          bio: {
+               type: String,
+               default: '',
+          },
+          socialLinks: {
+               type: {
+                    x: { type: String, default: '' },
+                    instagram: { type: String, default: '' },
+                    youtube: { type: String, default: '' },
+               },
+               default: {},
+          },
           status: {
                type: String,
                enum: ['active', 'blocked'],
