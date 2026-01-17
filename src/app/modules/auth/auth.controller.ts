@@ -5,6 +5,13 @@ import sendResponse from '../../../shared/sendResponse';
 import { AuthService } from './auth.service';
 import config from '../../../config';
 
+const registerUser = catchAsync(async (req, res) => {
+     const { ...registerData } = req.body;
+     const result = await AuthService.registerUserToDB(registerData);
+
+     sendResponse(res, { success: true, statusCode: StatusCodes.CREATED, message: 'User registered successfully. Please check your email to verify your account.', data: result });
+});
+
 const verifyEmail = catchAsync(async (req, res) => {
      const { ...verifyData } = req.body;
      const result = await AuthService.verifyEmailToDB(verifyData);
@@ -76,4 +83,4 @@ const refreshToken = catchAsync(async (req, res) => {
 
      sendResponse(res, { statusCode: StatusCodes.OK, success: true, message: 'Access token retrieved successfully', data: result });
 });
-export const AuthController = { verifyEmail, loginUser, forgetPassword, resetPassword, changePassword, forgetPasswordByUrl, resetPasswordByUrl, resendOtp, refreshToken };
+export const AuthController = { registerUser, verifyEmail, loginUser, forgetPassword, resetPassword, changePassword, forgetPasswordByUrl, resetPasswordByUrl, resendOtp, refreshToken };
