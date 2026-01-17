@@ -14,6 +14,18 @@ const createLoginZodSchema = z.object({
      }),
 });
 
+const createRegisterZodSchema = z.object({
+     body: z.object({
+          name: z.string({ required_error: 'Name is required' }).min(2, 'Name must be at least 2 characters long'),
+          email: z.string({ required_error: 'Email is required' }).email('Invalid email address'),
+          password: z.string({ required_error: 'Password is required' }).min(8, 'Password must be at least 8 characters long'),
+          confirmPassword: z.string({ required_error: 'Confirm Password is required' }),
+     }).refine((data) => data.password === data.confirmPassword, {
+          message: "Passwords don't match",
+          path: ["confirmPassword"],
+     }),
+});
+
 const createForgetPasswordZodSchema = z.object({
      body: z.object({
           email: z.string({ required_error: 'Email is required' }),
@@ -47,4 +59,5 @@ export const AuthValidation = {
      createLoginZodSchema,
      createResetPasswordZodSchema,
      createChangePasswordZodSchema,
+     createRegisterZodSchema,
 };
