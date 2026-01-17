@@ -6,11 +6,6 @@
     "auditLog": "C:\\Projects\\austin-backend\\winston\\error\\.0e45f2996b31da13f8b5e940de2a0ccfc93a63c3-audit.json",
     "files": [
         {
-            "date": 1768588541171,
-            "name": "C:\\Projects\\austin-backend\\winston\\error\\17-01-2026-00-error.log",
-            "hash": "c56ff63a8883d5b51a22993a4d7a9fad8f4687a4077ef13c551c6312807af5ab"
-        },
-        {
             "date": 1768651569347,
             "name": "C:\\Projects\\austin-backend\\winston\\error\\17-01-2026-18-error.log",
             "hash": "c8a4f28349f026782747839b6eda7e0f438e4d298bc26a8e8ab85db8441c9281"
@@ -34,6 +29,16 @@
             "date": 1768669328767,
             "name": "C:\\Projects\\austin-backend\\winston\\error\\17-01-2026-23-error.log",
             "hash": "b72700b56f72150bb649634f9725ae9cfbb6c9fb84bce146f9731e6ec72ead31"
+        },
+        {
+            "date": 1768673490195,
+            "name": "C:\\Projects\\austin-backend\\winston\\error\\18-01-2026-00-error.log",
+            "hash": "203a75caf1e9cd6cd990c0c772021023b9e94eb9950b154640984466c5aefe9f"
+        },
+        {
+            "date": 1768680179675,
+            "name": "C:\\Projects\\austin-backend\\winston\\error\\18-01-2026-02-error.log",
+            "hash": "eb8725b15ac59b7c276653af89c63604815b4ba409dbfa4ffbe15a39f9dd6924"
         }
     ],
     "hashType": "sha256"
