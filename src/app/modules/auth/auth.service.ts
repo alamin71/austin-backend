@@ -15,6 +15,51 @@ import cryptoToken from '../../../utils/cryptoToken';
 import { verifyToken } from '../../../utils/verifyToken';
 import { createToken } from '../../../utils/createToken';
 
+interface IRegisterData {
+     name: string;
+     email: string;
+     password: string;
+     confirmPassword: string;
+}
+
+//register
+const registerUserToDB = async (payload: IRegisterData) => {
+     const { name, email, password } = payload;
+
+     // Check if user already exists
+     const isExistUser = await User.isExistUserByEmail(email);
+     if (isExistUser) {
+          throw new AppError(StatusCodes.BAD_REQUEST, 'Email already exists!');
+     }
+
+     // Generate OTP for email verification
+     const otp = generateOTP(6);
+     const authentication = { oneTimeCode: otp, expireAt: new Date(Date.now() + 10 * 60000) };
+
+     // Create new user with unverified status
+     const userData = {
+          name,
+          email,
+          password,
+          verified: false,
+          authentication,
+     };
+
+     const newUser = await User.create(userData);
+
+     // Send verification email with OTP
+     const value = { name, otp, email };
+     const verificationEmail = emailTemplate.createAccount(value);
+     await emailHelper.sendEmail(verificationEmail);
+
+     // Return success response with minimal user data
+     return {
+          message: 'User created successfully. Please check your email to verify your account.',
+          email: newUser.email,
+          userId: newUser._id,
+     };
+};
+
 //login
 const loginUserFromDB = async (payload: ILoginData) => {
      const { email, password } = payload;
@@ -42,7 +87,7 @@ const loginUserFromDB = async (payload: ILoginData) => {
 
      //check user status
      if (isExistUser?.status === 'blocked') {
-          throw new AppError(StatusCodes.BAD_REQUEST, 'You don’t have permission to access this content.It looks like your account has been blocked.');
+          throw new AppError(StatusCodes.BAD_REQUEST, 'You don't have permission to access this content.It looks like your account has been blocked.');
      }
 
      //check match password
@@ -285,4 +330,4 @@ const refreshToken = async (token: string) => {
 
      return { accessToken };
 };
-export const AuthService = { verifyEmailToDB, loginUserFromDB, forgetPasswordToDB, resetPasswordToDB, changePasswordToDB, forgetPasswordByUrlToDB, resetPasswordByUrl, resendOtpFromDb, refreshToken };
+export const AuthService = { registerUserToDB, verifyEmailToDB, loginUserFromDB, forgetPasswordToDB, resetPasswordToDB, changePasswordToDB, forgetPasswordByUrlToDB, resetPasswordByUrl, resendOtpFromDb, refreshToken };
