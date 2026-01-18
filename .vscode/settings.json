@@ -1,0 +1,37 @@
+// {
+//      "files.exclude": {
+//           "**/.env": false,
+//           "**/logs": true,
+//           "**/uploads": true
+//      },
+//      "workbench.editor.restoreViewState": false,
+//      "workbench.startupEditor": "none",
+//      "editor.largeFileOptimizations": true,
+//      "files.autoSave": "off",
+//      "search.followSymlinks": false,
+//      "explorer.autoReveal": false
+// }
+{
+     // 🔹 Files & folders hide
+     "files.exclude": {
+          "**/.env": false,
+          "**/logs": true,
+          "**/uploads": true
+     },
+
+     // 🔹 Editor session restore
+     "workbench.editor.restoreViewState": true,
+     "workbench.startupEditor": "none",
+     "editor.largeFileOptimizations": true,
+     "files.autoSave": "off",
+     "search.followSymlinks": false,
+     "explorer.autoReveal": false,
+
+     // 🔹 Window/session restore
+     "window.restoreWindows": "all",
+     "window.restoreFullscreen": true,
+
+     // 🔹 Terminal persistent session
+     "terminal.integrated.enablePersistentSessions": true,
+     "terminal.integrated.persistentSessionScrollback": 10000
+}
