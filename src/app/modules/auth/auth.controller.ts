@@ -15,6 +15,10 @@ import config from '../../../config';
 // });
 
 const registerUser = catchAsync(async (req, res) => {
+     console.log('📨 req.body:', req.body); // ✅ কী আসছে দেখো
+
+     const payload = req.body.body || req.body;
+     console.log('📦 payload:', payload);
      const result = await AuthService.registerUserToDB(req.body);
      sendResponse(res, {
           success: true,
