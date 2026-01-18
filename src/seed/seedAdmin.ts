@@ -3,7 +3,6 @@ import { User } from '../app/modules/user/user.model';
 import config from '../config';
 import { USER_ROLES } from '../enums/user';
 import { logger } from '../shared/logger';
-import colors from 'colors';
 import bcrypt from 'bcrypt';
 
 const usersData = [
@@ -43,9 +42,9 @@ const seedUsers = async () => {
 
           // Insert users into the database
           await User.insertMany(hashedUsersData);
-          logger.info(colors.green('✨ --------------> Users seeded successfully <-------------- ✨'));
+          logger.info('✨ Users seeded successfully ✨');
      } catch (err) {
-          logger.error(colors.red('💥 Error seeding users: 💥'), err);
+          logger.error('💥 Error seeding users: 💥', err);
      }
 };
 
@@ -54,13 +53,13 @@ mongoose.connect(config.database_url as string);
 
 const seedSuperAdmin = async () => {
      try {
-          logger.info(colors.cyan('🎨 --------------> Database seeding start <--------------- 🎨'));
+          logger.info('🎨 Database seeding start 🎨');
 
           // Start seeding users
           await seedUsers();
-          logger.info(colors.green('🎉 --------------> Database seeding completed <--------------- 🎉'));
+          logger.info('🎉 Database seeding completed 🎉');
      } catch (error) {
-          logger.error(colors.red('🔥 Error creating Super Admin: 🔥'), error);
+          logger.error('🔥 Error creating Super Admin: 🔥', error);
      } finally {
           mongoose.disconnect();
      }

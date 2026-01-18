@@ -13,8 +13,7 @@ export default [
      },
      pluginJs.configs.recommended,
      ...tseslint.configs.recommended,
-     // Add Prettier recommended config disables conflicting rules
-     ...configPrettier.flatConfig,
+     configPrettier,
 
      // Enable prettier plugin with error level for formatting issues
      {

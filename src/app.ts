@@ -1,5 +1,7 @@
 import cors from 'cors';
 import express, { Application, Request, Response } from 'express';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
 import router from './routes';
 import { Morgan } from './shared/morgen';
 import globalErrorHandler from './globalErrorHandler/globalErrorHandler';
@@ -7,6 +9,10 @@ import { notFound } from './app/middleware/notFound';
 import { welcome } from './utils/welcome';
 import config from './config';
 import path from 'path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
 const app: Application = express();
 
 app.set('view engine', 'ejs');

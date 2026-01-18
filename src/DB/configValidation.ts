@@ -1,4 +1,3 @@
-import colors from 'colors';
 import config from '../config';
 import { logger } from '../shared/logger';
 
@@ -17,5 +16,5 @@ export function validateConfig(): void {
      }
 
      // Log successful validation
-     logger.info(colors.green('Config validation successful.'));
+     logger.info('Config validation successful.');
 }
