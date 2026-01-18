@@ -9,6 +9,7 @@ export type ISocialLinks = {
 
 export type IUser = {
      name: string;
+     userName: string;
      role: USER_ROLES;
      email: string;
      password: string;
