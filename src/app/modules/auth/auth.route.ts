@@ -58,11 +58,11 @@ router.post(
 router.post('/login', validateRequest(AuthValidation.createLoginZodSchema), AuthController.loginUser);
 router.post('/refresh-token', AuthController.refreshToken);
 
-// OAuth endpoints
+// OAuth endpoints (User only)
 router.post('/google-login', AuthController.googleLogin);
 router.post('/apple-login', AuthController.appleLogin);
 
-// OTP endpoints
+// OTP endpoints (User only)
 router.post('/send-otp', AuthController.sendOTP);
 router.post('/verify-otp', AuthController.verifyOTPAndLogin);
 

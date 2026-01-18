@@ -2,7 +2,7 @@
 
 ## 🔐 Complete Authentication Endpoints for Admin Dashboard
 
-All authentication endpoints are ready for admin dashboard integration. These endpoints support multiple authentication methods including OAuth (Google, Apple) and OTP.
+All authentication endpoints are ready for admin dashboard integration. Admin uses email/password login with OTP-based password reset.
 
 ---
 
@@ -14,7 +14,6 @@ All authentication endpoints are ready for admin dashboard integration. These en
 4. [Resend OTP](#resend-otp)
 5. [Change Password](#change-password)
 6. [Refresh Token](#refresh-token)
-7. [OAuth Logins](#oauth-logins)
 
 ---
 
@@ -302,141 +301,6 @@ try {
 
 ---
 
-## 🔐 OAuth Logins
-
-### Google Login
-
-#### Endpoint
-```
-POST /api/v1/auth/google-login
-```
-
-#### Request Body
-```json
-{
-  "idToken": "<Google ID Token>"
-}
-```
-
-#### Response (Success)
-```json
-{
-  "success": true,
-  "statusCode": 200,
-  "message": "User logged in successfully",
-  "data": {
-    "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-    "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-  }
-}
-```
-
-#### Implementation
-```javascript
-// Using Google Sign-In Library
-import { GoogleLogin } from '@react-oauth/google';
-
-<GoogleLogin
-  onSuccess={(credentialResponse) => {
-    fetch('/api/v1/auth/google-login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ idToken: credentialResponse.credential })
-    })
-  }}
-/>
-```
-
----
-
-### Apple Login
-
-#### Endpoint
-```
-POST /api/v1/auth/apple-login
-```
-
-#### Request Body
-```json
-{
-  "identityToken": "<Apple Identity Token>",
-  "authorizationCode": "<Authorization Code>"
-}
-```
-
-#### Response (Success)
-```json
-{
-  "success": true,
-  "statusCode": 200,
-  "message": "User logged in successfully",
-  "data": {
-    "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-    "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-  }
-}
-```
-
----
-
-## 🔄 OTP Authentication (Alternative Login)
-
-### Send OTP
-
-#### Endpoint
-```
-POST /api/v1/auth/send-otp
-```
-
-#### Request Body
-```json
-{
-  "email": "admin@example.com"
-}
-```
-
-#### Response (Success)
-```json
-{
-  "success": true,
-  "statusCode": 200,
-  "message": "OTP sent successfully to your email",
-  "data": {
-    "expiryTime": 600000
-  }
-}
-```
-
-### Verify OTP & Login
-
-#### Endpoint
-```
-POST /api/v1/auth/verify-otp
-```
-
-#### Request Body
-```json
-{
-  "email": "admin@example.com",
-  "otp": "123456"
-}
-```
-
-#### Response (Success)
-```json
-{
-  "success": true,
-  "statusCode": 200,
-  "message": "OTP verified successfully",
-  "data": {
-    "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-    "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-  }
-}
-```
-
----
-
 ## 🛡️ Security Considerations for Admin Dashboard
 
 ### Token Management
@@ -568,6 +432,7 @@ All authentication endpoints are fully implemented and tested:
 - ✅ Change password (for logged-in admins)
 - ✅ Resend OTP functionality
 - ✅ Token refresh mechanism
-- ✅ OAuth (Google & Apple) support
+
+**OAuth (Google & Apple):** User-only endpoints (not for admin)
 
 **Status:** Production Ready ✅
