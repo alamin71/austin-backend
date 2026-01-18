@@ -13,29 +13,40 @@ const upload = multer({
      limits: { fileSize: 5 * 1024 * 1024 },
 });
 
-// ✅ Middleware: form-data কে Zod-friendly format-এ convert করো
-const wrapFormData = (req: any, res: any, next: any) => {
-     // socialLinks parse করো
-     const socialLinks: any = {};
-     if (req.body['socialLinks[x]']) socialLinks.x = req.body['socialLinks[x]'];
-     if (req.body['socialLinks[instagram]']) socialLinks.instagram = req.body['socialLinks[instagram]'];
-     if (req.body['socialLinks[youtube]']) socialLinks.youtube = req.body['socialLinks[youtube]'];
+// ✅ Fix: form-data কে body object-এ wrap করো
+const parseFormDataForValidation = (req: any, res: any, next: any) => {
+     try {
+          // socialLinks object তৈরি করো
+          const socialLinks: any = {};
+          Object.keys(req.body).forEach((key) => {
+               if (key.startsWith('socialLinks[')) {
+                    const fieldName = key.match(/socialLinks\[(.*?)\]/)?.[1];
+                    if (fieldName) {
+                         socialLinks[fieldName] = req.body[key];
+                    }
+                    delete req.body[key]; // Original থেকে সরাও
+               }
+          });
 
-     // socialLinks add করো যদি থাকে
-     if (Object.keys(socialLinks).length > 0) {
-          req.body.socialLinks = socialLinks;
+          // socialLinks যোগ করো
+          if (Object.keys(socialLinks).length > 0) {
+               req.body.socialLinks = socialLinks;
+          }
+
+          // Zod validation-এর জন্য body wrapper যোগ করো
+          req.body = { body: req.body };
+
+          next();
+     } catch (err) {
+          next(err);
      }
-
-     // body wrapper যোগ করো (Zod validation এর জন্য)
-     req.body = { body: req.body };
-     next();
 };
 
-// ✅ Registration - form-data সাপোর্ট
+// Registration endpoint
 router.post(
      '/register',
      upload.single('image'),
-     wrapFormData, // ✅ এই middleware যোগ করো
+     parseFormDataForValidation, // ✅ এই middleware ব্যবহার করো
      validateRequest(AuthValidation.createRegisterZodSchema),
      AuthController.registerUser,
 );
