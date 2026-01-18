@@ -9,6 +9,7 @@ import { socketHelper } from './helpers/socketHelper';
 import { setupProcessHandlers } from './DB/processHandlers';
 import { setupSecurity } from './DB/security';
 import { setupCluster } from './DB/cluster';
+import { emailHelper } from './helpers/emailHelper';
 
 // Define the types for the servers
 let httpServer: HttpServer;
@@ -21,6 +22,11 @@ export async function startServer() {
           validateConfig();
           // Connect to the database
           await connectToDatabase();
+          
+          // Verify email configuration
+          logger.info('🔍 Verifying email configuration...');
+          await emailHelper.verifyEmailConnection();
+          
           // Create HTTP server
           httpServer = createServer(app);
           const httpPort = Number(config.port);

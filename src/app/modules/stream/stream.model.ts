@@ -1,5 +1,5 @@
 import { Schema, model, Types } from 'mongoose';
-import { IStream } from './stream.interface';
+import { IStream } from './stream.interface.js';
 
 const streamSchema = new Schema<IStream>(
      {

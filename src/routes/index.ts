@@ -2,6 +2,7 @@ import express from 'express';
 import { UserRouter } from '../app/modules/user/user.route';
 import { AuthRouter } from '../app/modules/auth/auth.route';
 import { StreamRouter } from '../app/modules/stream/stream.route';
+import { TestRouter } from '../app/modules/test/test.route';
 
 const router = express.Router();
 const routes = [
@@ -16,6 +17,10 @@ const routes = [
      {
           path: '/stream',
           route: StreamRouter,
+     },
+     {
+          path: '/test',
+          route: TestRouter,
      },
 ];
 
