@@ -55,7 +55,7 @@ router.post(
      '/register',
      upload.single('image'),
      parseFormDataForValidation,
-     // validateRequest(AuthValidation.createRegisterZodSchema),  // ✅ এটা comment করো
+     validateRequest(AuthValidation.createRegisterZodSchema), // ✅ এটা comment করো
      AuthController.registerUser,
 );
 router.post('/login', validateRequest(AuthValidation.createLoginZodSchema), AuthController.loginUser);
