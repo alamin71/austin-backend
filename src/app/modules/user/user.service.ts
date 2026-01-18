@@ -104,16 +104,25 @@ const createVendorToDB = async (payload: IUser): Promise<IUser> => {
 // };
 
 // get user profile
-const getUserProfileFromDB = async (user: JwtPayload): Promise<Partial<IUser>> => {
-     const { id } = user;
-     const isExistUser = await User.isExistUserById(id);
-     if (!isExistUser) {
-          throw new AppError(StatusCodes.BAD_REQUEST, "User doesn't exist!");
+// const getUserProfileFromDB = async (user: JwtPayload): Promise<Partial<IUser>> => {
+//      const { id } = user;
+//      const isExistUser = await User.isExistUserById(id);
+//      if (!isExistUser) {
+//           throw new AppError(StatusCodes.BAD_REQUEST, "User doesn't exist!");
+//      }
+
+//      return isExistUser;
+// };
+const getUserProfileFromDB = async (user: any) => {
+     const userId = user?.id || user?._id;
+     const userProfile = await User.findById(userId).select('-password -authentication');
+
+     if (!userProfile) {
+          throw new AppError(StatusCodes.NOT_FOUND, 'User not found');
      }
 
-     return isExistUser;
+     return userProfile; // সব field সহ return হবে
 };
-
 // update user profile
 const updateProfileToDB = async (user: JwtPayload, payload: Partial<IUser>): Promise<Partial<IUser | null>> => {
      const { id } = user;

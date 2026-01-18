@@ -12,39 +12,14 @@ import generateOTP from '../../../utils/generateOTP';
 import { verifyToken } from '../../../utils/verifyToken';
 import { createToken } from '../../../utils/createToken';
 
-// interface IRegisterData {
-//      name: string;
-//      email: string;
-//      password: string;
-//      confirmPassword: string;
-// }
-
-// const registerUserToDB = async (payload: IRegisterData) => {
-//      const { name, email, password } = payload;
-//      const isExistUser = await User.isExistUserByEmail(email);
-//      if (isExistUser) throw new AppError(StatusCodes.BAD_REQUEST, 'Email already exists!');
-
-//      const otp = generateOTP(6);
-//      const authentication = { oneTimeCode: otp, expireAt: new Date(Date.now() + 10 * 60000) };
-//      const userData = { name, email, password, verified: false, authentication };
-//      const newUser = await User.create(userData);
-
-//      const value = { name, otp, email };
-//      const verificationEmail = emailTemplate.createAccount(value);
-//      await emailHelper.sendEmail(verificationEmail);
-
-//      return { email: newUser.email, userId: newUser._id, otp };
-// };
-
 interface IRegisterData {
      name: string;
-     userName: string; // ✅ যোগ করো
+     userName: string;
      email: string;
      password: string;
      confirmPassword: string;
-     bio?: string; // ✅ যোগ করো
+     bio?: string;
      socialLinks?: {
-          // ✅ যোগ করো
           x?: string;
           instagram?: string;
           youtube?: string;
@@ -52,7 +27,7 @@ interface IRegisterData {
 }
 const registerUserToDB = async (payload: IRegisterData) => {
      try {
-          // null-prototype পরিষ্কার + trim + normalize
+          // null-prototype + trim + normalize
           const normal = JSON.parse(JSON.stringify(payload));
           const name = (normal.name || '').trim();
           const userName = (normal.userName || '').trim().toLowerCase();
@@ -63,7 +38,7 @@ const registerUserToDB = async (payload: IRegisterData) => {
 
           console.log('🔍 registerUserToDB with:', { name, userName, email });
 
-          // সরাসরি create করো, duplicate key error ধরো
+          //  duplicate key error
           const otp = generateOTP(6);
           const authentication = { oneTimeCode: otp, expireAt: new Date(Date.now() + 10 * 60000) };
           const userData = {
@@ -77,14 +52,14 @@ const registerUserToDB = async (payload: IRegisterData) => {
                socialLinks,
           };
 
-          console.log('💾 Creating user with:', userData);
+          console.log('Creating user with:', userData);
           const newUser = await User.create(userData);
-          console.log('✅ User created:', newUser._id);
+          console.log('User created:', newUser._id);
 
           const value = { name, otp, email };
           const verificationEmail = emailTemplate.createAccount(value);
           await emailHelper.sendEmail(verificationEmail);
-          console.log('📧 Email sent to:', email);
+          console.log('Email sent to:', email);
 
           return {
                _id: newUser._id,

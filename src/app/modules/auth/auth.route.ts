@@ -13,10 +13,9 @@ const upload = multer({
      limits: { fileSize: 5 * 1024 * 1024 },
 });
 
-// ✅ Fix: form-data কে body object-এ wrap করো
 const parseFormDataForValidation = (req: any, res: any, next: any) => {
      try {
-          // socialLinks object তৈরি করো
+          // socialLinks object
           const socialLinks: any = {};
           Object.keys(req.body).forEach((key) => {
                if (key.startsWith('socialLinks[')) {
@@ -24,16 +23,16 @@ const parseFormDataForValidation = (req: any, res: any, next: any) => {
                     if (fieldName) {
                          socialLinks[fieldName] = req.body[key];
                     }
-                    delete req.body[key]; // Original থেকে সরাও
+                    delete req.body[key];
                }
           });
 
-          // socialLinks যোগ করো
+          // socialLinks
           if (Object.keys(socialLinks).length > 0) {
                req.body.socialLinks = socialLinks;
           }
 
-          // Zod validation-এর জন্য body wrapper যোগ করো
+          // Zod validation-body wrapper
           req.body = { body: req.body };
 
           next();
@@ -45,17 +44,15 @@ const parseFormDataForValidation = (req: any, res: any, next: any) => {
 // Registration endpoint
 // router.post(
 //      '/register',
-//      upload.single('image'),
-//      parseFormDataForValidation, // ✅ এই middleware ব্যবহার করো
-//      validateRequest(AuthValidation.createRegisterZodSchema),
+//      validateRequest(AuthValidation.createRegisterZodSchema),  // ✅ JSON validation
 //      AuthController.registerUser,
 // );
-// Registration endpoint - validation সাময়িক সরাও
+// Registration endpoint - validation
 router.post(
      '/register',
      upload.single('image'),
      parseFormDataForValidation,
-     validateRequest(AuthValidation.createRegisterZodSchema), // ✅ এটা comment করো
+     // validateRequest(AuthValidation.createRegisterZodSchema),
      AuthController.registerUser,
 );
 router.post('/login', validateRequest(AuthValidation.createLoginZodSchema), AuthController.loginUser);
