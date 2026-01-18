@@ -15,16 +15,24 @@ import config from '../../../config';
 // });
 
 const registerUser = catchAsync(async (req, res) => {
-     console.log('📨 req.body:', req.body); // ✅ কী আসছে দেখো
+     const raw = req.body.body || req.body;
+     // null-prototype clean + trim + normalize
+     const payload = JSON.parse(JSON.stringify(raw));
+     const normalized = {
+          ...payload,
+          name: (payload.name || '').trim(),
+          userName: (payload.userName || '').trim().toLowerCase(),
+          email: (payload.email || '').trim().toLowerCase(),
+          bio: payload.bio || '',
+          socialLinks: payload.socialLinks || { x: '', instagram: '', youtube: '' },
+     };
 
-     const payload = req.body.body || req.body;
-     console.log('📦 payload:', payload);
-     const result = await AuthService.registerUserToDB(req.body);
+     const result = await AuthService.registerUserToDB(normalized);
      sendResponse(res, {
           success: true,
           statusCode: StatusCodes.CREATED,
           message: 'User registered successfully. Please check your email to verify your account.',
-          data: result, // ✅ সব ডেটা রিটার্ন
+          data: result,
      });
 });
 const verifyEmail = catchAsync(async (req, res) => {
