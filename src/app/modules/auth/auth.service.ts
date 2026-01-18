@@ -38,13 +38,13 @@ import { createToken } from '../../../utils/createToken';
 
 interface IRegisterData {
      name: string;
-     userName: string; // ✅ NEW
+     userName: string; // ✅ যোগ করো
      email: string;
      password: string;
      confirmPassword: string;
-     bio?: string; // ✅ NEW
+     bio?: string; // ✅ যোগ করো
      socialLinks?: {
-          // ✅ NEW
+          // ✅ যোগ করো
           x?: string;
           instagram?: string;
           youtube?: string;
