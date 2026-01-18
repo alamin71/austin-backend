@@ -12,30 +12,91 @@ import generateOTP from '../../../utils/generateOTP';
 import { verifyToken } from '../../../utils/verifyToken';
 import { createToken } from '../../../utils/createToken';
 
+// interface IRegisterData {
+//      name: string;
+//      email: string;
+//      password: string;
+//      confirmPassword: string;
+// }
+
+// const registerUserToDB = async (payload: IRegisterData) => {
+//      const { name, email, password } = payload;
+//      const isExistUser = await User.isExistUserByEmail(email);
+//      if (isExistUser) throw new AppError(StatusCodes.BAD_REQUEST, 'Email already exists!');
+
+//      const otp = generateOTP(6);
+//      const authentication = { oneTimeCode: otp, expireAt: new Date(Date.now() + 10 * 60000) };
+//      const userData = { name, email, password, verified: false, authentication };
+//      const newUser = await User.create(userData);
+
+//      const value = { name, otp, email };
+//      const verificationEmail = emailTemplate.createAccount(value);
+//      await emailHelper.sendEmail(verificationEmail);
+
+//      return { email: newUser.email, userId: newUser._id, otp };
+// };
+
 interface IRegisterData {
      name: string;
+     userName: string; // ✅ NEW
      email: string;
      password: string;
      confirmPassword: string;
+     bio?: string; // ✅ NEW
+     socialLinks?: {
+          // ✅ NEW
+          x?: string;
+          instagram?: string;
+          youtube?: string;
+     };
 }
 
 const registerUserToDB = async (payload: IRegisterData) => {
-     const { name, email, password } = payload;
-     const isExistUser = await User.isExistUserByEmail(email);
-     if (isExistUser) throw new AppError(StatusCodes.BAD_REQUEST, 'Email already exists!');
+     const { name, userName, email, password, bio, socialLinks } = payload;
+
+     // Check if user with email OR userName already exists
+     const isExistUser = await User.findOne({
+          $or: [{ email }, { userName }],
+     });
+
+     if (isExistUser) {
+          throw new AppError(StatusCodes.BAD_REQUEST, isExistUser.email === email ? 'Email already exists!' : 'Username already exists!');
+     }
 
      const otp = generateOTP(6);
      const authentication = { oneTimeCode: otp, expireAt: new Date(Date.now() + 10 * 60000) };
-     const userData = { name, email, password, verified: false, authentication };
+     const userData = {
+          name,
+          userName,
+          email,
+          password,
+          verified: false,
+          authentication,
+          bio: bio || '',
+          socialLinks: socialLinks || { x: '', instagram: '', youtube: '' },
+     };
+
      const newUser = await User.create(userData);
 
      const value = { name, otp, email };
      const verificationEmail = emailTemplate.createAccount(value);
      await emailHelper.sendEmail(verificationEmail);
 
-     return { email: newUser.email, userId: newUser._id, otp };
+     // ✅ Return সব user data
+     return {
+          _id: newUser._id,
+          name: newUser.name,
+          userName: newUser.userName,
+          email: newUser.email,
+          bio: newUser.bio,
+          socialLinks: newUser.socialLinks,
+          role: newUser.role,
+          image: newUser.image,
+          status: newUser.status,
+          verified: newUser.verified,
+          otp, // For testing - remove in production
+     };
 };
-
 const loginUserFromDB = async (payload: ILoginData) => {
      const { email, password } = payload;
      if (!password) throw new AppError(StatusCodes.BAD_REQUEST, 'Password is required!');

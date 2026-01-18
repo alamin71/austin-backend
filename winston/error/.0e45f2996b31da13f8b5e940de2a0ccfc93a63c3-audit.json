@@ -39,6 +39,16 @@
             "date": 1768680179675,
             "name": "C:\\Projects\\austin-backend\\winston\\error\\18-01-2026-02-error.log",
             "hash": "eb8725b15ac59b7c276653af89c63604815b4ba409dbfa4ffbe15a39f9dd6924"
+        },
+        {
+            "date": 1768684011155,
+            "name": "C:\\Projects\\austin-backend\\winston\\error\\18-01-2026-03-error.log",
+            "hash": "31e2fd49e3bc88eb2650531630fcbdf12c7a10f714149881c886adfde2466f20"
+        },
+        {
+            "date": 1768697036408,
+            "name": "C:\\Projects\\austin-backend\\winston\\error\\18-01-2026-06-error.log",
+            "hash": "57d42ab3acc70618414052c64afb334378fe2911328ef9fce8a0182e3db776d9"
         }
     ],
     "hashType": "sha256"

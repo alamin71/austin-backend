@@ -4,16 +4,25 @@ import sendResponse from '../../../shared/sendResponse';
 import { AuthService } from './auth.service';
 import config from '../../../config';
 
+// const registerUser = catchAsync(async (req, res) => {
+//      const result = await AuthService.registerUserToDB(req.body);
+//      sendResponse(res, {
+//           success: true,
+//           statusCode: StatusCodes.CREATED,
+//           message: 'User registered successfully. Please check your email to verify your account.',
+//           data: result,
+//      });
+// });
+
 const registerUser = catchAsync(async (req, res) => {
      const result = await AuthService.registerUserToDB(req.body);
      sendResponse(res, {
           success: true,
           statusCode: StatusCodes.CREATED,
           message: 'User registered successfully. Please check your email to verify your account.',
-          data: result,
+          data: result, // ✅ সব ডেটা রিটার্ন
      });
 });
-
 const verifyEmail = catchAsync(async (req, res) => {
      const result = await AuthService.verifyEmailToDB(req.body);
      sendResponse(res, {
