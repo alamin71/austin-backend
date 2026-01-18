@@ -51,18 +51,20 @@ interface IRegisterData {
      };
 }
 const registerUserToDB = async (payload: IRegisterData) => {
-     const { name, userName, email, password, bio, socialLinks } = payload;
-
-     console.log('🔍 registerUserToDB called with:', { name, userName, email }); // ✅ Log
-
      try {
+          // ✅ [Object: null prototype] কে normal object-এ convert করো
+          const normalPayload = JSON.parse(JSON.stringify(payload));
+          const { name, userName, email, password, bio, socialLinks } = normalPayload;
+
+          console.log('🔍 registerUserToDB called with:', { name, userName, email });
+
           // Check if user with email OR userName already exists
           const isExistUser = await User.findOne({
                $or: [{ email }, { userName }],
           });
 
           if (isExistUser) {
-               console.log('⚠️ User already exists:', isExistUser.email); // ✅ Log
+               console.log('⚠️ User already exists:', isExistUser.email);
                throw new AppError(StatusCodes.BAD_REQUEST, isExistUser.email === email ? 'Email already exists!' : 'Username already exists!');
           }
 
@@ -79,15 +81,15 @@ const registerUserToDB = async (payload: IRegisterData) => {
                socialLinks: socialLinks || { x: '', instagram: '', youtube: '' },
           };
 
-          console.log('💾 Creating user with:', userData); // ✅ Log
+          console.log('💾 Creating user with:', userData);
 
           const newUser = await User.create(userData);
-          console.log('✅ User created:', newUser._id); // ✅ Log
+          console.log('✅ User created:', newUser._id);
 
           const value = { name, otp, email };
           const verificationEmail = emailTemplate.createAccount(value);
           await emailHelper.sendEmail(verificationEmail);
-          console.log('📧 Email sent to:', email); // ✅ Log
+          console.log('📧 Email sent to:', email);
 
           return {
                _id: newUser._id,
@@ -103,7 +105,7 @@ const registerUserToDB = async (payload: IRegisterData) => {
                otp,
           };
      } catch (error: any) {
-          console.error('❌ Error in registerUserToDB:', error.message); // ✅ Log
+          console.error('❌ Error in registerUserToDB:', error.message);
           throw error;
      }
 };
