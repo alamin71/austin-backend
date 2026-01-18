@@ -37,6 +37,7 @@ const createRegisterZodSchema = z.object({
                     .regex(/^[a-zA-Z0-9_@.-]+$/, 'Username can only contain alphanumeric, @, _, ., -'),
                email: z.string({ required_error: 'Email is required' }).email('Invalid email address'),
                password: z.string({ required_error: 'Password is required' }).min(8, 'Password must be at least 8 characters long'),
+               image: z.string().url('Invalid image URL').optional(),
                confirmPassword: z.string({ required_error: 'Confirm Password is required' }),
                bio: z.string().optional(),
                socialLinks: z
