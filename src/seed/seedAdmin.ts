@@ -5,46 +5,42 @@ import { USER_ROLES } from '../enums/user';
 import { logger } from '../shared/logger';
 import bcrypt from 'bcrypt';
 
-const usersData = [
-     {
-          name: 'Administrator',
-          email: config.super_admin.email,
-          role: USER_ROLES.SUPER_ADMIN,
-          password: config.super_admin.password,
-          verified: true,
-     },
-     {
-          name: 'User',
-          email: 'user@gmail.com',
-          role: USER_ROLES.USER,
-          password: 'hello123',
-          verified: true,
-     },
-];
+// Only admin user data - Regular users will register via app signup
+const adminData = {
+     name: 'Administrator',
+     email: config.super_admin.email,
+     role: USER_ROLES.SUPER_ADMIN,
+     password: config.super_admin.password,
+     authProvider: 'email',
+     isEmailVerified: true,
+};
 
 // Function to hash passwords
 const hashPassword = async (password: string) => {
-     const salt = await bcrypt.hash(password, Number(config.bcrypt_salt_rounds));
+     const salt = await bcrypt.genSalt(Number(config.bcrypt_salt_rounds));
      return await bcrypt.hash(password, salt);
 };
 
-// Function to seed users
-const seedUsers = async () => {
+// Function to seed admin user
+const seedAdmin = async () => {
      try {
-          await User.deleteMany();
+          // Check if admin already exists
+          const existingAdmin = await User.findOne({ email: adminData.email });
+          
+          if (existingAdmin) {
+               logger.info('ℹ️ Admin user already exists. Skipping creation...');
+               return;
+          }
 
-          const hashedUsersData = await Promise.all(
-               usersData.map(async (user: any) => {
-                    const hashedPassword = await hashPassword(user.password);
-                    return { ...user, password: hashedPassword };
-               }),
-          );
+          const hashedPassword = await hashPassword(adminData.password as string);
+          const adminUser = { ...adminData, password: hashedPassword };
 
-          // Insert users into the database
-          await User.insertMany(hashedUsersData);
-          logger.info('✨ Users seeded successfully ✨');
+          // Create only the admin user
+          await User.create(adminUser);
+          logger.info('✨ Admin user created successfully ✨');
      } catch (err) {
-          logger.error('💥 Error seeding users: 💥', err);
+          logger.error('💥 Error creating admin user: 💥', err);
+          throw err;
      }
 };
 
@@ -53,15 +49,19 @@ mongoose.connect(config.database_url as string);
 
 const seedSuperAdmin = async () => {
      try {
-          logger.info('🎨 Database seeding start 🎨');
+          logger.info('🎨 Admin seeding started 🎨');
 
-          // Start seeding users
-          await seedUsers();
-          logger.info('🎉 Database seeding completed 🎉');
+          // Seed only admin user
+          await seedAdmin();
+          
+          logger.info('🎉 Admin seeding completed successfully! 🎉');
+          logger.info(`📧 Admin Email: ${adminData.email}`);
+          logger.info('⚠️  Regular users will register via app signup');
      } catch (error) {
-          logger.error('🔥 Error creating Super Admin: 🔥', error);
+          logger.error('🔥 Error in admin seeding: 🔥', error);
+          process.exit(1);
      } finally {
-          mongoose.disconnect();
+          await mongoose.disconnect();
      }
 };
 
