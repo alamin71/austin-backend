@@ -50,53 +50,64 @@ interface IRegisterData {
           youtube?: string;
      };
 }
-
 const registerUserToDB = async (payload: IRegisterData) => {
      const { name, userName, email, password, bio, socialLinks } = payload;
 
-     // Check if user with email OR userName already exists
-     const isExistUser = await User.findOne({
-          $or: [{ email }, { userName }],
-     });
+     console.log('🔍 registerUserToDB called with:', { name, userName, email }); // ✅ Log
 
-     if (isExistUser) {
-          throw new AppError(StatusCodes.BAD_REQUEST, isExistUser.email === email ? 'Email already exists!' : 'Username already exists!');
+     try {
+          // Check if user with email OR userName already exists
+          const isExistUser = await User.findOne({
+               $or: [{ email }, { userName }],
+          });
+
+          if (isExistUser) {
+               console.log('⚠️ User already exists:', isExistUser.email); // ✅ Log
+               throw new AppError(StatusCodes.BAD_REQUEST, isExistUser.email === email ? 'Email already exists!' : 'Username already exists!');
+          }
+
+          const otp = generateOTP(6);
+          const authentication = { oneTimeCode: otp, expireAt: new Date(Date.now() + 10 * 60000) };
+          const userData = {
+               name,
+               userName,
+               email,
+               password,
+               verified: false,
+               authentication,
+               bio: bio || '',
+               socialLinks: socialLinks || { x: '', instagram: '', youtube: '' },
+          };
+
+          console.log('💾 Creating user with:', userData); // ✅ Log
+
+          const newUser = await User.create(userData);
+          console.log('✅ User created:', newUser._id); // ✅ Log
+
+          const value = { name, otp, email };
+          const verificationEmail = emailTemplate.createAccount(value);
+          await emailHelper.sendEmail(verificationEmail);
+          console.log('📧 Email sent to:', email); // ✅ Log
+
+          return {
+               _id: newUser._id,
+               name: newUser.name,
+               userName: newUser.userName,
+               email: newUser.email,
+               bio: newUser.bio,
+               socialLinks: newUser.socialLinks,
+               role: newUser.role,
+               image: newUser.image,
+               status: newUser.status,
+               verified: newUser.verified,
+               otp,
+          };
+     } catch (error: any) {
+          console.error('❌ Error in registerUserToDB:', error.message); // ✅ Log
+          throw error;
      }
-
-     const otp = generateOTP(6);
-     const authentication = { oneTimeCode: otp, expireAt: new Date(Date.now() + 10 * 60000) };
-     const userData = {
-          name,
-          userName,
-          email,
-          password,
-          verified: false,
-          authentication,
-          bio: bio || '',
-          socialLinks: socialLinks || { x: '', instagram: '', youtube: '' },
-     };
-
-     const newUser = await User.create(userData);
-
-     const value = { name, otp, email };
-     const verificationEmail = emailTemplate.createAccount(value);
-     await emailHelper.sendEmail(verificationEmail);
-
-     // ✅ Return সব user data
-     return {
-          _id: newUser._id,
-          name: newUser.name,
-          userName: newUser.userName,
-          email: newUser.email,
-          bio: newUser.bio,
-          socialLinks: newUser.socialLinks,
-          role: newUser.role,
-          image: newUser.image,
-          status: newUser.status,
-          verified: newUser.verified,
-          otp, // For testing - remove in production
-     };
 };
+
 const loginUserFromDB = async (payload: ILoginData) => {
      const { email, password } = payload;
      if (!password) throw new AppError(StatusCodes.BAD_REQUEST, 'Password is required!');
