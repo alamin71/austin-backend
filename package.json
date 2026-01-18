@@ -18,6 +18,7 @@
      "description": "",
      "dependencies": {
           "@aws-sdk/client-s3": "^3.971.0",
+          "@aws-sdk/credential-providers": "^3.971.0",
           "@types/bcrypt": "^5.0.2",
           "bcrypt": "^5.1.1",
           "colors": "^1.4.0",
