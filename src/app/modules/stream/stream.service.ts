@@ -230,7 +230,7 @@ class StreamService {
                     throw new AppError(StatusCodes.NOT_FOUND, 'Stream not found');
                }
 
-               stream.viewers = stream.viewers.filter((v) => v.toString() !== userId);
+               stream.viewers = stream.viewers.filter((v: any) => v.toString() !== userId);
                stream.currentViewerCount = stream.viewers.length;
 
                await stream.save();

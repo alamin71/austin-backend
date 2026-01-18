@@ -57,6 +57,15 @@ router.post(
 );
 router.post('/login', validateRequest(AuthValidation.createLoginZodSchema), AuthController.loginUser);
 router.post('/refresh-token', AuthController.refreshToken);
+
+// OAuth endpoints
+router.post('/google-login', AuthController.googleLogin);
+router.post('/apple-login', AuthController.appleLogin);
+
+// OTP endpoints
+router.post('/send-otp', AuthController.sendOTP);
+router.post('/verify-otp', AuthController.verifyOTPAndLogin);
+
 router.post('/forget-password', validateRequest(AuthValidation.createForgetPasswordZodSchema), AuthController.forgetPassword);
 
 router.post('/verify-email', validateRequest(AuthValidation.createVerifyEmailZodSchema), AuthController.verifyEmail);

@@ -2,6 +2,7 @@ import { StatusCodes } from 'http-status-codes';
 import catchAsync from '../../../shared/catchAsync';
 import sendResponse from '../../../shared/sendResponse';
 import { AuthService } from './auth.service';
+import OAuthService from './oauth.service';
 import config from '../../../config';
 
 const registerUser = catchAsync(async (req, res) => {
@@ -138,6 +139,96 @@ const refreshToken = catchAsync(async (req, res) => {
      });
 });
 
+// Google OAuth
+const googleLogin = catchAsync(async (req, res) => {
+     const { idToken } = req.body;
+     const user = await OAuthService.verifyGoogleToken(idToken);
+     
+     // Generate JWT tokens
+     const tokens = await AuthService.generateTokens(user);
+     
+     sendResponse(res, {
+          success: true,
+          statusCode: StatusCodes.OK,
+          message: 'Google login successful',
+          data: {
+               user: {
+                    id: user._id,
+                    email: user.email,
+                    name: user.name,
+                    avatar: user.avatar,
+               },
+               accessToken: tokens.accessToken,
+               refreshToken: tokens.refreshToken,
+          },
+     });
+});
+
+// Apple OAuth
+const appleLogin = catchAsync(async (req, res) => {
+     const { identityToken, authorizationCode } = req.body;
+     const user = await OAuthService.verifyAppleToken(identityToken, authorizationCode);
+     
+     // Generate JWT tokens
+     const tokens = await AuthService.generateTokens(user);
+     
+     sendResponse(res, {
+          success: true,
+          statusCode: StatusCodes.OK,
+          message: 'Apple login successful',
+          data: {
+               user: {
+                    id: user._id,
+                    email: user.email,
+                    name: user.name,
+                    avatar: user.avatar,
+               },
+               accessToken: tokens.accessToken,
+               refreshToken: tokens.refreshToken,
+          },
+     });
+});
+
+// OTP - Send OTP
+const sendOTP = catchAsync(async (req, res) => {
+     const { email } = req.body;
+     const result = await OAuthService.generateAndSendOTP(email);
+     
+     sendResponse(res, {
+          success: true,
+          statusCode: StatusCodes.OK,
+          message: result.message,
+          data: {
+               expiresIn: result.expiresIn,
+          },
+     });
+});
+
+// OTP - Verify OTP and Login
+const verifyOTPAndLogin = catchAsync(async (req, res) => {
+     const { email, otp } = req.body;
+     const user = await OAuthService.verifyOTP(email, otp);
+     
+     // Generate JWT tokens
+     const tokens = await AuthService.generateTokens(user);
+     
+     sendResponse(res, {
+          success: true,
+          statusCode: StatusCodes.OK,
+          message: 'OTP verified and login successful',
+          data: {
+               user: {
+                    id: user._id,
+                    email: user.email,
+                    name: user.name,
+                    avatar: user.avatar,
+               },
+               accessToken: tokens.accessToken,
+               refreshToken: tokens.refreshToken,
+          },
+     });
+});
+
 export const AuthController = {
      registerUser,
      verifyEmail,
@@ -150,4 +241,8 @@ export const AuthController = {
      resetPasswordByUrl,
      resendOtp,
      refreshToken,
+     googleLogin,
+     appleLogin,
+     sendOTP,
+     verifyOTPAndLogin,
 };

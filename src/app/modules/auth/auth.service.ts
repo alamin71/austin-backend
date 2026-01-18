@@ -108,12 +108,12 @@ const loginUserFromDB = async (payload: ILoginData) => {
           const authentication = { oneTimeCode: otp, expireAt: new Date(Date.now() + 3 * 60000) };
           await User.findOneAndUpdate({ email }, { $set: { authentication } });
 
-          throw new AppError(StatusCodes.CONFLICT, 'Please verify your account, then try to login again');
+     throw new AppError(StatusCodes.CONFLICT, 'Please verify your account, then try to login again');
      }
 
      if (isExistUser?.status === 'blocked') throw new AppError(StatusCodes.BAD_REQUEST, 'Your account has been blocked.');
 
-     if (!(await User.isMatchPassword(password, isExistUser.password))) throw new AppError(StatusCodes.BAD_REQUEST, 'Password is incorrect!');
+     if (!isExistUser.password || !(await User.isMatchPassword(password, isExistUser.password))) throw new AppError(StatusCodes.BAD_REQUEST, 'Password is incorrect!');
 
      const jwtData = { id: isExistUser._id, role: isExistUser.role, email: isExistUser.email };
      const accessToken = jwtHelper.createToken(jwtData, config.jwt.jwt_secret as Secret, config.jwt.jwt_expire_in as string);
@@ -250,7 +250,7 @@ const changePasswordToDB = async (user: JwtPayload, payload: IChangePassword) =>
      const isExistUser = await User.findById(user.id).select('+password');
      if (!isExistUser) throw new AppError(StatusCodes.BAD_REQUEST, 'User does not exist!');
 
-     if (currentPassword && !(await User.isMatchPassword(currentPassword, isExistUser.password))) throw new AppError(StatusCodes.BAD_REQUEST, 'Password is incorrect');
+     if (currentPassword && (!isExistUser.password || !(await User.isMatchPassword(currentPassword, isExistUser.password)))) throw new AppError(StatusCodes.BAD_REQUEST, 'Password is incorrect');
 
      if (currentPassword === newPassword) throw new AppError(StatusCodes.BAD_REQUEST, 'Please give different password from current password');
 
@@ -280,6 +280,23 @@ const refreshToken = async (token: string) => {
      return { accessToken };
 };
 
+// Generate both access and refresh tokens
+const generateTokens = async (user: any) => {
+     const jwtPayload = {
+          id: user._id.toString(),
+          role: user.role || 'user',
+          email: user.email,
+     };
+
+     const accessToken = createToken(jwtPayload, process.env.JWT_SECRET || '', process.env.JWT_EXPIRE_IN || '7d');
+     const refreshToken = createToken(jwtPayload, process.env.JWT_REFRESH_SECRET || '', process.env.JWT_REFRESH_EXPIRE_IN || '365d');
+
+     return {
+          accessToken,
+          refreshToken,
+     };
+};
+
 export const AuthService = {
      registerUserToDB,
      verifyEmailToDB,
@@ -292,4 +309,5 @@ export const AuthService = {
      resetPasswordByUrl,
      resendOtpFromDb,
      refreshToken,
+     generateTokens,
 };
