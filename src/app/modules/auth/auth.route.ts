@@ -43,14 +43,21 @@ const parseFormDataForValidation = (req: any, res: any, next: any) => {
 };
 
 // Registration endpoint
+// router.post(
+//      '/register',
+//      upload.single('image'),
+//      parseFormDataForValidation, // ✅ এই middleware ব্যবহার করো
+//      validateRequest(AuthValidation.createRegisterZodSchema),
+//      AuthController.registerUser,
+// );
+// Registration endpoint - validation সাময়িক সরাও
 router.post(
      '/register',
      upload.single('image'),
-     parseFormDataForValidation, // ✅ এই middleware ব্যবহার করো
-     validateRequest(AuthValidation.createRegisterZodSchema),
+     parseFormDataForValidation,
+     // validateRequest(AuthValidation.createRegisterZodSchema),  // ✅ এটা comment করো
      AuthController.registerUser,
 );
-
 router.post('/login', validateRequest(AuthValidation.createLoginZodSchema), AuthController.loginUser);
 router.post('/refresh-token', AuthController.refreshToken);
 router.post('/forget-password', validateRequest(AuthValidation.createForgetPasswordZodSchema), AuthController.forgetPassword);
