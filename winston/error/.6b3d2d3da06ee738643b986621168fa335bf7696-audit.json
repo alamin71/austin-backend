@@ -1,0 +1,15 @@
+{
+    "keep": {
+        "days": true,
+        "amount": 1
+    },
+    "auditLog": "C:\\Users\\alami\\Desktop\\alamin\\backend-setup-template\\winston\\error\\.6b3d2d3da06ee738643b986621168fa335bf7696-audit.json",
+    "files": [
+        {
+            "date": 1750189712611,
+            "name": "C:\\Users\\alami\\Desktop\\alamin\\backend-setup-template\\winston\\error\\18-06-2025-01-error.log",
+            "hash": "d939e7519cbaacf1dedcc85247641c5584ac65e6d5b46136dbba9729c294ce27"
+        }
+    ],
+    "hashType": "sha256"
+}
