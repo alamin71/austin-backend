@@ -6,9 +6,12 @@ const SHUTDOWN_TIMEOUT_MS = 30000;
 declare global {
      let isShuttingDown: boolean;
 }
+
+let isShuttingDown = false;
+
 export function gracefulShutdown(signal: string) {
-     if (globalThis.isShuttingDown) return;
-     globalThis.isShuttingDown = true;
+     if (isShuttingDown) return;
+     isShuttingDown = true;
 
      logger.info(`${signal} received. Shutting down gracefully...`);
 
