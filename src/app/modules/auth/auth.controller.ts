@@ -6,7 +6,6 @@ import config from '../../../config';
 
 const registerUser = catchAsync(async (req, res) => {
      const raw = req.body.body || req.body;
-     // null-prototype clean + trim + normalize
      const payload = JSON.parse(JSON.stringify(raw));
      const normalized = {
           ...payload,
@@ -17,7 +16,10 @@ const registerUser = catchAsync(async (req, res) => {
           socialLinks: payload.socialLinks || { x: '', instagram: '', youtube: '' },
      };
 
-     const result = await AuthService.registerUserToDB(normalized);
+     console.log('📁 File received:', req.file ? req.file.originalname : 'No file'); // ✅ Debug
+
+     // ✅ req.file pass করো
+     const result = await AuthService.registerUserToDB(normalized, req.file);
      sendResponse(res, {
           success: true,
           statusCode: StatusCodes.CREATED,
