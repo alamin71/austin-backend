@@ -21,7 +21,7 @@ All authentication endpoints are ready for admin dashboard integration. Admin us
 
 ### Endpoint
 ```
-POST /api/v1/auth/login
+POST /api/v1/auth/admin/login
 ```
 
 ### Description
@@ -69,7 +69,7 @@ Authorization: Bearer <accessToken>
 
 ### Endpoint
 ```
-POST /api/v1/auth/forget-password
+POST /api/v1/auth/admin/forget-password
 ```
 
 ### Description
@@ -112,7 +112,7 @@ Generates OTP and sends to admin's email for password reset initiation.
 
 ### Endpoint
 ```
-POST /api/v1/auth/reset-password
+POST /api/v1/auth/admin/reset-password
 ```
 
 ### Description
@@ -150,13 +150,13 @@ resettoken: <reset-token-from-verify-reset-otp>
 ```
 1. Admin clicks "Forgot Password"
    ↓
-2. POST /api/v1/auth/forget-password (sends OTP)
+2. POST /api/v1/auth/admin/forget-password (sends OTP)
    ↓
 3. Admin enters OTP from email
    ↓
-4. POST /api/v1/auth/verify-reset-otp (verifies OTP, returns resetToken)
+4. POST /api/v1/auth/admin/verify-reset-otp (verifies OTP, returns resetToken)
    ↓
-5. POST /api/v1/auth/reset-password (with resetToken header, resets password)
+5. POST /api/v1/auth/admin/reset-password (with resetToken header, resets password)
    ↓
 6. Success message + Redirect to login
 ```
@@ -167,7 +167,7 @@ resettoken: <reset-token-from-verify-reset-otp>
 
 ### Endpoint
 ```
-POST /api/v1/auth/resend-otp
+POST /api/v1/auth/admin/resend-otp
 ```
 
 ### Description
@@ -204,7 +204,7 @@ Resends OTP to admin's email if the previous one expired or was not received.
 
 ### Endpoint
 ```
-POST /api/v1/auth/change-password
+POST /api/v1/auth/admin/change-password
 Authorization: Bearer <accessToken>
 ```
 

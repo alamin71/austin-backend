@@ -34,7 +34,7 @@
 ║  © VidZo 2024 - All Rights Reserved               ║
 ╚════════════════════════════════════════════════════╝
 
-ENDPOINT: POST /api/v1/auth/login
+ENDPOINT: POST /api/v1/auth/admin/login
 REQUEST:
 {
   "email": "admin@vidzo.com",
@@ -74,7 +74,7 @@ RESPONSE:
 ║                                                    ║
 ╚════════════════════════════════════════════════════╝
 
-ENDPOINT: POST /api/v1/auth/forget-password
+ENDPOINT: POST /api/v1/auth/admin/forget-password
 REQUEST:
 {
   "email": "admin@vidzo.com"
@@ -118,7 +118,7 @@ RESPONSE:
 ║                                                    ║
 ╚════════════════════════════════════════════════════╝
 
-ENDPOINT: POST /api/v1/auth/verify-reset-otp
+ENDPOINT: POST /api/v1/auth/admin/verify-reset-otp
 REQUEST:
 {
   "email": "admin@vidzo.com",
@@ -165,7 +165,7 @@ RESPONSE:
 ║                                                    ║
 ╚════════════════════════════════════════════════════╝
 
-ENDPOINT: POST /api/v1/auth/reset-password
+ENDPOINT: POST /api/v1/auth/admin/reset-password
 HEADER:
 {
   "resettoken": "<token_from_verify_otp>"
@@ -247,7 +247,7 @@ DELAY: 2-3 seconds
 ║                                                    ║
 ╚════════════════════════════════════════════════════╝
 
-ENDPOINT: POST /api/v1/auth/change-password
+ENDPOINT: POST /api/v1/auth/admin/change-password
 HEADER:
 {
   "Authorization": "Bearer <accessToken>"
@@ -382,11 +382,11 @@ Redirect to Login
 
 | Screen | Endpoint | Method | Auth | Status |
 |--------|----------|--------|------|--------|
-| Login | `/login` | POST | ❌ | ✅ |
-| Forgot Password | `/forget-password` | POST | ❌ | ✅ |
-| OTP Input | `/verify-reset-otp` | POST | ❌ | ✅ |
-| Reset Password | `/reset-password` | POST | ❌ | ✅ |
-| Change Password | `/change-password` | POST | ✅ | ✅ |
+| Login | `/admin/login` | POST | ❌ | ✅ |
+| Forgot Password | `/admin/forget-password` | POST | ❌ | ✅ |
+| OTP Input | `/admin/verify-reset-otp` | POST | ❌ | ✅ |
+| Reset Password | `/admin/reset-password` | POST | ❌ | ✅ |
+| Change Password | `/admin/change-password` | POST | ✅ | ✅ |
 
 ---
 
