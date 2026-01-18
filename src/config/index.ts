@@ -57,6 +57,10 @@ export default {
           stripe_webhook_url: process.env.STRIPE_WEBHOOK_URL,
           stripe_product_id: process.env.STRIPE_PRODUCT_ID,
      },
+     agora: {
+          app_id: process.env.AGORA_APP_ID,
+          app_certificate: process.env.AGORA_APP_CERTIFICATE,
+     },
      super_admin: {
           email: process.env.SUPER_ADMIN_EMAIL,
           password: process.env.SUPER_ADMIN_PASSWORD,
