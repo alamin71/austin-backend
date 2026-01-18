@@ -11,6 +11,7 @@ import AppError from '../../../errors/AppError';
 import generateOTP from '../../../utils/generateOTP';
 import { verifyToken } from '../../../utils/verifyToken';
 import { createToken } from '../../../utils/createToken';
+import { uploadFileToS3 } from '../../../helpers/s3Helper'; // ✅ Import
 
 interface IRegisterData {
      name: string;
@@ -25,7 +26,7 @@ interface IRegisterData {
           youtube?: string;
      };
 }
-const registerUserToDB = async (payload: IRegisterData) => {
+const registerUserToDB = async (payload: IRegisterData, file?: any) => {
      try {
           // null-prototype + trim + normalize
           const normal = JSON.parse(JSON.stringify(payload));
@@ -37,7 +38,11 @@ const registerUserToDB = async (payload: IRegisterData) => {
           const socialLinks = normal.socialLinks || { x: '', instagram: '', youtube: '' };
 
           console.log('🔍 registerUserToDB with:', { name, userName, email });
-
+          let imageUrl = '';
+          if (file) {
+               imageUrl = await uploadFileToS3(file, 'profile-images');
+               console.log('📸 Image uploaded to S3:', imageUrl);
+          }
           //  duplicate key error
           const otp = generateOTP(6);
           const authentication = { oneTimeCode: otp, expireAt: new Date(Date.now() + 10 * 60000) };
@@ -49,6 +54,7 @@ const registerUserToDB = async (payload: IRegisterData) => {
                verified: false,
                authentication,
                bio,
+               image: imageUrl,
                socialLinks,
           };
 
@@ -67,9 +73,9 @@ const registerUserToDB = async (payload: IRegisterData) => {
                userName: newUser.userName,
                email: newUser.email,
                bio: newUser.bio,
+               image: newUser.image,
                socialLinks: newUser.socialLinks,
                role: newUser.role,
-               image: newUser.image,
                status: newUser.status,
                verified: newUser.verified,
                otp,

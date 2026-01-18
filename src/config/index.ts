@@ -30,6 +30,13 @@ export default {
           host: process.env.EMAIL_HOST,
           pass: process.env.EMAIL_PASS,
      },
+
+     // ✅ AWS S3 Configuration
+     aws_region: process.env.AWS_REGION || 'ap-south-1',
+     aws_access_key_id: process.env.AWS_ACCESS_KEY_ID,
+     aws_secret_access_key: process.env.AWS_SECRET_ACCESS_KEY,
+     aws_s3_bucket_name: process.env.AWS_S3_BUCKET_NAME,
+
      express_sessoin: process.env.EXPRESS_SESSION_SECRET_KEY,
      social: {
           google_client_id: process.env.GOOGLE_CLIENT_ID,

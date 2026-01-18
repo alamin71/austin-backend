@@ -69,50 +69,8 @@ const createVendorToDB = async (payload: IUser): Promise<IUser> => {
 
      return createUser;
 };
-// create Admin
-// const createAdminToDB = async (
-//   payload: Partial<IUser>
-// ): Promise<IUser> => {
-//   //set role
-//   payload.role = USER_ROLES.ADMIN;
-//   const createAdmin = await User.create(payload);
-//   if (!createAdmin) {
-//     throw new ApiError(StatusCodes.BAD_REQUEST, 'Failed to create admin');
-//   }
-
-//   //send email
-//   const otp = generateOTP(6);
-//   const values = {
-//     name: createAdmin.name,
-//     otp: otp,
-//     email: createAdmin.email!,
-//   };
-//   const createAccountTemplate = emailTemplate.createAccount(values);
-//   emailHelper.sendEmail(createAccountTemplate);
-
-//   //save to DB
-//   const authentication = {
-//     oneTimeCode: otp,
-//     expireAt: new Date(Date.now() + 3 * 60000),
-//   };
-//   await User.findOneAndUpdate(
-//     { _id: createAdmin._id },
-//     { $set: { authentication } }
-//   );
-
-//   return createAdmin;
-// };
 
 // get user profile
-// const getUserProfileFromDB = async (user: JwtPayload): Promise<Partial<IUser>> => {
-//      const { id } = user;
-//      const isExistUser = await User.isExistUserById(id);
-//      if (!isExistUser) {
-//           throw new AppError(StatusCodes.BAD_REQUEST, "User doesn't exist!");
-//      }
-
-//      return isExistUser;
-// };
 const getUserProfileFromDB = async (user: any) => {
      const userId = user?.id || user?._id;
      const userProfile = await User.findById(userId).select('-password -authentication');
@@ -121,7 +79,7 @@ const getUserProfileFromDB = async (user: any) => {
           throw new AppError(StatusCodes.NOT_FOUND, 'User not found');
      }
 
-     return userProfile; // সব field সহ return হবে
+     return userProfile;
 };
 // update user profile
 const updateProfileToDB = async (user: JwtPayload, payload: Partial<IUser>): Promise<Partial<IUser | null>> => {
