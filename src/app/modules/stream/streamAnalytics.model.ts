@@ -86,7 +86,7 @@ const streamAnalyticsSchema = new Schema<IStreamAnalytics>(
      },
 );
 
-streamAnalyticsSchema.index({ stream: 1 });
+// Index removed - 'unique: true' on stream field already creates an index
 
 export const StreamAnalytics = model<IStreamAnalytics>(
      'StreamAnalytics',
