@@ -1,15 +1,16 @@
 import path from 'path';
 import DailyRotateFile from 'winston-daily-rotate-file';
-const { createLogger, format, transports } = require('winston');
+import winston from 'winston';
+const { createLogger, format, transports } = winston;
 const { combine, timestamp, label, printf } = format;
 
-const myFormat = printf(({ level, message, label, timestamp }: { level: string; message: string; label: string; timestamp: Date }) => {
-     const date = new Date(timestamp);
+const myFormat = printf((info: any) => {
+     const date = new Date(info.timestamp);
      const hour = date.getHours();
      const minutes = date.getMinutes();
      const seconds = date.getSeconds();
 
-     return `${date.toDateString()} ${hour}:${minutes}:${seconds} [${label}] ${level}: ${message}`;
+     return `${date.toDateString()} ${hour}:${minutes}:${seconds} [${info.label}] ${info.level}: ${info.message}`;
 });
 
 const logger = createLogger({
