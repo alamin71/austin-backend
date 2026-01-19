@@ -1,4 +1,5 @@
-import { RtcTokenBuilder, RtcRole } from 'agora-token';
+import AgoraToken from 'agora-token';
+const { RtcTokenBuilder, RtcRole } = AgoraToken;
 import { StatusCodes } from 'http-status-codes';
 import config from '../../../config/index.js';
 import AppError from '../../../errors/AppError.js';
