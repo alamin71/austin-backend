@@ -99,7 +99,8 @@ const loginUserFromDB = async (payload: ILoginData) => {
      const isExistUser = await User.findOne({ email }).select('+password');
      if (!isExistUser) throw new AppError(StatusCodes.BAD_REQUEST, 'User does not exist!');
 
-     if (!isExistUser.verified) {
+     // Skip verification check for admin/super_admin
+     if (isExistUser.role !== 'super_admin' && isExistUser.role !== 'admin' && !isExistUser.verified) {
           const otp = generateOTP(6);
           const value = { otp, email: isExistUser.email };
           const emailContent = emailTemplate.resetPassword(value);
