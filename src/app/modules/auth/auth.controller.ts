@@ -60,8 +60,8 @@ const loginUser = catchAsync(async (req, res) => {
      sendResponse(res, {
           success: true,
           statusCode: StatusCodes.OK,
-          message: 'User logged in successfully.',
-          data: { accessToken: result.accessToken, refreshToken: result.refreshToken },
+          message: 'Admin login successfully.',
+          data: { accessToken: result.accessToken, refreshToken: result.refreshToken, role: result.role, email: result.email, userName: result.userName },
      });
 });
 

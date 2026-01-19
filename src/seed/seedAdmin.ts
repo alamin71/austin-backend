@@ -3,7 +3,6 @@ import { User } from '../app/modules/user/user.model.js';
 import config from '../config/index.js';
 import { USER_ROLES } from '../enums/user.js';
 import { logger } from '../shared/logger.js';
-import bcrypt from 'bcrypt';
 
 // Only admin user data - Regular users will register via app signup
 const adminData = {
@@ -17,12 +16,6 @@ const adminData = {
      verified: true,
 };
 
-// Function to hash passwords
-const hashPassword = async (password: string) => {
-     const salt = await bcrypt.genSalt(Number(config.bcrypt_salt_rounds));
-     return await bcrypt.hash(password, salt);
-};
-
 // Function to seed admin user
 const seedAdmin = async () => {
      try {
@@ -34,8 +27,8 @@ const seedAdmin = async () => {
                return;
           }
 
-          const hashedPassword = await hashPassword(adminData.password as string);
-          const adminUser = { ...adminData, password: hashedPassword };
+          // Do NOT hash here - let the model pre-save hook handle it
+          const adminUser = { ...adminData };
 
           // Create only the admin user
           await User.create(adminUser);

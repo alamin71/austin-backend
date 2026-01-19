@@ -118,11 +118,11 @@ const loginUserFromDB = async (payload: ILoginData) => {
 
      if (!isExistUser.password || !(await User.isMatchPassword(password, isExistUser.password))) throw new AppError(StatusCodes.BAD_REQUEST, 'Password is incorrect!');
 
-     const jwtData = { id: isExistUser._id, role: isExistUser.role, email: isExistUser.email };
+     const jwtData = { id: isExistUser._id, role: isExistUser.role, email: isExistUser.email, userName: isExistUser.userName };
      const accessToken = jwtHelper.createToken(jwtData, config.jwt.jwt_secret as Secret, config.jwt.jwt_expire_in as string);
      const refreshToken = jwtHelper.createToken(jwtData, config.jwt.jwt_refresh_secret as string, config.jwt.jwt_refresh_expire_in as string);
 
-     return { accessToken, refreshToken };
+     return { accessToken, refreshToken, role: isExistUser.role, email: isExistUser.email, userName: isExistUser.userName };
 };
 
 const verifyEmailToDB = async (payload: IVerifyEmail) => {
