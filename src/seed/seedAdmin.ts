@@ -14,6 +14,7 @@ const adminData = {
      password: config.super_admin.password,
      authProvider: 'email',
      isEmailVerified: true,
+     verified: true,
 };
 
 // Function to hash passwords
