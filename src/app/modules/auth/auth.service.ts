@@ -11,7 +11,8 @@ import AppError from '../../../errors/AppError.js';
 import generateOTP from '../../../utils/generateOTP.js';
 import { verifyToken } from '../../../utils/verifyToken.js';
 import { createToken } from '../../../utils/createToken.js';
-import { uploadFileToS3 } from '../../../helpers/s3Helper.js'; // ✅ Import
+import { uploadFileToS3 } from '../../../helpers/s3Helper.js';
+import { USER_ROLES } from '../../../enums/user.js';
 
 interface IRegisterData {
      name: string;
@@ -100,7 +101,8 @@ const loginUserFromDB = async (payload: ILoginData) => {
      if (!isExistUser) throw new AppError(StatusCodes.BAD_REQUEST, 'User does not exist!');
 
      // Skip verification check for admin/super_admin
-     if (isExistUser.role !== 'super_admin' && isExistUser.role !== 'admin' && !isExistUser.verified) {
+     const adminRoles = [USER_ROLES.SUPER_ADMIN, USER_ROLES.ADMIN];
+     if (!adminRoles.includes(isExistUser.role as USER_ROLES) && !isExistUser.verified) {
           const otp = generateOTP(6);
           const value = { otp, email: isExistUser.email };
           const emailContent = emailTemplate.resetPassword(value);
