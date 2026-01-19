@@ -9,7 +9,7 @@
           "lint": "eslint src/**/*.ts",
           "lint:fix": "eslint src/**/*.ts --fix",
           "format": "prettier . --write",
-          "seed": "ts-node src/seed/seedAdmin.ts",
+          "seed": "node --loader ts-node/esm src/seed/seedAdmin.ts",
           "build": "tsc",
           "start": "node dist/server.js"
      },

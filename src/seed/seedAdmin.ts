@@ -8,6 +8,7 @@ import bcrypt from 'bcrypt';
 // Only admin user data - Regular users will register via app signup
 const adminData = {
      name: 'Administrator',
+     userName: 'admin',
      email: config.super_admin.email,
      role: USER_ROLES.SUPER_ADMIN,
      password: config.super_admin.password,

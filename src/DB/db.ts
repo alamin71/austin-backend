@@ -41,6 +41,7 @@ export async function connectToDatabase(): Promise<void> {
                family: 4, // Force IPv4
                retryWrites: true,
                retryReads: true,
+               autoIndex: config.node_env !== 'production',
           });
           logger.info('🚀 Database connected successfully');
           setupMongooseListeners();
