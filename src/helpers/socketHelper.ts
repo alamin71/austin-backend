@@ -1,14 +1,18 @@
-import colors from 'colors';
 import { Server } from 'socket.io';
 import { logger } from '../shared/logger';
+import StreamSocketHandler from '../app/modules/stream/stream.socket';
 
 const socket = (io: Server) => {
-     io.on('connection', (socket) => {
-          logger.info(colors.blue('A user connected'));
+     // Setup stream handlers
+     StreamSocketHandler.setupStreamHandlers(io);
 
-          //disconnect
+     // General connection handler
+     io.on('connection', (socket) => {
+          logger.info('A user connected');
+
+          // Disconnect
           socket.on('disconnect', () => {
-               logger.info(colors.red('A user disconnect'));
+               logger.info('A user disconnect');
           });
      });
 };

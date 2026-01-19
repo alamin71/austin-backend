@@ -2,7 +2,7 @@ Entity,Field,Type,Reference
 User,_id,ObjectId,
 User,name,String,
 User,email,String,
-User,password,String,
+User,password,String (optional),
 User,role,String,
 User,profile,ObjectId,Profile
 User,followers,ObjectId[],User
@@ -15,6 +15,14 @@ User,businessProfile,ObjectId,BusinessProfile
 User,settings,ObjectId,Settings
 User,notifications,ObjectId[],Notification
 User,blockedUsers,ObjectId[],User
+User,authProvider,String (enum: email|google|apple),
+User,authProviderId,String,
+User,avatar,String,
+User,otp,String (select: false),
+User,otpExpiry,Date (select: false),
+User,isEmailVerified,Boolean,
+User,createdAt,Date,
+User,updatedAt,Date,
 Profile,_id,ObjectId,
 Profile,user,ObjectId,User
 Profile,bio,String,

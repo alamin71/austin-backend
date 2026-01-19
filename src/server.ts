@@ -1,6 +1,5 @@
 import { createServer, Server as HttpServer } from 'http';
 import { Server as SocketServer } from 'socket.io';
-import colors from 'colors';
 import { validateConfig } from './DB/configValidation';
 import { connectToDatabase } from './DB/db';
 import app from './app';
@@ -10,6 +9,7 @@ import { socketHelper } from './helpers/socketHelper';
 import { setupProcessHandlers } from './DB/processHandlers';
 import { setupSecurity } from './DB/security';
 import { setupCluster } from './DB/cluster';
+import { emailHelper } from './helpers/emailHelper';
 
 // Define the types for the servers
 let httpServer: HttpServer;
@@ -22,6 +22,11 @@ export async function startServer() {
           validateConfig();
           // Connect to the database
           await connectToDatabase();
+          
+          // Verify email configuration
+          logger.info('🔍 Verifying email configuration...');
+          await emailHelper.verifyEmailConnection();
+          
           // Create HTTP server
           httpServer = createServer(app);
           const httpPort = Number(config.port);
@@ -35,7 +40,7 @@ export async function startServer() {
 
           // Start HTTP server
           httpServer.listen(httpPort, ipAddress, () => {
-               logger.info(colors.yellow(`♻️  Application listening on http://${ipAddress}:${httpPort}`));
+               logger.info(`♻️  Application listening on http://${ipAddress}:${httpPort}`);
           });
 
           // Set up Socket.io server
@@ -49,9 +54,9 @@ export async function startServer() {
 
           socketServer.listen(socketPort);
           socketHelper.socket(socketServer);
-          logger.info(colors.yellow(`♻️  Socket is listening on ${ipAddress}:${socketPort}`));
+          logger.info(`♻️  Socket is listening on ${ipAddress}:${socketPort}`);
      } catch (error) {
-          logger.error(colors.red('Failed to start server'), error);
+          logger.error('Failed to start server', error);
           process.exit(1);
      }
 }

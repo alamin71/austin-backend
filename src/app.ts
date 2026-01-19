@@ -7,6 +7,8 @@ import { notFound } from './app/middleware/notFound';
 import { welcome } from './utils/welcome';
 import config from './config';
 import path from 'path';
+
+const __dirname = path.dirname(require.main?.filename || '');
 const app: Application = express();
 
 app.set('view engine', 'ejs');

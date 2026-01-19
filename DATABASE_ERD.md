@@ -7,7 +7,7 @@
 - \_id
 - name
 - email
-- password
+- password (optional, required for email/password auth only)
 - role (user, streamer, business, admin)
 - profile (ref: Profile)
 - followers (array of User refs)
@@ -20,6 +20,14 @@
 - settings (ref: Settings)
 - notifications (array of Notification refs)
 - blockedUsers (array of User refs)
+- **authProvider** (email, google, apple) - Authentication method
+- **authProviderId** (String, optional) - Provider's unique user ID
+- **avatar** (String, optional) - Profile picture from OAuth provider
+- **otp** (String, select: false) - One-time password for OTP auth
+- **otpExpiry** (Date, select: false) - OTP expiration timestamp
+- **isEmailVerified** (Boolean, default: false) - Email verification status
+- createdAt
+- updatedAt
 
 ### 2. Profile
 

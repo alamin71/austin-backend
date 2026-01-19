@@ -55,19 +55,51 @@ router.post(
      // validateRequest(AuthValidation.createRegisterZodSchema),
      AuthController.registerUser,
 );
+// ============================================
+// USER AUTHENTICATION ENDPOINTS
+// ============================================
+
+// User login & registration
 router.post('/login', validateRequest(AuthValidation.createLoginZodSchema), AuthController.loginUser);
 router.post('/refresh-token', AuthController.refreshToken);
-router.post('/forget-password', validateRequest(AuthValidation.createForgetPasswordZodSchema), AuthController.forgetPassword);
 
+// OAuth endpoints (User only)
+router.post('/google-login', AuthController.googleLogin);
+router.post('/apple-login', AuthController.appleLogin);
+
+// OTP endpoints (User only)
+router.post('/send-otp', AuthController.sendOTP);
+router.post('/verify-otp', AuthController.verifyOTPAndLogin);
+
+// User password reset (email-based)
+router.post('/forget-password', validateRequest(AuthValidation.createForgetPasswordZodSchema), AuthController.forgetPassword);
 router.post('/verify-email', validateRequest(AuthValidation.createVerifyEmailZodSchema), AuthController.verifyEmail);
 router.post('/verify-reset-otp', validateRequest(AuthValidation.createVerifyEmailZodSchema), AuthController.verifyResetOtp);
-
 router.post('/reset-password', validateRequest(AuthValidation.createResetPasswordZodSchema), AuthController.resetPassword);
+
+// ============================================
+// ADMIN AUTHENTICATION ENDPOINTS
+// ============================================
+
+// Admin login
+router.post('/admin/login', validateRequest(AuthValidation.createLoginZodSchema), AuthController.loginUser);
+
+// Admin password reset (OTP-based)
+router.post('/admin/forget-password', validateRequest(AuthValidation.createForgetPasswordZodSchema), AuthController.forgetPassword);
+router.post('/admin/verify-reset-otp', validateRequest(AuthValidation.createVerifyEmailZodSchema), AuthController.verifyResetOtp);
+router.post('/admin/reset-password', validateRequest(AuthValidation.createResetPasswordZodSchema), AuthController.resetPassword);
+
+// Admin password change (logged in only)
+router.post('/admin/change-password', auth(USER_ROLES.ADMIN), validateRequest(AuthValidation.createChangePasswordZodSchema), AuthController.changePassword);
+
+// Admin resend OTP
+router.post('/admin/resend-otp', AuthController.resendOtp);
+
+// ============================================
+// LEGACY ENDPOINTS (keeping for compatibility)
+// ============================================
 router.post('/dashboard/forget-password', validateRequest(AuthValidation.createForgetPasswordZodSchema), AuthController.forgetPasswordByUrl);
-
 router.post('/dashboard/reset-password', auth(USER_ROLES.ADMIN, USER_ROLES.VENDOR), validateRequest(AuthValidation.createResetPasswordZodSchema), AuthController.resetPasswordByUrl);
-
 router.post('/change-password', auth(USER_ROLES.ADMIN, USER_ROLES.USER, USER_ROLES.VENDOR), validateRequest(AuthValidation.createChangePasswordZodSchema), AuthController.changePassword);
-router.post('/resend-otp', AuthController.resendOtp);
 
 export const AuthRouter = router;

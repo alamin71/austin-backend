@@ -106,6 +106,7 @@ const verifyUserPassword = async (userId: string, password: string) => {
      if (!user) {
           throw new AppError(StatusCodes.NOT_FOUND, 'User not found.');
      }
+     if (!user.password) return false;
      const isPasswordValid = await User.isMatchPassword(password, user.password);
      return isPasswordValid;
 };

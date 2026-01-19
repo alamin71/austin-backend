@@ -12,20 +12,29 @@ export type IUser = {
      userName: string;
      role: USER_ROLES;
      email: string;
-     password: string;
+     password?: string;
      image?: string;
+     avatar?: string;
      bio?: string;
      socialLinks?: ISocialLinks;
      isDeleted: boolean;
      stripeCustomerId: string;
-     address: string;
+     address?: string;
      status: 'active' | 'blocked';
      verified: boolean;
+     // OAuth fields
+     authProvider?: 'email' | 'google' | 'apple';
+     authProviderId?: string;
+     // OTP fields
+     otp?: string;
+     otpExpiry?: Date;
+     isEmailVerified?: boolean;
      authentication?: {
           isResetPassword: boolean;
           oneTimeCode: number;
           expireAt: Date;
      };
+     _id?: any;
 };
 
 export type UserModel = {

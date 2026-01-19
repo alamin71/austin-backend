@@ -32,7 +32,7 @@ const userSchema = new Schema<IUser, UserModel>(
           },
           password: {
                type: String,
-               required: true,
+               required: false,
                select: false,
                minlength: 8,
           },
@@ -40,9 +40,38 @@ const userSchema = new Schema<IUser, UserModel>(
                type: String,
                default: '',
           },
+          avatar: {
+               type: String,
+               default: '',
+          },
           bio: {
                type: String,
                default: '',
+          },
+          // OAuth fields
+          authProvider: {
+               type: String,
+               enum: ['email', 'google', 'apple'],
+               default: 'email',
+          },
+          authProviderId: {
+               type: String,
+               default: null,
+          },
+          // OTP fields
+          otp: {
+               type: String,
+               default: null,
+               select: false,
+          },
+          otpExpiry: {
+               type: Date,
+               default: null,
+               select: false,
+          },
+          isEmailVerified: {
+               type: Boolean,
+               default: false,
           },
           socialLinks: {
                type: {
@@ -115,7 +144,10 @@ userSchema.pre('save', async function (next) {
           throw new AppError(StatusCodes.BAD_REQUEST, 'Email already exists!');
      }
 
-     this.password = await bcrypt.hash(this.password, Number(config.bcrypt_salt_rounds));
+     // Only hash password if it exists and is modified
+     if (this.password && this.isModified('password')) {
+          this.password = await bcrypt.hash(this.password, Number(config.bcrypt_salt_rounds));
+     }
      next();
 });
 

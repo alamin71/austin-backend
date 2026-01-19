@@ -1,28 +1,27 @@
 import mongoose from 'mongoose';
-import colors from 'colors';
 import { errorLogger, logger } from '../shared/logger';
 import config from '../config';
 
 // Set up MongoDB connection listeners
 export function setupMongooseListeners(): void {
      mongoose.connection.on('error', (err) => {
-          errorLogger.error(colors.red('MongoDB connection error:'), err);
+          errorLogger.error('MongoDB connection error:', err);
           if (config.node_env === 'production') {
-               logger.error(colors.red('Critical database error - restarting worker'));
+               logger.error('Critical database error - restarting worker');
                process.exit(1);
           }
      });
 
      mongoose.connection.on('disconnected', () => {
-          logger.warn(colors.yellow('MongoDB disconnected. Attempting to reconnect...'));
+          logger.warn('MongoDB disconnected. Attempting to reconnect...');
      });
 
      mongoose.connection.on('reconnected', () => {
-          logger.info(colors.green('MongoDB reconnected successfully'));
+          logger.info('MongoDB reconnected successfully');
      });
 
      mongoose.connection.on('reconnectFailed', () => {
-          errorLogger.error(colors.red('MongoDB reconnection failed after multiple attempts'));
+          errorLogger.error('MongoDB reconnection failed after multiple attempts');
           if (config.node_env === 'production') {
                process.exit(1);
           }
@@ -43,10 +42,10 @@ export async function connectToDatabase(): Promise<void> {
                retryWrites: true,
                retryReads: true,
           });
-          logger.info(colors.bgCyan('🚀 Database connected successfully'));
+          logger.info('🚀 Database connected successfully');
           setupMongooseListeners();
      } catch (error) {
-          errorLogger.error(colors.red('Database connection error'), error);
+          errorLogger.error('Database connection error', error);
           process.exit(1);
      }
 }
