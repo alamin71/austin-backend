@@ -1,8 +1,8 @@
 import mongoose from 'mongoose';
-import { User } from '../app/modules/user/user.model';
-import config from '../config';
-import { USER_ROLES } from '../enums/user';
-import { logger } from '../shared/logger';
+import { User } from '../app/modules/user/user.model.js';
+import config from '../config/index.js';
+import { USER_ROLES } from '../enums/user.js';
+import { logger } from '../shared/logger.js';
 import bcrypt from 'bcrypt';
 
 // Only admin user data - Regular users will register via app signup

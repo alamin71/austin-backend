@@ -1,7 +1,7 @@
 import twilio from 'twilio';
-import config from '../config';
+import config from '../config/index.js';
 import { StatusCodes } from 'http-status-codes';
-import AppError from '../errors/AppError';
+import AppError from '../errors/AppError.js';
 
 const client = twilio(config.twilio.accountSid, config.twilio.authToken);
 const sendSMS = async (to: string, message: string) => {

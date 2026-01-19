@@ -1,8 +1,8 @@
 import { Request, Response } from 'express';
 import { StatusCodes } from 'http-status-codes';
-import catchAsync from '../../../shared/catchAsync';
-import sendResponse from '../../../shared/sendResponse';
-import { AdminService } from './admin.service';
+import catchAsync from '../../../shared/catchAsync.js';
+import sendResponse from '../../../shared/sendResponse.js';
+import { AdminService } from './admin.service.js';
 
 const createAdmin = catchAsync(async (req: Request, res: Response) => {
      const payload = req.body;

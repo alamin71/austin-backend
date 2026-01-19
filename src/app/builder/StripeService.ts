@@ -1,5 +1,5 @@
 import Stripe from 'stripe';
-import stripe from '../../config/stripe';
+import stripe from '../../config/stripe.js';
 
 class StripeService {
      // Create a connected account for the vendor

@@ -1,5 +1,5 @@
-import { INotification } from '../app/modules/notification/notification.interface';
-import { Notification } from '../app/modules/notification/notification.model';
+import { INotification } from '../app/modules/notification/notification.interface.js';
+import { Notification } from '../app/modules/notification/notification.model.js';
 
 export const sendNotifications = async (data: any): Promise<INotification> => {
      const result = await Notification.create(data);

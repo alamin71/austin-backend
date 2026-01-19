@@ -1,9 +1,9 @@
 import { OAuth2Client } from 'google-auth-library';
 import axios from 'axios';
-import { User } from '../user/user.model';
-import AppError from '../../../errors/AppError';
+import { User } from '../user/user.model.js';
+import AppError from '../../../errors/AppError.js';
 import { StatusCodes } from 'http-status-codes';
-import { errorLogger } from '../../../shared/logger';
+import { errorLogger } from '../../../shared/logger.js';
 
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 

@@ -1,17 +1,17 @@
 import bcrypt from 'bcrypt';
 import { StatusCodes } from 'http-status-codes';
 import { JwtPayload, Secret } from 'jsonwebtoken';
-import config from '../../../config';
-import { emailHelper } from '../../../helpers/emailHelper';
-import { jwtHelper } from '../../../helpers/jwtHelper';
-import { emailTemplate } from '../../../shared/emailTemplate';
-import { IAuthResetPassword, IChangePassword, ILoginData, IVerifyEmail } from '../../../types/auth';
-import { User } from '../user/user.model';
-import AppError from '../../../errors/AppError';
-import generateOTP from '../../../utils/generateOTP';
-import { verifyToken } from '../../../utils/verifyToken';
-import { createToken } from '../../../utils/createToken';
-import { uploadFileToS3 } from '../../../helpers/s3Helper'; // ✅ Import
+import config from '../../../config/index.js';
+import { emailHelper } from '../../../helpers/emailHelper.js';
+import { jwtHelper } from '../../../helpers/jwtHelper.js';
+import { emailTemplate } from '../../../shared/emailTemplate.js';
+import { IAuthResetPassword, IChangePassword, ILoginData, IVerifyEmail } from '../../../types/auth.js';
+import { User } from '../user/user.model.js';
+import AppError from '../../../errors/AppError.js';
+import generateOTP from '../../../utils/generateOTP.js';
+import { verifyToken } from '../../../utils/verifyToken.js';
+import { createToken } from '../../../utils/createToken.js';
+import { uploadFileToS3 } from '../../../helpers/s3Helper.js'; // ✅ Import
 
 interface IRegisterData {
      name: string;

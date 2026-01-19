@@ -1,8 +1,8 @@
 import { StatusCodes } from 'http-status-codes';
-import catchAsync from '../../../shared/catchAsync';
-import sendResponse from '../../../shared/sendResponse';
-import { UserService } from './user.service';
-import config from '../../../config';
+import catchAsync from '../../../shared/catchAsync.js';
+import sendResponse from '../../../shared/sendResponse.js';
+import { UserService } from './user.service.js';
+import config from '../../../config/index.js';
 import bcrypt from 'bcrypt';
 const createUser = catchAsync(async (req, res) => {
      const { ...userData } = req.body;

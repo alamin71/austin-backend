@@ -1,5 +1,5 @@
-import { logger } from '../shared/logger';
-import { gracefulShutdown } from './shutdown';
+import { logger } from '../shared/logger.js';
+import { gracefulShutdown } from './shutdown.js';
 
 export function setupProcessHandlers() {
      process.on('uncaughtException', (error) => {

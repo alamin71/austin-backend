@@ -1,9 +1,9 @@
 import { ZodError } from 'zod';
-import handleZodError from '../errors/handleZodError';
-import handleValidationError from '../errors/handleValidationError';
-import handleCastError from '../errors/handleCastError';
-import handleDuplicateError from '../errors/handleDuplicateError';
-import AppError from '../errors/AppError';
+import handleZodError from '../errors/handleZodError.js';
+import handleValidationError from '../errors/handleValidationError.js';
+import handleCastError from '../errors/handleCastError.js';
+import handleDuplicateError from '../errors/handleDuplicateError.js';
+import AppError from '../errors/AppError.js';
 import { StatusCodes } from 'http-status-codes';
 const processError = (err: any) => {
      if (err instanceof ZodError) return handleZodError(err);

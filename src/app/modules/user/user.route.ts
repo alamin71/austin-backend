@@ -1,11 +1,11 @@
 import express, { NextFunction, Request, Response } from 'express';
-import { USER_ROLES } from '../../../enums/user';
-import { UserController } from './user.controller';
-import { UserValidation } from './user.validation';
-import { getSingleFilePath } from '../../../shared/getFilePath';
-import auth from '../../middleware/auth';
-import fileUploadHandler from '../../middleware/fileUploadHandler';
-import validateRequest from '../../middleware/validateRequest';
+import { USER_ROLES } from '../../../enums/user.js';
+import { UserController } from './user.controller.js';
+import { UserValidation } from './user.validation.js';
+import { getSingleFilePath } from '../../../shared/getFilePath.js';
+import auth from '../../middleware/auth.js';
+import fileUploadHandler from '../../middleware/fileUploadHandler.js';
+import validateRequest from '../../middleware/validateRequest.js';
 const router = express.Router();
 
 router

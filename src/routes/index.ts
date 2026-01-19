@@ -1,8 +1,8 @@
 import express from 'express';
-import { UserRouter } from '../app/modules/user/user.route';
-import { AuthRouter } from '../app/modules/auth/auth.route';
-import { StreamRouter } from '../app/modules/stream/stream.route';
-import { TestRouter } from '../app/modules/test/test.route';
+import { UserRouter } from '../app/modules/user/user.route.js';
+import { AuthRouter } from '../app/modules/auth/auth.route.js';
+import { StreamRouter } from '../app/modules/stream/stream.route.js';
+import { TestRouter } from '../app/modules/test/test.route.js';
 
 const router = express.Router();
 const routes = [

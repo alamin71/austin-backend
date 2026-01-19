@@ -1,7 +1,7 @@
 import compression from 'compression';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
-import app from '../app';
+import app from '../app.js';
 
 // Setup security middleware
 export function setupSecurity() {

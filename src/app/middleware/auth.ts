@@ -1,10 +1,10 @@
 import { NextFunction, Request, Response } from 'express';
 import { StatusCodes } from 'http-status-codes';
 import { Secret } from 'jsonwebtoken';
-import config from '../../config';
-import AppError from '../../errors/AppError';
-import { verifyToken } from '../../utils/verifyToken';
-import { User } from '../modules/user/user.model';
+import config from '../../config/index.js';
+import AppError from '../../errors/AppError.js';
+import { verifyToken } from '../../utils/verifyToken.js';
+import { User } from '../modules/user/user.model.js';
 
 const auth =
      (...roles: string[]) =>

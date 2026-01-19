@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
-import { errorLogger, logger } from '../shared/logger';
-import { httpServer, socketServer } from '../server';
+import { errorLogger, logger } from '../shared/logger.js';
+import { httpServer, socketServer } from '../server.js';
 
 const SHUTDOWN_TIMEOUT_MS = 30000;
 declare global {

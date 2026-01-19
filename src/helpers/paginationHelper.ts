@@ -1,4 +1,4 @@
-import { IPaginationOptions } from '../types/pagination';
+import { IPaginationOptions } from '../types/pagination.js';
 
 const calculatePagination = (options: IPaginationOptions) => {
      const page = Number(options.page || 1);

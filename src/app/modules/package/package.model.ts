@@ -1,5 +1,5 @@
 import { Schema, model } from 'mongoose';
-import { IPackage } from './package.interface';
+import { IPackage } from './package.interface.js';
 
 const packageSchema = new Schema<IPackage>({
      name: { type: String, required: true },

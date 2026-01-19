@@ -1,6 +1,6 @@
 import { Server, Socket } from 'socket.io';
-import { logger, errorLogger } from '../../../shared/logger';
-import StreamService from './stream.service';
+import { logger, errorLogger } from '../../../shared/logger.js';
+import StreamService from './stream.service.js';
 
 class StreamSocketHandler {
      static setupStreamHandlers(io: Server) {

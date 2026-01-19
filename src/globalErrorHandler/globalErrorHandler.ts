@@ -1,6 +1,6 @@
 import { ErrorRequestHandler, Request, Response, NextFunction } from 'express';
-import processError from './processError';
-import config from '../config';
+import processError from './processError.js';
+import config from '../config/index.js';
 
 export const globalErrorHandler: ErrorRequestHandler = (error: any, req: Request, res: Response, _next: NextFunction) => {
      // Process the all error function

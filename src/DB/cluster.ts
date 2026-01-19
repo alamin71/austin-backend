@@ -1,6 +1,6 @@
 import os from 'os';
-import { errorLogger, logger } from '../shared/logger';
-import { startServer } from '../server';
+import { errorLogger, logger } from '../shared/logger.js';
+import { startServer } from '../server.js';
 import cluster from 'cluster';
 
 const CONFIG = {

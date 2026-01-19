@@ -3,7 +3,7 @@ import fs from 'fs';
 import { StatusCodes } from 'http-status-codes';
 import multer, { FileFilterCallback } from 'multer';
 import path from 'path';
-import AppError from '../../errors/AppError';
+import AppError from '../../errors/AppError.js';
 
 const fileUploadHandler = () => {
      // Create upload folder

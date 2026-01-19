@@ -1,9 +1,9 @@
 import { StatusCodes } from 'http-status-codes';
-import catchAsync from '../../../shared/catchAsync';
-import sendResponse from '../../../shared/sendResponse';
-import { AuthService } from './auth.service';
-import OAuthService from './oauth.service';
-import config from '../../../config';
+import catchAsync from '../../../shared/catchAsync.js';
+import sendResponse from '../../../shared/sendResponse.js';
+import { AuthService } from './auth.service.js';
+import OAuthService from './oauth.service.js';
+import config from '../../../config/index.js';
 
 const registerUser = catchAsync(async (req, res) => {
      const raw = req.body.body || req.body;

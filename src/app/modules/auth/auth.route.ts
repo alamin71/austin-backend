@@ -1,10 +1,10 @@
 import express from 'express';
 import multer from 'multer';
-import { USER_ROLES } from '../../../enums/user';
-import { AuthController } from './auth.controller';
-import { AuthValidation } from './auth.validation';
-import validateRequest from '../../middleware/validateRequest';
-import auth from '../../middleware/auth';
+import { USER_ROLES } from '../../../enums/user.js';
+import { AuthController } from './auth.controller.js';
+import { AuthValidation } from './auth.validation.js';
+import validateRequest from '../../middleware/validateRequest.js';
+import auth from '../../middleware/auth.js';
 
 const router = express.Router();
 

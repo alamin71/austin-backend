@@ -1,6 +1,6 @@
 import express from 'express';
-import streamController from './stream.controller';
-import auth from '../../middleware/auth';
+import streamController from './stream.controller.js';
+import auth from '../../middleware/auth.js';
 
 const router = express.Router();
 

@@ -1,5 +1,5 @@
 import { Model } from 'mongoose';
-import { USER_ROLES } from '../../../enums/user';
+import { USER_ROLES } from '../../../enums/user.js';
 
 export type ISocialLinks = {
      x?: string;

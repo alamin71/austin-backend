@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { getMultipleFilesPath } from '../../shared/getFilePath';
+import { getMultipleFilesPath } from '../../shared/getFilePath.js';
 
 const parseFileData = (req: Request, res: Response, next: NextFunction) => {
      try {

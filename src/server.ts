@@ -1,15 +1,15 @@
 import { createServer, Server as HttpServer } from 'http';
 import { Server as SocketServer } from 'socket.io';
-import { validateConfig } from './DB/configValidation';
-import { connectToDatabase } from './DB/db';
-import app from './app';
-import config from './config';
-import { logger } from './shared/logger';
-import { socketHelper } from './helpers/socketHelper';
-import { setupProcessHandlers } from './DB/processHandlers';
-import { setupSecurity } from './DB/security';
-import { setupCluster } from './DB/cluster';
-import { emailHelper } from './helpers/emailHelper';
+import { validateConfig } from './DB/configValidation.js';
+import { connectToDatabase } from './DB/db.js';
+import app from './app.js';
+import config from './config/index.js';
+import { logger } from './shared/logger.js';
+import { socketHelper } from './helpers/socketHelper.js';
+import { setupProcessHandlers } from './DB/processHandlers.js';
+import { setupSecurity } from './DB/security.js';
+import { setupCluster } from './DB/cluster.js';
+import { emailHelper } from './helpers/emailHelper.js';
 
 // Define the types for the servers
 let httpServer: HttpServer;

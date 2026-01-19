@@ -1,12 +1,12 @@
 import { RtcTokenBuilder, RtcRole } from 'agora-token';
 import { StatusCodes } from 'http-status-codes';
-import config from '../../../config';
-import AppError from '../../../errors/AppError';
-import { Stream } from './stream.model';
-import { StreamAnalytics } from './streamAnalytics.model';
-import { Message } from './message.model';
-import { User } from '../user/user.model';
-import { logger, errorLogger } from '../../../shared/logger';
+import config from '../../../config/index.js';
+import AppError from '../../../errors/AppError.js';
+import { Stream } from './stream.model.js';
+import { StreamAnalytics } from './streamAnalytics.model.js';
+import { Message } from './message.model.js';
+import { User } from '../user/user.model.js';
+import { logger, errorLogger } from '../../../shared/logger.js';
 
 class StreamService {
      /**

@@ -1,9 +1,9 @@
 import { Request, Response } from 'express';
 import { StatusCodes } from 'http-status-codes';
-import catchAsync from '../../../shared/catchAsync';
-import sendResponse from '../../../shared/sendResponse';
-import StreamService from './stream.service';
-import AppError from '../../../errors/AppError';
+import catchAsync from '../../../shared/catchAsync.js';
+import sendResponse from '../../../shared/sendResponse.js';
+import StreamService from './stream.service.js';
+import AppError from '../../../errors/AppError.js';
 
 class StreamController {
      startStream = catchAsync(async (req: Request, res: Response) => {

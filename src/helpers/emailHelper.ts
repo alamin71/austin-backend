@@ -1,7 +1,7 @@
 import nodemailer from 'nodemailer';
-import config from '../config';
-import { errorLogger, logger } from '../shared/logger';
-import { ISendEmail } from '../types/email';
+import config from '../config/index.js';
+import { errorLogger, logger } from '../shared/logger.js';
+import { ISendEmail } from '../types/email.js';
 
 // Gmail SMTP Configuration
 const transporter = nodemailer.createTransport({

@@ -1,1 +1,1 @@
-export * from './handleAccountUpdatedEvent';
+export * from './handleAccountUpdatedEvent.js';

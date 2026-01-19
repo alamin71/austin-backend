@@ -1,7 +1,7 @@
 import { StatusCodes } from 'http-status-codes';
 
-import AppError from '../errors/AppError';
-import stripe from '../config/stripe';
+import AppError from '../errors/AppError.js';
+import stripe from '../config/stripe.js';
 
 // Fetch payment info from the database
 const getPaymentInfo = async (paymentIntentId: string) => {

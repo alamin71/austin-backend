@@ -1,5 +1,5 @@
 import { S3Client, PutObjectCommand, DeleteObjectCommand } from '@aws-sdk/client-s3';
-import config from '../config';
+import config from '../config/index.js';
 import { v4 as uuidv4 } from 'uuid';
 
 const s3Client = new S3Client({

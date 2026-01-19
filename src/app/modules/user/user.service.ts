@@ -1,13 +1,13 @@
 import { StatusCodes } from 'http-status-codes';
 import { JwtPayload } from 'jsonwebtoken';
-import { USER_ROLES } from '../../../enums/user';
-import { emailHelper } from '../../../helpers/emailHelper';
-import { emailTemplate } from '../../../shared/emailTemplate';
-import unlinkFile from '../../../shared/unlinkFile';
-import { IUser } from './user.interface';
-import { User } from './user.model';
-import AppError from '../../../errors/AppError';
-import generateOTP from '../../../utils/generateOTP';
+import { USER_ROLES } from '../../../enums/user.js';
+import { emailHelper } from '../../../helpers/emailHelper.js';
+import { emailTemplate } from '../../../shared/emailTemplate.js';
+import unlinkFile from '../../../shared/unlinkFile.js';
+import { IUser } from './user.interface.js';
+import { User } from './user.model.js';
+import AppError from '../../../errors/AppError.js';
+import generateOTP from '../../../utils/generateOTP.js';
 // create user
 const createUserToDB = async (payload: IUser): Promise<IUser> => {
      //set role

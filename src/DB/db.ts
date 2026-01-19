@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
-import { errorLogger, logger } from '../shared/logger';
-import config from '../config';
+import { errorLogger, logger } from '../shared/logger.js';
+import config from '../config/index.js';
 
 // Set up MongoDB connection listeners
 export function setupMongooseListeners(): void {

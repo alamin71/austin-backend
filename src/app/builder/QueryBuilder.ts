@@ -1,5 +1,5 @@
 import { FilterQuery, Query } from 'mongoose';
-import AppError from '../../errors/AppError';
+import AppError from '../../errors/AppError.js';
 import { StatusCodes } from 'http-status-codes';
 
 class QueryBuilder<T> {

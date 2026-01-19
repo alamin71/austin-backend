@@ -1,9 +1,9 @@
 import express from 'express';
-import { USER_ROLES } from '../../../enums/user';
-import { AdminController } from './admin.controller';
-import { AdminValidation } from './admin.validation';
-import auth from '../../middleware/auth';
-import validateRequest from '../../middleware/validateRequest';
+import { USER_ROLES } from '../../../enums/user.js';
+import { AdminController } from './admin.controller.js';
+import { AdminValidation } from './admin.validation.js';
+import auth from '../../middleware/auth.js';
+import validateRequest from '../../middleware/validateRequest.js';
 const router = express.Router();
 
 router.post('/create-admin', auth(USER_ROLES.SUPER_ADMIN), validateRequest(AdminValidation.createAdminZodSchema), AdminController.createAdmin);

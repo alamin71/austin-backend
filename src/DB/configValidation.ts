@@ -1,5 +1,5 @@
-import config from '../config';
-import { logger } from '../shared/logger';
+import config from '../config/index.js';
+import { logger } from '../shared/logger.js';
 
 // Function to validate required configuration values
 export function validateConfig(): void {

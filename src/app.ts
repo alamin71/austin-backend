@@ -1,11 +1,11 @@
 import cors from 'cors';
 import express, { Application, Request, Response } from 'express';
-import router from './routes';
-import { Morgan } from './shared/morgen';
-import globalErrorHandler from './globalErrorHandler/globalErrorHandler';
-import { notFound } from './app/middleware/notFound';
-import { welcome } from './utils/welcome';
-import config from './config';
+import router from './routes/index.js';
+import { Morgan } from './shared/morgen.js';
+import globalErrorHandler from './globalErrorHandler/globalErrorHandler.js';
+import { notFound } from './app/middleware/notFound.js';
+import { welcome } from './utils/welcome.js';
+import config from './config/index.js';
 import path from 'path';
 
 const __dirname = path.resolve();

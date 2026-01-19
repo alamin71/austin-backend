@@ -1,10 +1,10 @@
 import bcrypt from 'bcrypt';
 import { StatusCodes } from 'http-status-codes';
 import { model, Schema } from 'mongoose';
-import config from '../../../config';
-import { USER_ROLES } from '../../../enums/user';
-import AppError from '../../../errors/AppError';
-import { IUser, UserModel } from './user.interface';
+import config from '../../../config/index.js';
+import { USER_ROLES } from '../../../enums/user.js';
+import AppError from '../../../errors/AppError.js';
+import { IUser, UserModel } from './user.interface.js';
 
 const userSchema = new Schema<IUser, UserModel>(
      {

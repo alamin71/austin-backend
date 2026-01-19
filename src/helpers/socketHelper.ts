@@ -1,6 +1,6 @@
 import { Server } from 'socket.io';
-import { logger } from '../shared/logger';
-import StreamSocketHandler from '../app/modules/stream/stream.socket';
+import { logger } from '../shared/logger.js';
+import StreamSocketHandler from '../app/modules/stream/stream.socket.js';
 
 const socket = (io: Server) => {
      // Setup stream handlers

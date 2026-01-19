@@ -1,4 +1,4 @@
-import { IContact, ICreateAccount, IHelpContact, IResetPassword, IResetPasswordByEmail } from '../types/emailTamplate';
+import { IContact, ICreateAccount, IHelpContact, IResetPassword, IResetPasswordByEmail } from '../types/emailTamplate.js';
 
 const createAccount = (values: ICreateAccount) => {
      const data = {

@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { getSingleFilePath, IFolderName } from '../../shared/getFilePath';
+import { getSingleFilePath, IFolderName } from '../../shared/getFilePath.js';
 
 const parseFileData = (fieldName: IFolderName) => {
      return async (req: Request, res: Response, next: NextFunction) => {
