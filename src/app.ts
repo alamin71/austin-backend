@@ -7,8 +7,10 @@ import { notFound } from './app/middleware/notFound';
 import { welcome } from './utils/welcome';
 import config from './config';
 import path from 'path';
+import { fileURLToPath } from 'url';
 
-const __dirname = path.dirname(require.main?.filename || '');
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 const app: Application = express();
 
 app.set('view engine', 'ejs');
