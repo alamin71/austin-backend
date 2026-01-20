@@ -140,6 +140,101 @@ class StreamController {
                data: message,
           });
      });
+
+     joinStream = catchAsync(async (req: Request, res: Response) => {
+          const userId = (req.user as any)?._id || (req.user as any)?.id;
+          const { streamId } = req.params;
+
+          if (!userId) {
+               throw new AppError(StatusCodes.UNAUTHORIZED, 'User not authenticated');
+          }
+
+          const result = await StreamService.joinStream(streamId, userId);
+
+          sendResponse(res, {
+               statusCode: StatusCodes.OK,
+               success: true,
+               message: 'Joined stream successfully',
+               data: result,
+          });
+     });
+
+     leaveStream = catchAsync(async (req: Request, res: Response) => {
+          const userId = (req.user as any)?._id || (req.user as any)?.id;
+          const { streamId } = req.params;
+
+          if (!userId) {
+               throw new AppError(StatusCodes.UNAUTHORIZED, 'User not authenticated');
+          }
+
+          await StreamService.leaveStream(streamId, userId);
+
+          sendResponse(res, {
+               statusCode: StatusCodes.OK,
+               success: true,
+               message: 'Left stream successfully',
+               data: null,
+          });
+     });
+
+     likeStream = catchAsync(async (req: Request, res: Response) => {
+          const userId = (req.user as any)?._id || (req.user as any)?.id;
+          const { streamId } = req.params;
+
+          if (!userId) {
+               throw new AppError(StatusCodes.UNAUTHORIZED, 'User not authenticated');
+          }
+
+          const stream = await StreamService.likeStream(streamId, userId);
+
+          sendResponse(res, {
+               statusCode: StatusCodes.OK,
+               success: true,
+               message: 'Stream liked successfully',
+               data: stream,
+          });
+     });
+
+     updateStreamSettings = catchAsync(async (req: Request, res: Response) => {
+          const { streamId } = req.params;
+          const settings = req.body;
+
+          const stream = await StreamService.updateStreamSettings(streamId, settings);
+
+          sendResponse(res, {
+               statusCode: StatusCodes.OK,
+               success: true,
+               message: 'Stream settings updated successfully',
+               data: stream,
+          });
+     });
+
+     toggleStreamControls = catchAsync(async (req: Request, res: Response) => {
+          const { streamId } = req.params;
+          const controls = req.body;
+
+          const stream = await StreamService.toggleStreamControls(streamId, controls);
+
+          sendResponse(res, {
+               statusCode: StatusCodes.OK,
+               success: true,
+               message: 'Stream controls updated successfully',
+               data: stream,
+          });
+     });
+
+     getStreamAnalytics = catchAsync(async (req: Request, res: Response) => {
+          const { streamId } = req.params;
+
+          const analytics = await StreamService.getStreamAnalytics(streamId);
+
+          sendResponse(res, {
+               statusCode: StatusCodes.OK,
+               success: true,
+               message: 'Stream analytics retrieved successfully',
+               data: analytics,
+          });
+     });
 }
 
 export default new StreamController();

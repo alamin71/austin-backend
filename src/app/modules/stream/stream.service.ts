@@ -7,6 +7,7 @@ import { Stream } from './stream.model.js';
 import { StreamAnalytics } from './streamAnalytics.model.js';
 import { Message } from './message.model.js';
 import { User } from '../user/user.model.js';
+import CategoryService from '../category/category.service.js';
 import { logger, errorLogger } from '../../../shared/logger.js';
 
 class StreamService {
@@ -82,6 +83,8 @@ class StreamService {
                     category: streamData.category,
                     contentRating: streamData.contentRating || 'PG',
                     banner: streamData.banner,
+                    bannerPosition: streamData.bannerPosition || 'top',
+                    visibility: streamData.visibility || 'public',
                     status: 'live',
                     startedAt: new Date(),
                     agora: {
@@ -92,12 +95,22 @@ class StreamService {
                     },
                     allowComments: streamData.allowComments !== false,
                     allowGifts: streamData.allowGifts !== false,
+                    enablePolls: streamData.enablePolls !== false,
+                    enableAdBanners: streamData.enableAdBanners || false,
                     isAgeRestricted: streamData.isAgeRestricted || false,
                     isRecordingEnabled: streamData.isRecordingEnabled || false,
+                    streamControls: {
+                         cameraOn: true,
+                         micOn: true,
+                         background: streamData.background || '',
+                    },
                     tags: streamData.tags || [],
                });
 
                await stream.save();
+
+               // Increment category stream count
+               await CategoryService.incrementStreamCount(streamData.category);
 
                // Create analytics document
                const analytics = new StreamAnalytics({
@@ -149,6 +162,13 @@ class StreamService {
                stream.duration = duration;
 
                await stream.save();
+
+               // Decrement category stream count
+               if (stream.category) {
+                    await CategoryService.decrementStreamCount(
+                         stream.category.toString(),
+                    );
+               }
 
                // Update analytics
                if (stream.analytics) {
@@ -401,6 +421,181 @@ class StreamService {
                };
           } catch (error) {
                errorLogger.error('Search streams error', error);
+               throw error;
+          }
+     }
+
+     /**
+      * Like a stream
+      */
+     static async likeStream(streamId: string, userId: string) {
+          try {
+               const stream = await Stream.findById(streamId);
+
+               if (!stream) {
+                    throw new AppError(StatusCodes.NOT_FOUND, 'Stream not found');
+               }
+
+               stream.likes = (stream.likes || 0) + 1;
+               await stream.save();
+
+               // Update analytics
+               if (stream.analytics) {
+                    await StreamAnalytics.findByIdAndUpdate(stream.analytics, {
+                         $inc: { likes: 1 },
+                    });
+               }
+
+               logger.info(`Stream liked: ${streamId} by ${userId}`);
+               return stream;
+          } catch (error) {
+               errorLogger.error('Like stream error', error);
+               throw error;
+          }
+     }
+
+     /**
+      * Update stream settings
+      */
+     static async updateStreamSettings(streamId: string, settings: any) {
+          try {
+               const stream = await Stream.findById(streamId);
+
+               if (!stream) {
+                    throw new AppError(StatusCodes.NOT_FOUND, 'Stream not found');
+               }
+
+               if (stream.status !== 'live') {
+                    throw new AppError(
+                         StatusCodes.BAD_REQUEST,
+                         'Can only update settings for live streams',
+                    );
+               }
+
+               const updateFields: any = {};
+
+               if (typeof settings.allowComments !== 'undefined') {
+                    updateFields.allowComments = settings.allowComments;
+               }
+               if (typeof settings.allowGifts !== 'undefined') {
+                    updateFields.allowGifts = settings.allowGifts;
+               }
+               if (typeof settings.enablePolls !== 'undefined') {
+                    updateFields.enablePolls = settings.enablePolls;
+               }
+               if (typeof settings.enableAdBanners !== 'undefined') {
+                    updateFields.enableAdBanners = settings.enableAdBanners;
+               }
+               if (settings.title) {
+                    updateFields.title = settings.title;
+               }
+               if (settings.description) {
+                    updateFields.description = settings.description;
+               }
+
+               const updatedStream = await Stream.findByIdAndUpdate(streamId, updateFields, {
+                    new: true,
+               });
+
+               logger.info(`Stream settings updated: ${streamId}`);
+               return updatedStream;
+          } catch (error) {
+               errorLogger.error('Update stream settings error', error);
+               throw error;
+          }
+     }
+
+     /**
+      * Toggle stream controls (camera, mic, background)
+      */
+     static async toggleStreamControls(
+          streamId: string,
+          controls: { cameraOn?: boolean; micOn?: boolean; background?: string },
+     ) {
+          try {
+               const stream = await Stream.findById(streamId);
+
+               if (!stream) {
+                    throw new AppError(StatusCodes.NOT_FOUND, 'Stream not found');
+               }
+
+               const updateFields: any = { streamControls: stream.streamControls || {} };
+
+               if (typeof controls.cameraOn !== 'undefined') {
+                    updateFields.streamControls.cameraOn = controls.cameraOn;
+               }
+               if (typeof controls.micOn !== 'undefined') {
+                    updateFields.streamControls.micOn = controls.micOn;
+               }
+               if (controls.background) {
+                    updateFields.streamControls.background = controls.background;
+               }
+
+               const updatedStream = await Stream.findByIdAndUpdate(
+                    streamId,
+                    { $set: updateFields },
+                    { new: true },
+               );
+
+               logger.info(`Stream controls updated: ${streamId}`);
+               return updatedStream;
+          } catch (error) {
+               errorLogger.error('Toggle stream controls error', error);
+               throw error;
+          }
+     }
+
+     /**
+      * Get stream analytics
+      */
+     static async getStreamAnalytics(streamId: string) {
+          try {
+               const stream = await Stream.findById(streamId).populate('analytics');
+
+               if (!stream) {
+                    throw new AppError(StatusCodes.NOT_FOUND, 'Stream not found');
+               }
+
+               return stream.analytics;
+          } catch (error) {
+               errorLogger.error('Get stream analytics error', error);
+               throw error;
+          }
+     }
+
+     /**
+      * Join stream as viewer
+      */
+     static async joinStream(streamId: string, userId: string) {
+          try {
+               const stream = await this.addViewer(streamId, userId);
+
+               // Generate viewer token
+               const uid = Math.floor(Math.random() * 100000);
+               const agoraToken = this.generateAgoraToken(
+                    stream.agora?.channelName || '',
+                    uid,
+                    'subscriber',
+               );
+
+               return {
+                    stream,
+                    viewerToken: agoraToken,
+               };
+          } catch (error) {
+               errorLogger.error('Join stream error', error);
+               throw error;
+          }
+     }
+
+     /**
+      * Leave stream
+      */
+     static async leaveStream(streamId: string, userId: string) {
+          try {
+               return await this.removeViewer(streamId, userId);
+          } catch (error) {
+               errorLogger.error('Leave stream error', error);
                throw error;
           }
      }

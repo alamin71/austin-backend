@@ -8,7 +8,9 @@ export interface IStream {
      category: Types.ObjectId;
      contentRating: 'G' | 'PG' | 'PG-13' | 'R' | '18+';
      banner?: string;
+     bannerPosition?: 'top' | 'bottom' | 'center';
      status: 'scheduled' | 'live' | 'ended';
+     visibility: 'public' | 'followers' | 'subscribers';
      agora?: {
           channelName: string;
           token: string;
@@ -29,11 +31,19 @@ export interface IStream {
      scheduledStartTime?: Date;
      allowComments: boolean;
      allowGifts: boolean;
+     enablePolls: boolean;
+     enableAdBanners: boolean;
      isAgeRestricted: boolean;
      thumbnail?: string;
      recordingUrl?: string;
      isRecordingEnabled: boolean;
+     streamControls: {
+          cameraOn: boolean;
+          micOn: boolean;
+          background?: string;
+     };
      tags: string[];
+     likes: number;
      createdAt?: Date;
      updatedAt?: Date;
 }

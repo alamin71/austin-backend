@@ -2,6 +2,9 @@ import express from 'express';
 import { UserRouter } from '../app/modules/user/user.route.js';
 import { AuthRouter } from '../app/modules/auth/auth.route.js';
 import { StreamRouter } from '../app/modules/stream/stream.route.js';
+import { CategoryRouter } from '../app/modules/category/category.route.js';
+import GiftRouter from '../app/modules/gift/gift.route.js';
+import PollRouter from '../app/modules/poll/poll.route.js';
 import { TestRouter } from '../app/modules/test/test.route.js';
 
 const router = express.Router();
@@ -17,6 +20,18 @@ const routes = [
      {
           path: '/stream',
           route: StreamRouter,
+     },
+     {
+          path: '/category',
+          route: CategoryRouter,
+     },
+     {
+          path: '/gift',
+          route: GiftRouter,
+     },
+     {
+          path: '/poll',
+          route: PollRouter,
      },
      {
           path: '/test',

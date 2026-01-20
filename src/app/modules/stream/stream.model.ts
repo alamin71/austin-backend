@@ -30,10 +30,20 @@ const streamSchema = new Schema<IStream>(
           banner: {
                type: String,
           },
+          bannerPosition: {
+               type: String,
+               enum: ['top', 'bottom', 'center'],
+               default: 'top',
+          },
           status: {
                type: String,
                enum: ['scheduled', 'live', 'ended'],
                default: 'scheduled',
+          },
+          visibility: {
+               type: String,
+               enum: ['public', 'followers', 'subscribers'],
+               default: 'public',
           },
           agora: {
                channelName: String,
@@ -102,6 +112,14 @@ const streamSchema = new Schema<IStream>(
                type: Boolean,
                default: true,
           },
+          enablePolls: {
+               type: Boolean,
+               default: true,
+          },
+          enableAdBanners: {
+               type: Boolean,
+               default: false,
+          },
           isAgeRestricted: {
                type: Boolean,
                default: false,
@@ -111,6 +129,21 @@ const streamSchema = new Schema<IStream>(
           isRecordingEnabled: {
                type: Boolean,
                default: false,
+          },
+          streamControls: {
+               cameraOn: {
+                    type: Boolean,
+                    default: true,
+               },
+               micOn: {
+                    type: Boolean,
+                    default: true,
+               },
+               background: String,
+          },
+          likes: {
+               type: Number,
+               default: 0,
           },
           tags: [String],
      },
