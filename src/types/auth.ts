@@ -14,7 +14,7 @@ export type IAuthResetPassword = {
 };
 
 export type IChangePassword = {
-     oldPassword: string;
+     currentPassword: string;
      newPassword: string;
      confirmPassword: string;
 };

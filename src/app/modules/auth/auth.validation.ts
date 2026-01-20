@@ -58,8 +58,8 @@ const createResetPasswordZodSchema = z.object({
 
 const createChangePasswordZodSchema = z.object({
      body: z.object({
-          oldPassword: z.string({
-               required_error: 'Old Password is required',
+          currentPassword: z.string({
+               required_error: 'Current Password is required',
           }),
           newPassword: z.string({ required_error: 'New Password is required' }),
           confirmPassword: z.string({

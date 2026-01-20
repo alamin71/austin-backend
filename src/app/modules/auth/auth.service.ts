@@ -249,13 +249,13 @@ const resetPasswordByUrl = async (token: string, payload: IAuthResetPassword) =>
 };
 
 const changePasswordToDB = async (user: JwtPayload, payload: IChangePassword) => {
-     const { oldPassword, newPassword, confirmPassword } = payload;
+     const { currentPassword, newPassword, confirmPassword } = payload;
      const isExistUser = await User.findById(user.id).select('+password');
      if (!isExistUser) throw new AppError(StatusCodes.BAD_REQUEST, 'User does not exist!');
 
-     if (oldPassword && (!isExistUser.password || !(await User.isMatchPassword(oldPassword, isExistUser.password)))) throw new AppError(StatusCodes.BAD_REQUEST, 'Old password is incorrect');
+     if (currentPassword && (!isExistUser.password || !(await User.isMatchPassword(currentPassword, isExistUser.password)))) throw new AppError(StatusCodes.BAD_REQUEST, 'Password is incorrect');
 
-     if (oldPassword === newPassword) throw new AppError(StatusCodes.BAD_REQUEST, 'New password must be different from old password');
+     if (currentPassword === newPassword) throw new AppError(StatusCodes.BAD_REQUEST, 'New password must be different from current password');
 
      if (newPassword !== confirmPassword) throw new AppError(StatusCodes.BAD_REQUEST, 'Passwords do not match');
 
