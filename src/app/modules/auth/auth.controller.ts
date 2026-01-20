@@ -4,6 +4,7 @@ import sendResponse from '../../../shared/sendResponse.js';
 import { AuthService } from './auth.service.js';
 import OAuthService from './oauth.service.js';
 import config from '../../../config/index.js';
+import { USER_ROLES } from '../../../enums/user.js';
 
 const registerUser = catchAsync(async (req, res) => {
      const raw = req.body.body || req.body;
@@ -57,10 +58,13 @@ const loginUser = catchAsync(async (req, res) => {
      const cookieOptions: any = { secure: false, httpOnly: true, maxAge: 31536000000 };
      if (config.node_env === 'production') cookieOptions.sameSite = 'none';
 
+     const isAdmin = [USER_ROLES.ADMIN, USER_ROLES.SUPER_ADMIN].includes(result.role as USER_ROLES);
+     const message = isAdmin ? 'Admin login successfully.' : 'User logged in successfully.';
+
      sendResponse(res, {
           success: true,
           statusCode: StatusCodes.OK,
-          message: 'Admin login successfully.',
+          message,
           data: { accessToken: result.accessToken, refreshToken: result.refreshToken, role: result.role, email: result.email, userName: result.userName },
      });
 });

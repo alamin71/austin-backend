@@ -90,7 +90,7 @@ router.post('/admin/verify-reset-otp', validateRequest(AuthValidation.createVeri
 router.post('/admin/reset-password', validateRequest(AuthValidation.createResetPasswordZodSchema), AuthController.resetPassword);
 
 // Admin password change (logged in only)
-router.post('/admin/change-password', auth(USER_ROLES.ADMIN), validateRequest(AuthValidation.createChangePasswordZodSchema), AuthController.changePassword);
+router.patch('/admin/change-password', auth(USER_ROLES.ADMIN, USER_ROLES.SUPER_ADMIN), validateRequest(AuthValidation.createChangePasswordZodSchema), AuthController.changePassword);
 
 // Admin resend OTP
 router.post('/admin/resend-otp', AuthController.resendOtp);
