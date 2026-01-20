@@ -1,8 +1,8 @@
 import { Router } from 'express';
-import PollController from './poll.controller';
-import auth from '../../middleware/auth';
-import validateRequest from '../../middleware/validateRequest';
-import { createPollSchema, votePollSchema } from './poll.validation';
+import PollController from './poll.controller.js';
+import auth from '../../middleware/auth.js';
+import validateRequest from '../../middleware/validateRequest.js';
+import { createPollSchema, votePollSchema } from './poll.validation.js';
 
 const router = Router();
 
