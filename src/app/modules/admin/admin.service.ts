@@ -37,7 +37,7 @@ const getAdminFromDB = async (): Promise<IUser[]> => {
 };
 
 const getAdminProfileById = async (adminId: string): Promise<IUser | null> => {
-     const admin = await User.findById(adminId).select('-password');
+     const admin = await User.findById(adminId).select('_id name userName email role image status verified isDeleted createdAt updatedAt');
      if (!admin) {
           throw new AppError(StatusCodes.NOT_FOUND, 'Admin not found');
      }
@@ -73,7 +73,7 @@ const changePasswordToDB = async (adminId: string, payload: any): Promise<IUser 
           { _id: adminId },
           { password: hashPassword },
           { new: true }
-     ).select('-password');
+     ).select('_id name userName email role image status verified isDeleted createdAt updatedAt');
      
      return result;
 };
@@ -150,7 +150,7 @@ const adminResetPasswordToDB = async (token: string, payload: any) => {
      if (newPassword !== confirmPassword) throw new AppError(StatusCodes.BAD_REQUEST, 'Passwords do not match!');
 
      const hashPassword = await bcrypt.hash(newPassword, Number(config.bcrypt_salt_rounds));
-     const result = await User.findByIdAndUpdate(id, { password: hashPassword }, { new: true }).select('-password');
+     const result = await User.findByIdAndUpdate(id, { password: hashPassword }, { new: true }).select('_id name userName email role image status verified isDeleted createdAt updatedAt');
 
      return result;
 };
