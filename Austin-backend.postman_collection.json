@@ -1,417 +1,583 @@
 {
   "info": {
-    "name": "Austin-backend - Complete Live Streaming API v2.0",
-    "_postman_id": "austin-backend-live-streaming",
-    "description": "Complete Live Streaming API with all endpoints: Authentication, Admin Profile, User Management, Streaming, Gifts, Polls, Analytics, Admin Dashboard, and more. Production-ready for go-live.",
+    "name": "Austin-Backend - Complete Live Streaming API v2.0",
+    "_postman_id": "austin-backend-live-streaming-complete",
+    "description": "Complete Live Streaming API with all verified endpoints: User Auth + User Profile, Admin Auth + Admin Profile, Streaming, Gifts, Polls, Analytics. Production-ready for go-live. VERIFIED: Endpoints audited and matched with actual codebase (auth.route.ts, user.route.ts, admin.route.ts)",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "item": [
     {
-      "name": "1. Authentication (User & Admin)",
+      "name": "1. USER AUTH & PROFILE",
       "item": [
         {
-          "name": "User - Register",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
+          "name": "1.1 User Authentication",
+          "item": [
+            {
+              "name": "Register (FORM-DATA with image)",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "formdata",
+                  "formdata": [
+                    {
+                      "key": "name",
+                      "value": "John Doe",
+                      "type": "text"
+                    },
+                    {
+                      "key": "email",
+                      "value": "john@example.com",
+                      "type": "text"
+                    },
+                    {
+                      "key": "password",
+                      "value": "password123",
+                      "type": "text"
+                    },
+                    {
+                      "key": "role",
+                      "value": "user",
+                      "type": "text"
+                    },
+                    {
+                      "key": "image",
+                      "type": "file",
+                      "src": "/path/to/image.jpg"
+                    }
+                  ]
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/auth/register",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "v1", "auth", "register"]
+                }
               }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"name\": \"John Doe\",\n  \"email\": \"john@example.com\",\n  \"password\": \"password123\",\n  \"role\": \"user\"\n}"
             },
-            "url": {
-              "raw": "{{baseUrl}}/api/v1/user",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "v1", "user"]
+            {
+              "name": "Login",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"password123\"\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/auth/login",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "v1", "auth", "login"]
+                }
+              }
+            },
+            {
+              "name": "Refresh Token",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/auth/refresh-token",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "v1", "auth", "refresh-token"]
+                }
+              }
+            },
+            {
+              "name": "Google Login",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"token\": \"google_id_token\"\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/auth/google-login",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "v1", "auth", "google-login"]
+                }
+              }
+            },
+            {
+              "name": "Apple Login",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"token\": \"apple_id_token\"\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/auth/apple-login",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "v1", "auth", "apple-login"]
+                }
+              }
+            },
+            {
+              "name": "Send OTP",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"phone\": \"+8801234567890\"\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/auth/send-otp",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "v1", "auth", "send-otp"]
+                }
+              }
+            },
+            {
+              "name": "Verify OTP & Login",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"phone\": \"+8801234567890\",\n  \"otp\": \"123456\"\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/auth/verify-otp",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "v1", "auth", "verify-otp"]
+                }
+              }
+            },
+            {
+              "name": "Forgot Password",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"user@example.com\"\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/auth/forget-password",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "v1", "auth", "forget-password"]
+                }
+              }
+            },
+            {
+              "name": "Verify Email",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"user@example.com\"\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/auth/verify-email",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "v1", "auth", "verify-email"]
+                }
+              }
+            },
+            {
+              "name": "Verify Reset OTP",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"user@example.com\",\n  \"otp\": \"123456\"\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/auth/verify-reset-otp",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "v1", "auth", "verify-reset-otp"]
+                }
+              }
+            },
+            {
+              "name": "Reset Password",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"user@example.com\",\n  \"otp\": \"123456\",\n  \"newPassword\": \"newpassword123\"\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/auth/reset-password",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "v1", "auth", "reset-password"]
+                }
+              }
+            },
+            {
+              "name": "Change Password (Protected)",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{userToken}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"oldPassword\": \"currentpassword\",\n  \"newPassword\": \"newpassword123\"\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/auth/change-password",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "v1", "auth", "change-password"]
+                }
+              }
             }
-          }
+          ]
         },
         {
-          "name": "User - Login",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
+          "name": "1.2 User Profile",
+          "item": [
+            {
+              "name": "Get User Profile (Protected)",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{userToken}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/user/profile",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "v1", "user", "profile"]
+                }
               }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"password123\"\n}"
             },
-            "url": {
-              "raw": "{{baseUrl}}/api/v1/auth/login",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "v1", "auth", "login"]
-            }
-          }
-        },
-        {
-          "name": "User - Refresh Token",
-          "request": {
-            "method": "POST",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/api/v1/auth/refresh-token",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "v1", "auth", "refresh-token"]
-            }
-          }
-        },
-        {
-          "name": "User - Google Login",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
+            {
+              "name": "Update User Profile (FORM-DATA)",
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{userToken}}"
+                  }
+                ],
+                "body": {
+                  "mode": "formdata",
+                  "formdata": [
+                    {
+                      "key": "data",
+                      "value": "{\"name\":\"John Updated\",\"email\":\"newemail@example.com\"}",
+                      "type": "text"
+                    },
+                    {
+                      "key": "image",
+                      "type": "file",
+                      "src": "/path/to/profile.jpg"
+                    }
+                  ]
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/user/profile",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "v1", "user", "profile"]
+                }
               }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"token\": \"google_id_token_here\"\n}"
             },
-            "url": {
-              "raw": "{{baseUrl}}/api/v1/auth/google-login",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "v1", "auth", "google-login"]
-            }
-          }
-        },
-        {
-          "name": "User - Apple Login",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
+            {
+              "name": "Delete User Profile (Protected)",
+              "request": {
+                "method": "DELETE",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{userToken}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/user/delete",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "v1", "user", "delete"]
+                }
               }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"token\": \"apple_id_token_here\"\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/api/v1/auth/apple-login",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "v1", "auth", "apple-login"]
             }
-          }
-        },
-        {
-          "name": "User - Send OTP",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"phone\": \"+8801234567890\"\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/api/v1/auth/send-otp",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "v1", "auth", "send-otp"]
-            }
-          }
-        },
-        {
-          "name": "User - Verify OTP",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"phone\": \"+8801234567890\",\n  \"otp\": \"123456\"\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/api/v1/auth/verify-otp",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "v1", "auth", "verify-otp"]
-            }
-          }
-        },
-        {
-          "name": "User - Forgot Password",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"email\": \"user@example.com\"\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/api/v1/auth/forget-password",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "v1", "auth", "forget-password"]
-            }
-          }
-        },
-        {
-          "name": "User - Verify Email",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"email\": \"user@example.com\"\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/api/v1/auth/verify-email",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "v1", "auth", "verify-email"]
-            }
-          }
-        },
-        {
-          "name": "User - Verify Reset OTP",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"email\": \"user@example.com\",\n  \"otp\": \"123456\"\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/api/v1/auth/verify-reset-otp",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "v1", "auth", "verify-reset-otp"]
-            }
-          }
-        },
-        {
-          "name": "User - Reset Password",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"email\": \"user@example.com\",\n  \"otp\": \"123456\",\n  \"newPassword\": \"newpassword123\"\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/api/v1/auth/reset-password",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "v1", "auth", "reset-password"]
-            }
-          }
-        },
-        {
-          "name": "User - Change Password",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{userToken}}"
-              },
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"oldPassword\": \"currentpassword\",\n  \"newPassword\": \"newpassword123\"\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/api/v1/auth/change-password",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "v1", "auth", "change-password"]
-            }
-          }
-        },
-        {
-          "name": "Admin - Login",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"email\": \"admin@example.com\",\n  \"password\": \"admin123\"\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/api/v1/auth/admin/login",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "v1", "auth", "admin", "login"]
-            }
-          }
-        },
-        {
-          "name": "Admin - Forgot Password",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"email\": \"admin@example.com\"\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/api/v1/auth/admin/forget-password",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "v1", "auth", "admin", "forget-password"]
-            }
-          }
-        },
-        {
-          "name": "Admin - Verify Reset OTP",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"email\": \"admin@example.com\",\n  \"otp\": \"123456\"\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/api/v1/auth/admin/verify-reset-otp",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "v1", "auth", "admin", "verify-reset-otp"]
-            }
-          }
-        },
-        {
-          "name": "Admin - Reset Password",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"email\": \"admin@example.com\",\n  \"otp\": \"123456\",\n  \"newPassword\": \"newpassword123\"\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/api/v1/auth/admin/reset-password",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "v1", "auth", "admin", "reset-password"]
-            }
-          }
-        },
-        {
-          "name": "Admin - Change Password",
-          "request": {
-            "method": "PATCH",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{adminToken}}"
-              },
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"oldPassword\": \"currentpassword\",\n  \"newPassword\": \"newpassword123\"\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/api/v1/auth/admin/change-password",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "v1", "auth", "admin", "change-password"]
-            }
-          }
-        },
-        {
-          "name": "Admin - Resend OTP",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"email\": \"admin@example.com\"\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/api/v1/auth/admin/resend-otp",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "v1", "auth", "admin", "resend-otp"]
-            }
-          }
+          ]
         }
       ]
     },
     {
-      "name": "1.5 Admin Profile",
+      "name": "2. ADMIN AUTH & PROFILE",
       "item": [
         {
-          "name": "Get Admin Profile",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{adminToken}}"
+          "name": "2.1 Admin Authentication",
+          "item": [
+            {
+              "name": "Admin Login",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"admin@example.com\",\n  \"password\": \"admin123\"\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/auth/admin/login",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "v1", "auth", "admin", "login"]
+                }
               }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/api/v1/admin/profile",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "v1", "admin", "profile"]
+            },
+            {
+              "name": "Admin Forgot Password",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"admin@example.com\"\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/auth/admin/forget-password",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "v1", "auth", "admin", "forget-password"]
+                }
+              }
+            },
+            {
+              "name": "Admin Verify Reset OTP",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"admin@example.com\",\n  \"otp\": \"123456\"\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/auth/admin/verify-reset-otp",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "v1", "auth", "admin", "verify-reset-otp"]
+                }
+              }
+            },
+            {
+              "name": "Admin Reset Password",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"admin@example.com\",\n  \"otp\": \"123456\",\n  \"newPassword\": \"newpassword123\"\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/auth/admin/reset-password",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "v1", "auth", "admin", "reset-password"]
+                }
+              }
+            },
+            {
+              "name": "Admin Change Password (Protected)",
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{adminToken}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"oldPassword\": \"currentpassword\",\n  \"newPassword\": \"newpassword123\"\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/auth/admin/change-password",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "v1", "auth", "admin", "change-password"]
+                }
+              }
+            },
+            {
+              "name": "Admin Resend OTP",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"admin@example.com\"\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/auth/admin/resend-otp",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "v1", "auth", "admin", "resend-otp"]
+                }
+              }
             }
-          }
+          ]
+        },
+        {
+          "name": "2.2 Admin Profile & Management",
+          "item": [
+            {
+              "name": "Get My Admin Profile (Protected)",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{adminToken}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/admin/profile",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "v1", "admin", "profile"]
+                }
+              }
+            },
+            {
+              "name": "Get All Admins (SUPER_ADMIN)",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{adminToken}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/admin/get-admin",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "v1", "admin", "get-admin"]
+                }
+              }
+            },
+            {
+              "name": "Create Admin (SUPER_ADMIN)",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{adminToken}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"New Admin\",\n  \"email\": \"newadmin@example.com\",\n  \"password\": \"adminpassword\",\n  \"role\": \"admin\"\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/admin/create-admin",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "v1", "admin", "create-admin"]
+                }
+              }
+            },
+            {
+              "name": "Delete Admin (SUPER_ADMIN)",
+              "request": {
+                "method": "DELETE",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{adminToken}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/admin/{{adminId}}",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "v1", "admin", "{{adminId}}"]
+                }
+              }
+            }
+          ]
         }
       ]
     },
     {
-      "name": "2. Categories",
+      "name": "3. CATEGORIES",
       "item": [
         {
           "name": "Get All Categories",
@@ -463,7 +629,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"title\": \"Gaming\",\n  \"description\": \"Gaming streams and content\",\n  \"icon\": \"gaming-icon\",\n  \"isActive\": true\n}"
+              "raw": "{\n  \"title\": \"Gaming\",\n  \"description\": \"Gaming streams\",\n  \"icon\": \"gaming-icon\",\n  \"isActive\": true\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/api/v1/category",
@@ -517,10 +683,10 @@
       ]
     },
     {
-      "name": "3. Stream Management (Complete)",
+      "name": "4. STREAM MANAGEMENT",
       "item": [
         {
-          "name": "Start Stream (FORM-DATA with Banner)",
+          "name": "Start Stream (FORM-DATA with banner)",
           "request": {
             "method": "POST",
             "header": [
@@ -539,7 +705,7 @@
                 },
                 {
                   "key": "description",
-                  "value": "Playing the latest games with viewers",
+                  "value": "Playing the latest games",
                   "type": "text"
                 },
                 {
@@ -599,7 +765,7 @@
                 },
                 {
                   "key": "tags",
-                  "value": "gaming,valorant,live",
+                  "value": "gaming,live,fun",
                   "type": "text"
                 }
               ]
@@ -848,7 +1014,7 @@
       ]
     },
     {
-      "name": "4. Gifts Management",
+      "name": "5. GIFTS",
       "item": [
         {
           "name": "Get All Gifts",
@@ -1015,7 +1181,7 @@
       ]
     },
     {
-      "name": "5. Polls Management",
+      "name": "6. POLLS",
       "item": [
         {
           "name": "Create Poll (Streamer)",
@@ -1033,7 +1199,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"question\": \"What game should I play next?\",\n  \"options\": [\"Valorant\", \"CS:GO\", \"Apex Legends\", \"Fortnite\"],\n  \"duration\": 300,\n  \"allowMultipleVotes\": false\n}"
+              "raw": "{\n  \"question\": \"What game should I play next?\",\n  \"options\": [\"Valorant\", \"CS:GO\", \"Apex Legends\"],\n  \"duration\": 300,\n  \"allowMultipleVotes\": false\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/api/v1/poll/stream/{{streamId}}/create",
@@ -1140,7 +1306,7 @@
       ]
     },
     {
-      "name": "6. Analytics Dashboard",
+      "name": "7. ANALYTICS DASHBOARD",
       "item": [
         {
           "name": "Platform Analytics (Admin)",
@@ -1199,7 +1365,7 @@
           }
         },
         {
-          "name": "My Dashboard (Authenticated User)",
+          "name": "My Dashboard",
           "request": {
             "method": "GET",
             "header": [
@@ -1245,77 +1411,6 @@
           }
         }
       ]
-    },
-    {
-      "name": "7. User Profile",
-      "item": [
-        {
-          "name": "Get User Profile",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{userToken}}"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/api/v1/user/profile",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "v1", "user", "profile"]
-            }
-          }
-        },
-        {
-          "name": "Update Profile (FORM-DATA)",
-          "request": {
-            "method": "PATCH",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{userToken}}"
-              }
-            ],
-            "body": {
-              "mode": "formdata",
-              "formdata": [
-                {
-                  "key": "data",
-                  "value": "{\"name\":\"John Doe\",\"email\":\"john@example.com\"}",
-                  "type": "text"
-                },
-                {
-                  "key": "image",
-                  "type": "file",
-                  "src": "/path/to/profile.jpg"
-                }
-              ]
-            },
-            "url": {
-              "raw": "{{baseUrl}}/api/v1/user/profile",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "v1", "user", "profile"]
-            }
-          }
-        },
-        {
-          "name": "Delete Profile",
-          "request": {
-            "method": "DELETE",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{userToken}}"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/api/v1/user/delete",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "v1", "user", "delete"]
-            }
-          }
-        }
-      ]
     }
   ],
   "variable": [
@@ -1351,6 +1446,11 @@
     },
     {
       "key": "userId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "adminId",
       "value": "",
       "type": "string"
     },
