@@ -344,7 +344,8 @@ socket.on('stream:poll-created', (data) {
 
 ## 📚 Additional Resources
 
-- [Postman Testing Guide](POSTMAN_TESTING_GUIDE.md)
+- [Postman Collection](Live-Streaming-API-v2.postman_collection.json) (Import করুন)
+- [Postman Testing Guide](POSTMAN_COLLECTION_UPDATED.md)
 - [Complete Flutter Guide](COMPLETE_TESTING_FLUTTER_GUIDE.md)
 - [API Documentation](GO_LIVE_API_DOCUMENTATION.md)
 - [Socket.io Docs](https://socket.io/docs/)

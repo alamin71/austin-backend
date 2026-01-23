@@ -38,8 +38,25 @@ const getAdmin = catchAsync(async (req: Request, res: Response) => {
      });
 });
 
+const getAdminProfile = catchAsync(async (req: Request, res: Response) => {
+     const adminId = (req.user as any)?._id || (req.user as any)?.id;
+     
+     if (!adminId) {
+          throw new Error('Admin not authenticated');
+     }
+
+     const result = await AdminService.getAdminProfileById(adminId);
+     sendResponse(res, {
+          statusCode: StatusCodes.OK,
+          success: true,
+          message: 'Admin Profile Retrieved Successfully',
+          data: result,
+     });
+});
+
 export const AdminController = {
      deleteAdmin,
      createAdmin,
      getAdmin,
+     getAdminProfile,
 };

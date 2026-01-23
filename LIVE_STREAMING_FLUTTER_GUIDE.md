@@ -1693,6 +1693,6 @@ void dispose() {
 
 ---
 
-**সংস্করণ**: 1.0  
-**আপডেটেড**: January 19, 2026  
-**ভাষা**: বাংলা এবং English
+Version: 1.0
+Updated: January 23, 2026
+Language: Bengali and English

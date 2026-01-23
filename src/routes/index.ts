@@ -6,6 +6,7 @@ import { CategoryRouter } from '../app/modules/category/category.route.js';
 import GiftRouter from '../app/modules/gift/gift.route.js';
 import PollRouter from '../app/modules/poll/poll.route.js';
 import { TestRouter } from '../app/modules/test/test.route.js';
+import AnalyticsRouter from '../app/modules/stream/analytics.route.js';
 
 const router = express.Router();
 const routes = [
@@ -20,6 +21,10 @@ const routes = [
      {
           path: '/stream',
           route: StreamRouter,
+     },
+     {
+          path: '/analytics',
+          route: AnalyticsRouter,
      },
      {
           path: '/category',

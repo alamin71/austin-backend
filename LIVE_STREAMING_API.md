@@ -85,6 +85,26 @@ Real-time chat messages during streams.
 
 ---
 
+## REST API Endpoints Summary
+
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| GET | `/api/v1/stream/live` | No | Get paginated live streams with optional category filter |
+| GET | `/api/v1/stream/search` | No | Search streams by title, description, tags |
+| GET | `/api/v1/stream/streamer/{streamerId}/history` | No | Get streamer's past streams |
+| GET | `/api/v1/stream/{streamId}` | No | Get single stream details with Agora token |
+| POST | `/api/v1/stream/start` | Yes | Start a new stream |
+| POST | `/api/v1/stream/{streamId}/end` | Yes | End an active stream |
+| POST | `/api/v1/stream/{streamId}/join` | Yes | Add user as viewer to stream |
+| POST | `/api/v1/stream/{streamId}/leave` | Yes | Remove user from stream viewers |
+| POST | `/api/v1/stream/{streamId}/like` | Yes | Like a stream |
+| POST | `/api/v1/stream/{streamId}/chat` | Yes | Send chat message during stream |
+| PUT | `/api/v1/stream/{streamId}/settings` | Yes | Update stream settings (title, description) |
+| PUT | `/api/v1/stream/{streamId}/controls` | Yes | Toggle stream controls (comments, gifts) |
+| GET | `/api/v1/stream/{streamId}/analytics` | Yes | Get stream analytics data |
+
+---
+
 ## REST API Endpoints
 
 ### Public Endpoints
@@ -121,6 +141,66 @@ GET /api/v1/stream/live?page=1&limit=20&category={categoryId}
     "limit": 20,
     "total": 50,
     "totalPage": 3
+  }
+}
+```
+
+#### Search Streams
+```
+GET /api/v1/stream/search?q={searchQuery}&page=1&limit=20
+```
+
+**Query Parameters:**
+- `q` - Search query (searches title, description, tags)
+- `page` - Page number (default: 1)
+- `limit` - Results per page (default: 20)
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "Streams found",
+  "data": [ { ... } ],
+  "meta": {
+    "page": 1,
+    "limit": 20,
+    "total": 10,
+    "totalPage": 1
+  }
+}
+```
+
+#### Get Streamer History
+```
+GET /api/v1/stream/streamer/{streamerId}/history?page=1&limit=20
+```
+
+**Query Parameters:**
+- `page` - Page number (default: 1)
+- `limit` - Results per page (default: 20)
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "Streamer history retrieved successfully",
+  "data": [
+    {
+      "_id": "507f1f77bcf86cd799439011",
+      "title": "Past Gaming Stream",
+      "status": "ended",
+      "duration": 3600,
+      "currentViewerCount": 150,
+      "peakViewerCount": 250,
+      "startedAt": "2024-01-19T10:00:00Z",
+      "endedAt": "2024-01-19T11:00:00Z"
+    }
+  ],
+  "meta": {
+    "page": 1,
+    "limit": 20,
+    "total": 15,
+    "totalPage": 1
   }
 }
 ```
@@ -223,45 +303,28 @@ Content-Type: application/json
 }
 ```
 
-**Response:**
-```json
-{
-  "success": true,
-  "message": "Stream started successfully",
-  "data": {
-    "_id": "507f1f77bcf86cd799439011",
-    "title": "My Gaming Stream",
-    "status": "live",
-    "agora": {
-      "channelName": "stream_507f...",
-      "token": "agora_token_xyz...",
-      "uid": 12345,
-      "expiryTime": "2024-01-19T11:00:00Z"
-    },
-    "streamer": { ... }
-  }
-}
-```
-
 #### End a Stream
 ```
 POST /api/v1/stream/{streamId}/end
 Authorization: Bearer {token}
 ```
 
-**Response:**
-```json
-{
-  "success": true,
-  "message": "Stream ended successfully",
-  "data": {
-    "_id": "507f1f77bcf86cd799439011",
-    "status": "ended",
-    "endedAt": "2024-01-19T11:00:00Z",
-    "duration": 3600,
-    "currentViewerCount": 0
-  }
-}
+#### Join Stream (Add Viewer)
+```
+POST /api/v1/stream/{streamId}/join
+Authorization: Bearer {token}
+```
+
+#### Leave Stream (Remove Viewer)
+```
+POST /api/v1/stream/{streamId}/leave
+Authorization: Bearer {token}
+```
+
+#### Like Stream
+```
+POST /api/v1/stream/{streamId}/like
+Authorization: Bearer {token}
 ```
 
 #### Send Chat Message
@@ -279,24 +342,43 @@ Content-Type: application/json
 }
 ```
 
-**Response:**
+#### Update Stream Settings
+```
+PUT /api/v1/stream/{streamId}/settings
+Authorization: Bearer {token}
+Content-Type: application/json
+```
+
+**Request Body:**
 ```json
 {
-  "success": true,
-  "message": "Chat message sent successfully",
-  "data": {
-    "_id": "507f1f77bcf86cd799439020",
-    "stream": "507f1f77bcf86cd799439011",
-    "sender": {
-      "_id": "507f1f77bcf86cd799439021",
-      "name": "Viewer Name",
-      "avatar": "url"
-    },
-    "content": "Amazing stream!",
-    "type": "text",
-    "createdAt": "2024-01-19T10:05:00Z"
-  }
+  "title": "Updated Title",
+  "description": "Updated description",
+  "allowComments": true,
+  "allowGifts": false
 }
+```
+
+#### Toggle Stream Controls
+```
+PUT /api/v1/stream/{streamId}/controls
+Authorization: Bearer {token}
+Content-Type: application/json
+```
+
+**Request Body:**
+```json
+{
+  "allowComments": true,
+  "allowGifts": true,
+  "isAgeRestricted": false
+}
+```
+
+#### Get Stream Analytics
+```
+GET /api/v1/stream/{streamId}/analytics
+Authorization: Bearer {token}
 ```
 
 ---

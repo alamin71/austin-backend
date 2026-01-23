@@ -58,7 +58,7 @@ Response:
 ### Step 2: Collection Import করুন
 1. Postman খুলুন
 2. **File → Import** ক্লিক করুন
-3. **Go-Live-APIs-Postman-Collection.json** file select করুন
+3. **Live-Streaming-API-v2.postman_collection.json** file select করুন
 4. **Import** button ক্লিক করুন
 
 ### Step 3: Environment Setup করুন

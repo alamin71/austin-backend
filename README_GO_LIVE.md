@@ -13,14 +13,23 @@
 - Socket.io events cheat sheet
 - Flutter code snippets
 
-### 2. **POSTMAN_TESTING_GUIDE.md** 🧪
-**যখন:** Postman এ APIs test করতে চান
+### 2. **Live-Streaming-API-v2.postman_collection.json** 📦
+**যখন:** Postman এ directly import করতে চান
+
+**কী আছে:**
+- সব 19 endpoints ready-to-use
+- Production server (http://65.1.20.111:5000) configured
+- Form-data examples with file upload
+- Environment variables setup
+
+### 3. **POSTMAN_COLLECTION_UPDATED.md** 🧪
+**যখন:** Postman testing এর বিস্তারিত জানতে চান
 - Step-by-step testing guide
 - প্রতিটি API এর full request/response examples
 - Environment setup instructions
 - Testing order recommendation
 
-### 3. **COMPLETE_TESTING_FLUTTER_GUIDE.md** 🦋
+### 4. **COMPLETE_TESTING_FLUTTER_GUIDE.md** 🎯
 **যখন:** Flutter app এ integrate করতে চান
 - Complete Flutter code examples
 - API service class
@@ -28,15 +37,15 @@
 - State management with Provider
 - Error handling
 
-### 4. **GO_LIVE_API_DOCUMENTATION.md** 📖
+### 5. **GO_LIVE_API_DOCUMENTATION.md** 📖
 **যখন:** Detailed API documentation দরকার
 - সব APIs এর বিস্তারিত বর্ণনা
 - Request body examples
 - Response formats
 - Error codes
 
-### 5. **Go-Live-APIs-Postman-Collection.json** 📦
-**যখন:** Postman এ directly import করতে চান
+### 6. **ANALYTICS_API.md** 📊
+**যখন:** Analytics Dashboard APIs জানতে চান
 - Pre-configured requests
 - All endpoints included
 - Environment variables setup
@@ -49,14 +58,14 @@
 ```
 1. Postman খুলুন
 2. File → Import
-3. Go-Live-APIs-Postman-Collection.json select করুন
-4. Environment create করুন (POSTMAN_TESTING_GUIDE.md দেখুন)
+3. Live-Streaming-API-v2.postman_collection.json select করুন
+4. Collection import হবে সব environment variables সহ
 5. Token দিয়ে requests test করুন
 ```
 
 ### Step 2: API Testing (30 minutes)
 ```
-1. POSTMAN_TESTING_GUIDE.md এ Testing Step by Step অনুসরণ করুন
+1. POSTMAN_COLLECTION_UPDATED.md এ Testing Step by Step অনুসরণ করুন
 2. প্রতিটি API test করুন
 3. Response এ মিলবে expectations এর সাথে
 4. IDs save করুন পরবর্তী requests এর জন্য
@@ -497,7 +506,8 @@ Built with ❤️ for live streaming platform
 | Document | Purpose |
 |----------|---------|
 | [QUICK_REFERENCE.md](QUICK_REFERENCE.md) | API endpoints cheat sheet |
-| [POSTMAN_TESTING_GUIDE.md](POSTMAN_TESTING_GUIDE.md) | Postman testing tutorial |
+| [Live-Streaming-API-v2.postman_collection.json](Live-Streaming-API-v2.postman_collection.json) | Postman collection (Import করুন) |
+| [POSTMAN_COLLECTION_UPDATED.md](POSTMAN_COLLECTION_UPDATED.md) | Postman testing tutorial |
 | [COMPLETE_TESTING_FLUTTER_GUIDE.md](COMPLETE_TESTING_FLUTTER_GUIDE.md) | Flutter implementation guide |
 | [GO_LIVE_API_DOCUMENTATION.md](GO_LIVE_API_DOCUMENTATION.md) | Full API documentation |
 | [Go-Live-APIs-Postman-Collection.json](Go-Live-APIs-Postman-Collection.json) | Postman collection import |

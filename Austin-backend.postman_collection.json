@@ -1,0 +1,1368 @@
+{
+  "info": {
+    "name": "Austin-backend - Complete Live Streaming API v2.0",
+    "_postman_id": "austin-backend-live-streaming",
+    "description": "Complete Live Streaming API with all endpoints: Authentication, Admin Profile, User Management, Streaming, Gifts, Polls, Analytics, Admin Dashboard, and more. Production-ready for go-live.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "1. Authentication (User & Admin)",
+      "item": [
+        {
+          "name": "User - Register",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"John Doe\",\n  \"email\": \"john@example.com\",\n  \"password\": \"password123\",\n  \"role\": \"user\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/user",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "user"]
+            }
+          }
+        },
+        {
+          "name": "User - Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "User - Refresh Token",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/refresh-token",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "auth", "refresh-token"]
+            }
+          }
+        },
+        {
+          "name": "User - Google Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"token\": \"google_id_token_here\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/google-login",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "auth", "google-login"]
+            }
+          }
+        },
+        {
+          "name": "User - Apple Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"token\": \"apple_id_token_here\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/apple-login",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "auth", "apple-login"]
+            }
+          }
+        },
+        {
+          "name": "User - Send OTP",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phone\": \"+8801234567890\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/send-otp",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "auth", "send-otp"]
+            }
+          }
+        },
+        {
+          "name": "User - Verify OTP",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phone\": \"+8801234567890\",\n  \"otp\": \"123456\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/verify-otp",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "auth", "verify-otp"]
+            }
+          }
+        },
+        {
+          "name": "User - Forgot Password",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"user@example.com\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/forget-password",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "auth", "forget-password"]
+            }
+          }
+        },
+        {
+          "name": "User - Verify Email",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"user@example.com\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/verify-email",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "auth", "verify-email"]
+            }
+          }
+        },
+        {
+          "name": "User - Verify Reset OTP",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"user@example.com\",\n  \"otp\": \"123456\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/verify-reset-otp",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "auth", "verify-reset-otp"]
+            }
+          }
+        },
+        {
+          "name": "User - Reset Password",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"user@example.com\",\n  \"otp\": \"123456\",\n  \"newPassword\": \"newpassword123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/reset-password",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "auth", "reset-password"]
+            }
+          }
+        },
+        {
+          "name": "User - Change Password",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{userToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"oldPassword\": \"currentpassword\",\n  \"newPassword\": \"newpassword123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/change-password",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "auth", "change-password"]
+            }
+          }
+        },
+        {
+          "name": "Admin - Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@example.com\",\n  \"password\": \"admin123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/admin/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "auth", "admin", "login"]
+            }
+          }
+        },
+        {
+          "name": "Admin - Forgot Password",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@example.com\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/admin/forget-password",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "auth", "admin", "forget-password"]
+            }
+          }
+        },
+        {
+          "name": "Admin - Verify Reset OTP",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@example.com\",\n  \"otp\": \"123456\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/admin/verify-reset-otp",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "auth", "admin", "verify-reset-otp"]
+            }
+          }
+        },
+        {
+          "name": "Admin - Reset Password",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@example.com\",\n  \"otp\": \"123456\",\n  \"newPassword\": \"newpassword123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/admin/reset-password",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "auth", "admin", "reset-password"]
+            }
+          }
+        },
+        {
+          "name": "Admin - Change Password",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"oldPassword\": \"currentpassword\",\n  \"newPassword\": \"newpassword123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/admin/change-password",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "auth", "admin", "change-password"]
+            }
+          }
+        },
+        {
+          "name": "Admin - Resend OTP",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@example.com\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/admin/resend-otp",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "auth", "admin", "resend-otp"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "1.5 Admin Profile",
+      "item": [
+        {
+          "name": "Get Admin Profile",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/admin/profile",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "admin", "profile"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Categories",
+      "item": [
+        {
+          "name": "Get All Categories",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/category?page=1&limit=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "category"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "20"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Category by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/category/{{categoryId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "category", "{{categoryId}}"]
+            }
+          }
+        },
+        {
+          "name": "Create Category (Admin)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Gaming\",\n  \"description\": \"Gaming streams and content\",\n  \"icon\": \"gaming-icon\",\n  \"isActive\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/category",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "category"]
+            }
+          }
+        },
+        {
+          "name": "Update Category (Admin)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Updated Gaming\",\n  \"isActive\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/category/{{categoryId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "category", "{{categoryId}}"]
+            }
+          }
+        },
+        {
+          "name": "Delete Category (Admin)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/category/{{categoryId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "category", "{{categoryId}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Stream Management (Complete)",
+      "item": [
+        {
+          "name": "Start Stream (FORM-DATA with Banner)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{userToken}}"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "title",
+                  "value": "Epic Gaming Session",
+                  "type": "text"
+                },
+                {
+                  "key": "description",
+                  "value": "Playing the latest games with viewers",
+                  "type": "text"
+                },
+                {
+                  "key": "category",
+                  "value": "{{categoryId}}",
+                  "type": "text"
+                },
+                {
+                  "key": "contentRating",
+                  "value": "PG-13",
+                  "type": "text"
+                },
+                {
+                  "key": "banner",
+                  "type": "file",
+                  "src": "/path/to/banner.jpg"
+                },
+                {
+                  "key": "bannerPosition",
+                  "value": "top",
+                  "type": "text"
+                },
+                {
+                  "key": "visibility",
+                  "value": "public",
+                  "type": "text"
+                },
+                {
+                  "key": "allowComments",
+                  "value": "true",
+                  "type": "text"
+                },
+                {
+                  "key": "allowGifts",
+                  "value": "true",
+                  "type": "text"
+                },
+                {
+                  "key": "enablePolls",
+                  "value": "true",
+                  "type": "text"
+                },
+                {
+                  "key": "enableAdBanners",
+                  "value": "false",
+                  "type": "text"
+                },
+                {
+                  "key": "isAgeRestricted",
+                  "value": "false",
+                  "type": "text"
+                },
+                {
+                  "key": "isRecordingEnabled",
+                  "value": "true",
+                  "type": "text"
+                },
+                {
+                  "key": "tags",
+                  "value": "gaming,valorant,live",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/stream/start",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "stream", "start"]
+            }
+          }
+        },
+        {
+          "name": "Get Live Streams",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/stream/live?page=1&limit=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "stream", "live"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "20"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Search Streams",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/stream/search?q=gaming",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "stream", "search"],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "gaming"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Stream Details",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/stream/{{streamId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "stream", "{{streamId}}"]
+            }
+          }
+        },
+        {
+          "name": "Get Streamer History",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/stream/streamer/{{userId}}/history?page=1&limit=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "stream", "streamer", "{{userId}}", "history"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "20"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Join Stream (Get Agora Token)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{userToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/stream/{{streamId}}/join",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "stream", "{{streamId}}", "join"]
+            }
+          }
+        },
+        {
+          "name": "Leave Stream",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{userToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/stream/{{streamId}}/leave",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "stream", "{{streamId}}", "leave"]
+            }
+          }
+        },
+        {
+          "name": "Like Stream",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{userToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/stream/{{streamId}}/like",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "stream", "{{streamId}}", "like"]
+            }
+          }
+        },
+        {
+          "name": "Send Chat Message",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{userToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"content\": \"Amazing stream! 🔥\",\n  \"type\": \"text\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/stream/{{streamId}}/chat",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "stream", "{{streamId}}", "chat"]
+            }
+          }
+        },
+        {
+          "name": "Update Stream Settings",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{userToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Updated Title\",\n  \"allowComments\": true,\n  \"allowGifts\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/stream/{{streamId}}/settings",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "stream", "{{streamId}}", "settings"]
+            }
+          }
+        },
+        {
+          "name": "Toggle Stream Controls",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{userToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"cameraOn\": true,\n  \"micOn\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/stream/{{streamId}}/controls",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "stream", "{{streamId}}", "controls"]
+            }
+          }
+        },
+        {
+          "name": "Get Stream Analytics",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{userToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/stream/{{streamId}}/analytics",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "stream", "{{streamId}}", "analytics"]
+            }
+          }
+        },
+        {
+          "name": "End Stream",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{userToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/stream/{{streamId}}/end",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "stream", "{{streamId}}", "end"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. Gifts Management",
+      "item": [
+        {
+          "name": "Get All Gifts",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/gift",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "gift"]
+            }
+          }
+        },
+        {
+          "name": "Get Gifts by Category",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/gift/category/{{categoryName}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "gift", "category", "{{categoryName}}"]
+            }
+          }
+        },
+        {
+          "name": "Get Gift by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/gift/{{giftId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "gift", "{{giftId}}"]
+            }
+          }
+        },
+        {
+          "name": "Create Gift (Admin)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Heart\",\n  \"description\": \"Show your love\",\n  \"image\": \"https://example.com/heart.png\",\n  \"animation\": \"https://example.com/heart.json\",\n  \"price\": 10,\n  \"category\": \"love\",\n  \"isActive\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/gift",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "gift"]
+            }
+          }
+        },
+        {
+          "name": "Update Gift (Admin)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Updated Heart\",\n  \"price\": 15\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/gift/{{giftId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "gift", "{{giftId}}"]
+            }
+          }
+        },
+        {
+          "name": "Delete Gift (Admin)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/gift/{{giftId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "gift", "{{giftId}}"]
+            }
+          }
+        },
+        {
+          "name": "Send Gift to Stream",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{userToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"gift\": \"{{giftId}}\",\n  \"quantity\": 1,\n  \"message\": \"Great stream!\",\n  \"isAnonymous\": false\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/gift/send/{{streamId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "gift", "send", "{{streamId}}"]
+            }
+          }
+        },
+        {
+          "name": "Get Stream Gifts",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{userToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/gift/stream/{{streamId}}/list",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "gift", "stream", "{{streamId}}", "list"]
+            }
+          }
+        },
+        {
+          "name": "Get Streamer Received Gifts",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{userToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/gift/streamer/received",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "gift", "streamer", "received"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "5. Polls Management",
+      "item": [
+        {
+          "name": "Create Poll (Streamer)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{userToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"question\": \"What game should I play next?\",\n  \"options\": [\"Valorant\", \"CS:GO\", \"Apex Legends\", \"Fortnite\"],\n  \"duration\": 300,\n  \"allowMultipleVotes\": false\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/poll/stream/{{streamId}}/create",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "poll", "stream", "{{streamId}}", "create"]
+            }
+          }
+        },
+        {
+          "name": "Vote on Poll",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{userToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"optionIndex\": 0\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/poll/{{pollId}}/vote",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "poll", "{{pollId}}", "vote"]
+            }
+          }
+        },
+        {
+          "name": "Get Poll Results",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/poll/{{pollId}}/results",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "poll", "{{pollId}}", "results"]
+            }
+          }
+        },
+        {
+          "name": "Get Active Poll",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/poll/stream/{{streamId}}/active",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "poll", "stream", "{{streamId}}", "active"]
+            }
+          }
+        },
+        {
+          "name": "Get All Stream Polls",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/poll/stream/{{streamId}}/all",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "poll", "stream", "{{streamId}}", "all"]
+            }
+          }
+        },
+        {
+          "name": "End Poll (Streamer)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{userToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/poll/{{pollId}}/end",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "poll", "{{pollId}}", "end"]
+            }
+          }
+        },
+        {
+          "name": "Delete Poll (Streamer)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{userToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/poll/{{pollId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "poll", "{{pollId}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "6. Analytics Dashboard",
+      "item": [
+        {
+          "name": "Platform Analytics (Admin)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/analytics/platform?startDate=2026-01-01&endDate=2026-01-31",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "analytics", "platform"],
+              "query": [
+                {
+                  "key": "startDate",
+                  "value": "2026-01-01"
+                },
+                {
+                  "key": "endDate",
+                  "value": "2026-01-31"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Real-time Analytics",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/analytics/realtime",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "analytics", "realtime"]
+            }
+          }
+        },
+        {
+          "name": "Streamer Analytics",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{userToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/analytics/streamer/{{userId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "analytics", "streamer", "{{userId}}"]
+            }
+          }
+        },
+        {
+          "name": "My Dashboard (Authenticated User)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{userToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/analytics/my-dashboard",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "analytics", "my-dashboard"]
+            }
+          }
+        },
+        {
+          "name": "Category Analytics",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/analytics/category/{{categoryId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "analytics", "category", "{{categoryId}}"]
+            }
+          }
+        },
+        {
+          "name": "Comparison Analytics",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{userToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/analytics/comparison",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "analytics", "comparison"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "7. User Profile",
+      "item": [
+        {
+          "name": "Get User Profile",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{userToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/user/profile",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "user", "profile"]
+            }
+          }
+        },
+        {
+          "name": "Update Profile (FORM-DATA)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{userToken}}"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "data",
+                  "value": "{\"name\":\"John Doe\",\"email\":\"john@example.com\"}",
+                  "type": "text"
+                },
+                {
+                  "key": "image",
+                  "type": "file",
+                  "src": "/path/to/profile.jpg"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/user/profile",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "user", "profile"]
+            }
+          }
+        },
+        {
+          "name": "Delete Profile",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{userToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/user/delete",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "user", "delete"]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://65.1.20.111:5000",
+      "type": "string"
+    },
+    {
+      "key": "userToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "adminToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "categoryId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "categoryName",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "streamId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "userId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "giftId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "pollId",
+      "value": "",
+      "type": "string"
+    }
+  ]
+}

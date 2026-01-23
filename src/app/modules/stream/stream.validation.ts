@@ -10,17 +10,47 @@ export const startStreamSchema = z.object({
                     errorMap: () => ({ message: 'Invalid content rating' }),
                })
                .optional(),
-          banner: z.string().url().optional(),
+          banner: z.string().optional(), // Can be file path or URL
           bannerPosition: z.enum(['top', 'bottom', 'center']).optional(),
           visibility: z.enum(['public', 'followers', 'subscribers']).optional(),
-          allowComments: z.boolean().optional(),
-          allowGifts: z.boolean().optional(),
-          enablePolls: z.boolean().optional(),
-          enableAdBanners: z.boolean().optional(),
-          isAgeRestricted: z.boolean().optional(),
-          isRecordingEnabled: z.boolean().optional(),
+          allowComments: z.preprocess(
+               (val) => (typeof val === 'string' ? val === 'true' : val),
+               z.boolean().optional()
+          ),
+          allowGifts: z.preprocess(
+               (val) => (typeof val === 'string' ? val === 'true' : val),
+               z.boolean().optional()
+          ),
+          enablePolls: z.preprocess(
+               (val) => (typeof val === 'string' ? val === 'true' : val),
+               z.boolean().optional()
+          ),
+          enableAdBanners: z.preprocess(
+               (val) => (typeof val === 'string' ? val === 'true' : val),
+               z.boolean().optional()
+          ),
+          isAgeRestricted: z.preprocess(
+               (val) => (typeof val === 'string' ? val === 'true' : val),
+               z.boolean().optional()
+          ),
+          isRecordingEnabled: z.preprocess(
+               (val) => (typeof val === 'string' ? val === 'true' : val),
+               z.boolean().optional()
+          ),
           background: z.string().optional(),
-          tags: z.array(z.string()).optional(),
+          tags: z.preprocess(
+               (val) => {
+                    if (typeof val === 'string') {
+                         try {
+                              return JSON.parse(val);
+                         } catch {
+                              return val.split(',').map(tag => tag.trim());
+                         }
+                    }
+                    return val;
+               },
+               z.array(z.string()).optional()
+          ),
      }),
 });
 

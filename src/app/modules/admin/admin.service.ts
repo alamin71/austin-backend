@@ -27,8 +27,17 @@ const getAdminFromDB = async (): Promise<IUser[]> => {
      return admins;
 };
 
+const getAdminProfileById = async (adminId: string): Promise<IUser | null> => {
+     const admin = await User.findById(adminId).select('-password');
+     if (!admin) {
+          throw new AppError(StatusCodes.NOT_FOUND, 'Admin not found');
+     }
+     return admin;
+};
+
 export const AdminService = {
      createAdminToDB,
      deleteAdminFromDB,
      getAdminFromDB,
+     getAdminProfileById,
 };

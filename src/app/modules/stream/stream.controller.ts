@@ -14,6 +14,11 @@ class StreamController {
                throw new AppError(StatusCodes.UNAUTHORIZED, 'User not authenticated');
           }
 
+          // Handle banner file upload
+          if (req.file) {
+               streamData.banner = `/uploads/banner/${req.file.filename}`;
+          }
+
           const stream = await StreamService.startStream(userId, streamData);
 
           sendResponse(res, {

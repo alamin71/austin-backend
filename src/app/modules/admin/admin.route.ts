@@ -10,6 +10,8 @@ router.post('/create-admin', auth(USER_ROLES.SUPER_ADMIN), validateRequest(Admin
 
 router.get('/get-admin', auth(USER_ROLES.SUPER_ADMIN), AdminController.getAdmin);
 
+router.get('/profile', auth(USER_ROLES.ADMIN, USER_ROLES.SUPER_ADMIN), AdminController.getAdminProfile);
+
 router.delete('/:id', auth(USER_ROLES.SUPER_ADMIN), AdminController.deleteAdmin);
 
 export const AdminRoutes = router;
