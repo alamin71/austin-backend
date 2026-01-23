@@ -3,11 +3,27 @@ import { StatusCodes } from 'http-status-codes';
 import catchAsync from '../../../shared/catchAsync.js';
 import sendResponse from '../../../shared/sendResponse.js';
 import CategoryService from './category.service.js';
+import AppError from '../../../errors/AppError.js';
 
 class CategoryController {
-     createCategory = catchAsync(async (req: Request, res: Response) => {
-          const categoryData = req.body;
-          const category = await CategoryService.createCategory(categoryData);
+         createCategory = catchAsync(async (req: Request, res: Response) => {
+              const categoryData: any = req.body;
+
+              // map uploaded image path from form-data
+              const files: any = req.files;
+              const imageFile = files?.image?.[0];
+         if (imageFile) {
+                   const baseUrl = `${req.protocol}://${req.get('host')}`;
+                   const normalizedPath = imageFile.path.replace(/\\/g, '/');
+                   categoryData.image = `${baseUrl}/${normalizedPath}`;
+         }
+
+         // enforce image required for form-data upload
+         if (!categoryData.image) {
+              throw new AppError(StatusCodes.BAD_REQUEST, 'Image is required');
+         }
+
+              const category = await CategoryService.createCategory(categoryData);
 
           sendResponse(res, {
                statusCode: StatusCodes.CREATED,
@@ -43,7 +59,17 @@ class CategoryController {
 
      updateCategory = catchAsync(async (req: Request, res: Response) => {
           const { categoryId } = req.params;
-          const updateData = req.body;
+         const updateData: any = req.body;
+
+         // map uploaded image path from form-data
+         const files: any = req.files;
+         const imageFile = files?.image?.[0];
+         if (imageFile) {
+              const baseUrl = `${req.protocol}://${req.get('host')}`;
+              const normalizedPath = imageFile.path.replace(/\\/g, '/');
+              updateData.image = `${baseUrl}/${normalizedPath}`;
+         }
+
           const category = await CategoryService.updateCategory(categoryId, updateData);
 
           sendResponse(res, {

@@ -13,7 +13,7 @@ router.get('/:categoryId', categoryController.getCategoryById);
 
 // Admin only routes - Create Category (with image upload)
 router.post(
-     '/create-category',
+     '/admin/create-category',
      auth('admin'),
      fileUploadHandler(),
      validateRequest(createCategorySchema),
@@ -22,13 +22,13 @@ router.post(
 
 // Admin only routes - Update Category (with image upload)
 router.put(
-     '/:categoryId',
+     '/admin/update-category/:categoryId',
      auth('admin'),
      fileUploadHandler(),
      validateRequest(updateCategorySchema),
      categoryController.updateCategory,
 );
 
-router.delete('/:categoryId', auth('admin'), categoryController.deleteCategory);
+router.delete('/admin/update-category/:categoryId', auth('admin'), categoryController.deleteCategory);
 
 export const CategoryRouter = router;
