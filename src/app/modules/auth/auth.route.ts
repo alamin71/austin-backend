@@ -70,6 +70,7 @@ router.post('/apple-login', AuthController.appleLogin);
 // OTP endpoints (User only)
 router.post('/send-otp', AuthController.sendOTP);
 router.post('/verify-otp', AuthController.verifyOTPAndLogin);
+router.post('/resend-otp', AuthController.resendOtp);
 
 // User password reset (email-based)
 router.post('/forget-password', validateRequest(AuthValidation.createForgetPasswordZodSchema), AuthController.forgetPassword);
