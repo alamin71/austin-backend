@@ -68,7 +68,6 @@ router.post('/google-login', AuthController.googleLogin);
 router.post('/apple-login', AuthController.appleLogin);
 
 // OTP endpoints (User only)
-router.post('/send-otp', AuthController.sendOTP);
 router.post('/verify-otp', AuthController.verifyOTPAndLogin);
 router.post('/resend-otp', AuthController.resendOtp);
 

@@ -130,27 +130,6 @@
               }
             },
             {
-              "name": "Send OTP",
-              "request": {
-                "method": "POST",
-                "header": [
-                  {
-                    "key": "Content-Type",
-                    "value": "application/json"
-                  }
-                ],
-                "body": {
-                  "mode": "raw",
-                  "raw": "{\n  \"phone\": \"+8801234567890\"\n}"
-                },
-                "url": {
-                  "raw": "{{baseUrl}}/api/v1/auth/send-otp",
-                  "host": ["{{baseUrl}}"],
-                  "path": ["api", "v1", "auth", "send-otp"]
-                }
-              }
-            },
-            {
               "name": "Verify OTP & Login",
               "request": {
                 "method": "POST",
