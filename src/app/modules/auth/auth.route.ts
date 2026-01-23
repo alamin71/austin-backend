@@ -41,13 +41,13 @@ const parseFormDataForValidation = (req: any, res: any, next: any) => {
      }
 };
 
-// Registration endpoint
-// router.post(
-//      '/register',
-//      validateRequest(AuthValidation.createRegisterZodSchema),  // ✅ JSON validation
-//      AuthController.registerUser,
-// );
-// Registration endpoint - validation
+
+
+// ============================================
+// USER AUTHENTICATION ENDPOINTS
+// ============================================
+
+// User login & registration
 router.post(
      '/register',
      upload.single('image'),
@@ -55,11 +55,6 @@ router.post(
      // validateRequest(AuthValidation.createRegisterZodSchema),
      AuthController.registerUser,
 );
-// ============================================
-// USER AUTHENTICATION ENDPOINTS
-// ============================================
-
-// User login & registration
 router.post('/login', validateRequest(AuthValidation.createLoginZodSchema), AuthController.loginUser);
 router.post('/refresh-token', AuthController.refreshToken);
 
@@ -76,23 +71,5 @@ router.post('/forget-password', validateRequest(AuthValidation.createForgetPassw
 router.post('/verify-email', validateRequest(AuthValidation.createVerifyEmailZodSchema), AuthController.verifyEmail);
 router.post('/verify-reset-otp', validateRequest(AuthValidation.createVerifyEmailZodSchema), AuthController.verifyResetOtp);
 router.post('/reset-password', validateRequest(AuthValidation.createResetPasswordZodSchema), AuthController.resetPassword);
-
-// ============================================
-// ADMIN AUTHENTICATION ENDPOINTS
-// ============================================
-
-// Admin login
-router.post('/admin/login', validateRequest(AuthValidation.createLoginZodSchema), AuthController.loginUser);
-
-// Admin password reset (OTP-based)
-router.post('/admin/forget-password', validateRequest(AuthValidation.createForgetPasswordZodSchema), AuthController.forgetPassword);
-router.post('/admin/verify-reset-otp', validateRequest(AuthValidation.createVerifyEmailZodSchema), AuthController.verifyResetOtp);
-router.post('/admin/reset-password', validateRequest(AuthValidation.createResetPasswordZodSchema), AuthController.resetPassword);
-
-// Admin password change (logged in only)
-router.patch('/admin/change-password', auth(USER_ROLES.ADMIN, USER_ROLES.SUPER_ADMIN), validateRequest(AuthValidation.createChangePasswordZodSchema), AuthController.changePassword);
-
-// Admin resend OTP
-router.post('/admin/resend-otp', AuthController.resendOtp);
 
 export const AuthRouter = router;

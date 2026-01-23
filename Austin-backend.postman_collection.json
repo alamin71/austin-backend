@@ -26,18 +26,28 @@
                       "type": "text"
                     },
                     {
+                      "key": "userName",
+                      "value": "johndoe123",
+                      "type": "text"
+                    },
+                    {
                       "key": "email",
                       "value": "john@example.com",
                       "type": "text"
                     },
                     {
                       "key": "password",
-                      "value": "password123",
+                      "value": "password@123",
                       "type": "text"
                     },
                     {
-                      "key": "role",
-                      "value": "user",
+                      "key": "confirmPassword",
+                      "value": "password@123",
+                      "type": "text"
+                    },
+                    {
+                      "key": "bio",
+                      "value": "I love streaming",
                       "type": "text"
                     },
                     {
@@ -141,7 +151,7 @@
                 ],
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"phone\": \"+8801234567890\",\n  \"otp\": \"123456\"\n}"
+                  "raw": "{\n  \"email\": \"user@example.com\",\n  \"otp\": \"123456\"\n}"
                 },
                 "url": {
                   "raw": "{{baseUrl}}/api/v1/auth/verify-otp",
@@ -162,7 +172,7 @@
                 ],
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"phone\": \"+8801234567890\"\n}"
+                  "raw": "{\n  \"email\": \"user@example.com\"\n}"
                 },
                 "url": {
                   "raw": "{{baseUrl}}/api/v1/auth/resend-otp",
@@ -204,7 +214,7 @@
                 ],
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"email\": \"user@example.com\"\n}"
+                  "raw": "{\n  \"email\": \"user@example.com\",\n  \"oneTimeCode\": 123456\n}"
                 },
                 "url": {
                   "raw": "{{baseUrl}}/api/v1/auth/verify-email",
@@ -246,7 +256,7 @@
                 ],
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"email\": \"user@example.com\",\n  \"otp\": \"123456\",\n  \"newPassword\": \"newpassword123\"\n}"
+                  "raw": "{\n  \"newPassword\": \"newpassword@123\",\n  \"confirmPassword\": \"newpassword@123\"\n}"
                 },
                 "url": {
                   "raw": "{{baseUrl}}/api/v1/auth/reset-password",
@@ -271,7 +281,7 @@
                 ],
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"oldPassword\": \"currentpassword\",\n  \"newPassword\": \"newpassword123\"\n}"
+                  "raw": "{\n  \"currentPassword\": \"currentpassword123\",\n  \"newPassword\": \"newpassword@123\",\n  \"confirmPassword\": \"newpassword@123\"\n}"
                 },
                 "url": {
                   "raw": "{{baseUrl}}/api/v1/auth/change-password",
