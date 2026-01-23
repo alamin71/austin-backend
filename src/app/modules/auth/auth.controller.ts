@@ -102,7 +102,7 @@ const resetPasswordByUrl = catchAsync(async (req, res) => {
 });
 
 const resetPassword = catchAsync(async (req, res) => {
-     const token: any = req.headers.resettoken;
+     const token: any = req.headers.resettoken || req.headers.authorization?.split(' ')[1] || '';
      const result = await AuthService.resetPasswordToDB(token!, req.body);
      sendResponse(res, {
           success: true,

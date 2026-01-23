@@ -105,7 +105,7 @@ const adminVerifyResetOtp = catchAsync(async (req: Request, res: Response) => {
 });
 
 const adminResetPassword = catchAsync(async (req: Request, res: Response) => {
-     const token = req.headers.authorization?.split(' ')[1] || '';
+     const token = (req.headers.resettoken as string) || req.headers.authorization?.split(' ')[1] || '';
      const result = await AdminService.adminResetPasswordToDB(token, req.body);
      sendResponse(res, {
           success: true,
