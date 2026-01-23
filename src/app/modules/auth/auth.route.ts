@@ -95,11 +95,4 @@ router.patch('/admin/change-password', auth(USER_ROLES.ADMIN, USER_ROLES.SUPER_A
 // Admin resend OTP
 router.post('/admin/resend-otp', AuthController.resendOtp);
 
-// ============================================
-// LEGACY ENDPOINTS (keeping for compatibility)
-// ============================================
-router.post('/dashboard/forget-password', validateRequest(AuthValidation.createForgetPasswordZodSchema), AuthController.forgetPasswordByUrl);
-router.post('/dashboard/reset-password', auth(USER_ROLES.ADMIN, USER_ROLES.VENDOR), validateRequest(AuthValidation.createResetPasswordZodSchema), AuthController.resetPasswordByUrl);
-router.post('/change-password', auth(USER_ROLES.ADMIN, USER_ROLES.USER, USER_ROLES.VENDOR), validateRequest(AuthValidation.createChangePasswordZodSchema), AuthController.changePassword);
-
 export const AuthRouter = router;
