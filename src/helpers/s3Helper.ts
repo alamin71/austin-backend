@@ -1,4 +1,4 @@
-import { S3Client, PutObjectCommand, DeleteObjectCommand, ObjectCannedACL } from '@aws-sdk/client-s3';
+import { S3Client, PutObjectCommand, DeleteObjectCommand } from '@aws-sdk/client-s3';
 import config from '../config/index.js';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -22,7 +22,6 @@ export const uploadFileToS3 = async (file: Express.Multer.File, folder: string =
           Key: key,
           Body: file.buffer,
           ContentType: file.mimetype,
-          ACL: 'public-read' as ObjectCannedACL, // Make files publicly accessible
      };
 
      try {
