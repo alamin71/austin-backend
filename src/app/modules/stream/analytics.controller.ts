@@ -4,6 +4,7 @@ import sendResponse from '../../../shared/sendResponse.js';
 import { StatusCodes } from 'http-status-codes';
 import AnalyticsService from './analytics.service.js';
 import AppError from '../../../errors/AppError.js';
+import { USER_ROLES } from '../../../enums/user.js';
 
 class AnalyticsController {
      /**
@@ -39,7 +40,7 @@ class AnalyticsController {
           const userId = (req.user as any)?._id || (req.user as any)?.id;
 
           // Check if user is requesting their own analytics or is admin
-          if (streamerId !== userId.toString() && (req.user as any)?.role !== 'admin') {
+          if (streamerId !== userId.toString() && (req.user as any)?.role !== USER_ROLES.ADMIN) {
                throw new AppError(StatusCodes.FORBIDDEN, 'You can only view your own analytics');
           }
 
@@ -138,7 +139,7 @@ class AnalyticsController {
 
           // If streamerId provided, check permission
           let targetStreamerId = streamerId as string | undefined;
-          if (targetStreamerId && targetStreamerId !== userId?.toString() && (req.user as any)?.role !== 'admin') {
+          if (targetStreamerId && targetStreamerId !== userId?.toString() && (req.user as any)?.role !== USER_ROLES.ADMIN) {
                throw new AppError(StatusCodes.FORBIDDEN, 'You can only view your own analytics');
           }
 

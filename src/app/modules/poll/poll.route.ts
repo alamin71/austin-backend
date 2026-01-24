@@ -3,13 +3,14 @@ import PollController from './poll.controller.js';
 import auth from '../../middleware/auth.js';
 import validateRequest from '../../middleware/validateRequest.js';
 import { createPollSchema, votePollSchema } from './poll.validation.js';
+import { USER_ROLES } from '../../../enums/user.js';
 
 const router = Router();
 
 // Create poll (Streamer only)
 router.post(
      '/stream/:streamId/create',
-     auth('streamer', 'business'),
+     auth(USER_ROLES.USER),
      validateRequest(createPollSchema),
      PollController.createPoll,
 );
@@ -17,7 +18,7 @@ router.post(
 // Vote on poll
 router.post(
      '/:pollId/vote',
-     auth('user', 'streamer', 'business'),
+     auth(USER_ROLES.USER),
      validateRequest(votePollSchema),
      PollController.votePoll,
 );
@@ -34,14 +35,14 @@ router.get('/stream/:streamId/all', PollController.getStreamPolls);
 // End poll (Streamer only)
 router.post(
      '/:pollId/end',
-     auth('streamer', 'business'),
+     auth(USER_ROLES.USER),
      PollController.endPoll,
 );
 
 // Delete poll (Streamer only)
 router.delete(
      '/:pollId',
-     auth('streamer', 'business'),
+     auth(USER_ROLES.USER),
      PollController.deletePoll,
 );
 

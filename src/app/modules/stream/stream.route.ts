@@ -2,6 +2,7 @@ import express from 'express';
 import streamController from './stream.controller.js';
 import auth from '../../middleware/auth.js';
 import validateRequest from '../../middleware/validateRequest.js';
+import { USER_ROLES } from '../../../enums/user.js';
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
@@ -55,52 +56,52 @@ router.get('/:streamId', streamController.getStreamDetails);
 // Protected routes (authenticated users only)
 router.post(
      '/start',
-     auth('user', 'streamer', 'business'),
+     auth(USER_ROLES.USER),
      upload.single('banner'),
      validateRequest(startStreamSchema),
      streamController.startStream,
 );
 router.post(
      '/:streamId/end',
-     auth('user', 'streamer', 'business'),
+     auth(USER_ROLES.USER),
      streamController.endStream,
 );
 router.post(
      '/:streamId/join',
-     auth('user', 'streamer', 'business'),
+     auth(USER_ROLES.USER),
      streamController.joinStream,
 );
 router.post(
      '/:streamId/leave',
-     auth('user', 'streamer', 'business'),
+     auth(USER_ROLES.USER),
      streamController.leaveStream,
 );
 router.post(
      '/:streamId/like',
-     auth('user', 'streamer', 'business'),
+     auth(USER_ROLES.USER),
      streamController.likeStream,
 );
 router.post(
      '/:streamId/chat',
-     auth('user', 'streamer', 'business'),
+     auth(USER_ROLES.USER),
      validateRequest(sendChatMessageSchema),
      streamController.sendChatMessage,
 );
 router.put(
      '/:streamId/settings',
-     auth('user', 'streamer', 'business'),
+     auth(USER_ROLES.USER),
      validateRequest(updateStreamSettingsSchema),
      streamController.updateStreamSettings,
 );
 router.put(
      '/:streamId/controls',
-     auth('user', 'streamer', 'business'),
+     auth(USER_ROLES.USER),
      validateRequest(toggleStreamControlsSchema),
      streamController.toggleStreamControls,
 );
 router.get(
      '/:streamId/analytics',
-     auth('user', 'streamer', 'business'),
+     auth(USER_ROLES.USER),
      streamController.getStreamAnalytics,
 );
 

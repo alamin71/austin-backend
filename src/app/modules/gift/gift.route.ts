@@ -2,6 +2,7 @@ import { Router } from 'express';
 import GiftController from './gift.controller.js';
 import auth from '../../middleware/auth.js';
 import validateRequest from '../../middleware/validateRequest.js';
+import { USER_ROLES } from '../../../enums/user.js';
 import {
      createGiftSchema,
      updateGiftSchema,
@@ -18,33 +19,33 @@ router.get('/:giftId', GiftController.getGiftById);
 // Admin routes
 router.post(
      '/',
-     auth('admin'),
+     auth(USER_ROLES.ADMIN),
      validateRequest(createGiftSchema),
      GiftController.createGift,
 );
 router.put(
      '/:giftId',
-     auth('admin'),
+     auth(USER_ROLES.ADMIN),
      validateRequest(updateGiftSchema),
      GiftController.updateGift,
 );
-router.delete('/:giftId', auth('admin'), GiftController.deleteGift);
+router.delete('/:giftId', auth(USER_ROLES.ADMIN), GiftController.deleteGift);
 
 // User routes
 router.post(
      '/send/:streamId',
-     auth('user', 'streamer', 'business'),
+     auth(USER_ROLES.USER),
      validateRequest(sendGiftSchema),
      GiftController.sendGift,
 );
 router.get(
      '/stream/:streamId/list',
-     auth('user', 'streamer', 'business', 'admin'),
+     auth(USER_ROLES.USER, USER_ROLES.ADMIN),
      GiftController.getStreamGifts,
 );
 router.get(
      '/streamer/received',
-     auth('streamer', 'business'),
+     auth(USER_ROLES.USER),
      GiftController.getStreamerGifts,
 );
 
