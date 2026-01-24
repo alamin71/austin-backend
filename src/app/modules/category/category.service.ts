@@ -69,10 +69,15 @@ class CategoryService {
       */
      static async updateCategory(categoryId: string, updateData: any) {
           try {
+               // Only allow title and image fields to be updated
+               const sanitizedData: any = {};
+               if (updateData.title !== undefined) sanitizedData.title = updateData.title;
+               if (updateData.image !== undefined) sanitizedData.image = updateData.image;
+
                // Check if title is being updated and if it already exists (excluding current document)
-               if (updateData.title) {
+               if (sanitizedData.title) {
                     const existingCategory = await Category.findOne({
-                         title: updateData.title,
+                         title: sanitizedData.title,
                          _id: { $ne: categoryId },
                     });
 
@@ -84,7 +89,7 @@ class CategoryService {
                     }
                }
 
-               const category = await Category.findByIdAndUpdate(categoryId, updateData, {
+               const category = await Category.findByIdAndUpdate(categoryId, sanitizedData, {
                     new: true,
                     runValidators: true,
                });
