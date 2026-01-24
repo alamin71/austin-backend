@@ -13,7 +13,9 @@ const s3Client = new S3Client({
 export const uploadFileToS3 = async (file: Express.Multer.File, folder: string = 'uploads'): Promise<string> => {
      if (!file) return '';
 
-     const key = `${folder}/${uuidv4()}-${Date.now()}-${file.originalname}`;
+     // Normalize filename to avoid spaces/special chars breaking public URLs
+     const safeName = file.originalname.replace(/\s+/g, '-');
+     const key = `${folder}/${uuidv4()}-${Date.now()}-${safeName}`;
 
      const params = {
           Bucket: config.aws_s3_bucket_name,
