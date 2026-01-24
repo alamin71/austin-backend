@@ -1,4 +1,5 @@
 import express from 'express';
+import multer from 'multer';
 import { USER_ROLES } from '../../../enums/user.js';
 import { AdminController } from './admin.controller.js';
 import { AdminValidation } from './admin.validation.js';
@@ -7,8 +8,22 @@ import auth from '../../middleware/auth.js';
 import validateRequest from '../../middleware/validateRequest.js';
 import categoryController from '../category/category.controller.js';
 import { createCategorySchema, updateCategorySchema } from '../category/category.validation.js';
-import fileUploadHandler from '../../middleware/fileUploadHandler.js';
+
 const router = express.Router();
+
+// Multer for category image uploads (memory storage for S3)
+const categoryUpload = multer({
+     storage: multer.memoryStorage(),
+     limits: { fileSize: 5 * 1024 * 1024 },
+     fileFilter: (req, file, cb) => {
+          const allowedTypes = ['image/png', 'image/jpg', 'image/jpeg', 'image/webp'];
+          if (allowedTypes.includes(file.mimetype)) {
+               cb(null, true);
+          } else {
+               cb(new Error('Only .png, .jpg, .jpeg, .webp files are allowed'));
+          }
+     },
+});
 
 // ============================================
 // ADMIN AUTHENTICATION ENDPOINTS
@@ -47,7 +62,7 @@ router.delete('/:id', auth(USER_ROLES.SUPER_ADMIN), AdminController.deleteAdmin)
 router.post(
   '/create-category',
   auth(USER_ROLES.ADMIN, USER_ROLES.SUPER_ADMIN),
-  fileUploadHandler(),
+  categoryUpload.fields([{ name: 'image', maxCount: 1 }]),
   validateRequest(createCategorySchema),
   categoryController.createCategory,
 );
@@ -55,7 +70,7 @@ router.post(
 router.put(
   '/update-category/:categoryId',
   auth(USER_ROLES.ADMIN, USER_ROLES.SUPER_ADMIN),
-  fileUploadHandler(),
+  categoryUpload.fields([{ name: 'image', maxCount: 1 }]),
   validateRequest(updateCategorySchema),
   categoryController.updateCategory,
 );
