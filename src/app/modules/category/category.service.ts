@@ -36,8 +36,7 @@ class CategoryService {
       */
      static async getAllCategories(includeInactive: boolean = false) {
           try {
-               const query = includeInactive ? {} : { isActive: true };
-               const categories = await Category.find(query).sort({ order: 1, title: 1 });
+               const categories = await Category.find().sort({ title: 1 });
 
                return categories;
           } catch (error) {
