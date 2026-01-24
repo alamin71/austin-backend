@@ -83,7 +83,7 @@ class StreamService {
                     description: streamData.description,
                     category: streamData.category,
                     contentRating: streamData.contentRating || 'PG',
-                    banner: streamData.banner,
+                    banner: streamData.banner, // Should contain S3 URL from controller
                     bannerPosition: streamData.bannerPosition || 'top',
                     visibility: streamData.visibility || 'public',
                     status: 'live',
@@ -107,6 +107,8 @@ class StreamService {
                     },
                     tags: streamData.tags || [],
                });
+
+               logger.info(`Stream created with banner: ${streamData.banner || 'none'}`);
 
                await stream.save();
 

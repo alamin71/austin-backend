@@ -15,10 +15,13 @@ class StreamController {
                throw new AppError(StatusCodes.UNAUTHORIZED, 'User not authenticated');
           }
 
-          // Upload banner to S3
+          // Upload banner to S3 if provided
           if (req.file) {
                const s3Url = await uploadFileToS3(req.file, 'stream/banner');
                streamData.banner = s3Url;
+          } else {
+               // Banner might be optional, but log if not provided
+               console.log('Warning: No banner file provided for stream');
           }
 
           const stream = await StreamService.startStream(userId, streamData);
