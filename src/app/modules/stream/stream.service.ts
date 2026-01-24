@@ -9,6 +9,7 @@ import { Message } from './message.model.js';
 import { User } from '../user/user.model.js';
 import CategoryService from '../category/category.service.js';
 import { logger, errorLogger } from '../../../shared/logger.js';
+import { uploadFileToS3 } from '../../../helpers/s3Helper.js';
 
 class StreamService {
      /**
@@ -156,6 +157,19 @@ class StreamService {
                               1000,
                     )
                     : 0;
+
+               // TODO: Get recording from Agora and upload to S3
+               // When stream ends, fetch recording from Agora's cloud recording service
+               // For now, we're marking it ready for recording data
+               if (stream.isRecordingEnabled) {
+                    // Placeholder: In production, fetch actual recording file from Agora
+                    // Example:
+                    // const recordingBuffer = await fetchAgoraRecording(stream.agora.channelName);
+                    // const recordingFile: Express.Multer.File = { buffer: recordingBuffer, originalname: `${streamId}.mp4`, ... };
+                    // const recordingUrl = await uploadFileToS3(recordingFile, 'stream/recordings');
+                    // stream.recordingUrl = recordingUrl;
+                    logger.info(`Recording enabled for stream ${streamId} - awaiting Agora webhook callback`);
+               }
 
                stream.status = 'ended';
                stream.endedAt = new Date();

@@ -4,6 +4,7 @@ import catchAsync from '../../../shared/catchAsync.js';
 import sendResponse from '../../../shared/sendResponse.js';
 import StreamService from './stream.service.js';
 import AppError from '../../../errors/AppError.js';
+import { uploadFileToS3 } from '../../../helpers/s3Helper.js';
 
 class StreamController {
      startStream = catchAsync(async (req: Request, res: Response) => {
@@ -14,9 +15,10 @@ class StreamController {
                throw new AppError(StatusCodes.UNAUTHORIZED, 'User not authenticated');
           }
 
-          // Handle banner file upload
+          // Upload banner to S3
           if (req.file) {
-               streamData.banner = `/uploads/banner/${req.file.filename}`;
+               const s3Url = await uploadFileToS3(req.file, 'stream/banner');
+               streamData.banner = s3Url;
           }
 
           const stream = await StreamService.startStream(userId, streamData);
