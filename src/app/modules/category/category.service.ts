@@ -10,13 +10,13 @@ class CategoryService {
      static async createCategory(categoryData: any) {
           try {
                const existingCategory = await Category.findOne({
-                    $or: [{ title: categoryData.title }, { slug: categoryData.slug }],
+                    title: categoryData.title,
                });
 
                if (existingCategory) {
                     throw new AppError(
                          StatusCodes.CONFLICT,
-                         'Category with this title or slug already exists',
+                         'Category with this title already exists',
                     );
                }
 
