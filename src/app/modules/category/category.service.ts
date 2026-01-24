@@ -69,6 +69,21 @@ class CategoryService {
       */
      static async updateCategory(categoryId: string, updateData: any) {
           try {
+               // Check if title is being updated and if it already exists (excluding current document)
+               if (updateData.title) {
+                    const existingCategory = await Category.findOne({
+                         title: updateData.title,
+                         _id: { $ne: categoryId },
+                    });
+
+                    if (existingCategory) {
+                         throw new AppError(
+                              StatusCodes.CONFLICT,
+                              'Category with this title already exists',
+                         );
+                    }
+               }
+
                const category = await Category.findByIdAndUpdate(categoryId, updateData, {
                     new: true,
                     runValidators: true,
