@@ -1,9 +1,11 @@
+import { Request, Response } from 'express';
 import { StatusCodes } from 'http-status-codes';
 import catchAsync from '../../../shared/catchAsync.js';
 import sendResponse from '../../../shared/sendResponse.js';
 import { UserService } from './user.service.js';
 import config from '../../../config/index.js';
 import bcrypt from 'bcrypt';
+import { uploadFileToS3 } from '../../../helpers/s3Helper.js';
 const createUser = catchAsync(async (req, res) => {
      const { ...userData } = req.body;
      const result = await UserService.createUserToDB(userData);
