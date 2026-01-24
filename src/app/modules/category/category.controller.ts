@@ -4,21 +4,21 @@ import catchAsync from '../../../shared/catchAsync.js';
 import sendResponse from '../../../shared/sendResponse.js';
 import CategoryService from './category.service.js';
 import AppError from '../../../errors/AppError.js';
+import { uploadFileToS3, deleteFileFromS3 } from '../../../helpers/s3Helper.js';
 
 class CategoryController {
          createCategory = catchAsync(async (req: Request, res: Response) => {
               const categoryData: any = req.body;
 
-              // map uploaded image path from form-data
+              // Upload image to S3
               const files: any = req.files;
               const imageFile = files?.image?.[0];
          if (imageFile) {
-                   const baseUrl = `${req.protocol}://${req.get('host')}`;
-                   const normalizedPath = imageFile.path.replace(/\\/g, '/');
-                   categoryData.image = `${baseUrl}/${normalizedPath}`;
+                   const s3Url = await uploadFileToS3(imageFile, 'category');
+                   categoryData.image = s3Url;
          }
 
-         // enforce image required for form-data upload
+         // enforce image required
          if (!categoryData.image) {
               throw new AppError(StatusCodes.BAD_REQUEST, 'Image is required');
          }
@@ -61,13 +61,12 @@ class CategoryController {
           const { categoryId } = req.params;
          const updateData: any = req.body;
 
-         // map uploaded image path from form-data
+         // Upload new image to S3 if provided
          const files: any = req.files;
          const imageFile = files?.image?.[0];
          if (imageFile) {
-              const baseUrl = `${req.protocol}://${req.get('host')}`;
-              const normalizedPath = imageFile.path.replace(/\\/g, '/');
-              updateData.image = `${baseUrl}/${normalizedPath}`;
+              const s3Url = await uploadFileToS3(imageFile, 'category');
+              updateData.image = s3Url;
          }
 
           const category = await CategoryService.updateCategory(categoryId, updateData);
