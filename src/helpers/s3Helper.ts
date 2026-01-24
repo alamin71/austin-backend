@@ -20,6 +20,7 @@ export const uploadFileToS3 = async (file: Express.Multer.File, folder: string =
           Key: key,
           Body: file.buffer,
           ContentType: file.mimetype,
+          ACL: 'public-read', // Make files publicly accessible
      };
 
      try {

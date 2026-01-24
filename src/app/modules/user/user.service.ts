@@ -3,7 +3,6 @@ import { JwtPayload } from 'jsonwebtoken';
 import { USER_ROLES } from '../../../enums/user.js';
 import { emailHelper } from '../../../helpers/emailHelper.js';
 import { emailTemplate } from '../../../shared/emailTemplate.js';
-import unlinkFile from '../../../shared/unlinkFile.js';
 import { IUser } from './user.interface.js';
 import { User } from './user.model.js';
 import AppError from '../../../errors/AppError.js';
@@ -61,10 +60,8 @@ const updateProfileToDB = async (user: JwtPayload, payload: Partial<IUser>): Pro
           throw new AppError(StatusCodes.BAD_REQUEST, "User doesn't exist!");
      }
 
-     //unlink file here
-     if (payload.image) {
-          unlinkFile(isExistUser.image);
-     }
+     // S3 handles file storage now, no local unlink needed
+     // Old avatar can be deleted from S3 if needed via deleteFileFromS3
 
      const updateDoc = await User.findOneAndUpdate({ _id: id }, payload, {
           new: true,

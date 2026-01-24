@@ -39,6 +39,14 @@ const updateProfile = catchAsync(async (req, res) => {
           req.body.password = await bcrypt.hash(req.body.password, Number(config.bcrypt_salt_rounds));
      }
 
+     // Upload image/avatar to S3 if provided
+     const files: any = req.files;
+     const imageFile = files?.image?.[0];
+     if (imageFile) {
+          const s3Url = await uploadFileToS3(imageFile, 'user/avatar');
+          req.body.avatar = s3Url;
+     }
+
      const result = await UserService.updateProfileToDB(user, req.body);
 
      sendResponse(res, {
