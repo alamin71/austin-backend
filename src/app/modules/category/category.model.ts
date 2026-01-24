@@ -11,9 +11,9 @@ const categorySchema = new Schema<ICategory>(
           },
           slug: {
                type: String,
-               required: true,
                unique: true,
                lowercase: true,
+               sparse: true,
           },
           description: {
                type: String,
@@ -21,6 +21,7 @@ const categorySchema = new Schema<ICategory>(
           },
           image: {
                type: String,
+               required: true,
           },
           icon: {
                type: String,
@@ -28,10 +29,6 @@ const categorySchema = new Schema<ICategory>(
           isActive: {
                type: Boolean,
                default: true,
-          },
-          order: {
-               type: Number,
-               default: 0,
           },
           streamCount: {
                type: Number,
