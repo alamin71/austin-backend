@@ -44,6 +44,41 @@ const getAdminProfileById = async (adminId: string): Promise<IUser | null> => {
      return admin;
 };
 
+const updateAdminProfile = async (adminId: string, payload: any, file?: any): Promise<IUser | null> => {
+     const admin = await User.findById(adminId);
+     if (!admin) {
+          throw new AppError(StatusCodes.NOT_FOUND, 'Admin not found');
+     }
+
+     // Update allowed fields only
+     const updateData: any = {};
+     
+     if (payload.name) {
+          updateData.name = payload.name;
+     }
+     if (payload.userName) {
+          updateData.userName = payload.userName;
+     }
+     if (payload.email) {
+          updateData.email = payload.email;
+     }
+
+     // Handle image upload
+     if (file) {
+          const { uploadFileToS3 } = await import('../../../helpers/s3Helper.js');
+          const s3Url = await uploadFileToS3(file, 'admin/profile');
+          updateData.image = s3Url;
+     }
+
+     const result = await User.findByIdAndUpdate(
+          { _id: adminId },
+          updateData,
+          { new: true }
+     ).select('_id name userName email role image status verified isDeleted createdAt updatedAt');
+
+     return result;
+};
+
 const changePasswordToDB = async (adminId: string, payload: any): Promise<IUser | null> => {
      const { currentPassword, newPassword, confirmPassword } = payload;
      const admin = await User.findById(adminId).select('+password');
@@ -175,6 +210,7 @@ export const AdminService = {
      deleteAdminFromDB,
      getAdminFromDB,
      getAdminProfileById,
+     updateAdminProfile,
      changePasswordToDB,
      adminLoginToDB,
      adminForgetPasswordToDB,

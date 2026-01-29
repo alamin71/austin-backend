@@ -11,6 +11,20 @@ import { createCategorySchema, updateCategorySchema } from '../category/category
 
 const router = express.Router();
 
+// Multer for admin profile image uploads
+const adminUpload = multer({
+     storage: multer.memoryStorage(),
+     limits: { fileSize: 5 * 1024 * 1024 },
+     fileFilter: (req, file, cb) => {
+          const allowedTypes = ['image/png', 'image/jpg', 'image/jpeg', 'image/webp'];
+          if (allowedTypes.includes(file.mimetype)) {
+               cb(null, true);
+          } else {
+               cb(new Error('Only .png, .jpg, .jpeg, .webp files are allowed'));
+          }
+     },
+});
+
 // Multer for category image uploads (memory storage for S3)
 const categoryUpload = multer({
      storage: multer.memoryStorage(),
@@ -52,6 +66,13 @@ router.post('/create-admin', auth(USER_ROLES.SUPER_ADMIN), validateRequest(Admin
 router.get('/get-admin', auth(USER_ROLES.SUPER_ADMIN), AdminController.getAdmin);
 
 router.get('/profile', auth(USER_ROLES.ADMIN, USER_ROLES.SUPER_ADMIN), AdminController.getAdminProfile);
+
+router.patch(
+  '/profile/update',
+  auth(USER_ROLES.ADMIN, USER_ROLES.SUPER_ADMIN),
+  adminUpload.fields([{ name: 'image', maxCount: 1 }]),
+  AdminController.updateAdminProfile,
+);
 
 router.delete('/:id', auth(USER_ROLES.SUPER_ADMIN), AdminController.deleteAdmin);
 

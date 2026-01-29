@@ -54,6 +54,25 @@ const getAdminProfile = catchAsync(async (req: Request, res: Response) => {
      });
 });
 
+const updateAdminProfile = catchAsync(async (req: Request, res: Response) => {
+     const adminId = (req.user as any)?._id || (req.user as any)?.id;
+     
+     if (!adminId) {
+          throw new Error('Admin not authenticated');
+     }
+
+     const updateData = req.body;
+     const imageFile = (req.files as any)?.image?.[0];
+
+     const result = await AdminService.updateAdminProfile(adminId, updateData, imageFile);
+     sendResponse(res, {
+          statusCode: StatusCodes.OK,
+          success: true,
+          message: 'Admin Profile Updated Successfully',
+          data: result,
+     });
+});
+
 const changePassword = catchAsync(async (req: Request, res: Response) => {
      const adminId = (req.user as any)?._id || (req.user as any)?.id;
      
@@ -130,8 +149,7 @@ export const AdminController = {
      deleteAdmin,
      createAdmin,
      getAdmin,
-     getAdminProfile,
-     changePassword,
+     getAdminProfile,     updateAdminProfile,     changePassword,
      adminLogin,
      adminForgetPassword,
      adminVerifyResetOtp,
