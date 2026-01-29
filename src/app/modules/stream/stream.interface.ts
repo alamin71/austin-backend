@@ -9,7 +9,7 @@ export interface IStream {
      contentRating: 'G' | 'PG' | 'PG-13' | 'R' | '18+';
      banner?: string;
      bannerPosition?: 'top' | 'bottom' | 'center';
-     status: 'scheduled' | 'live' | 'ended';
+     status: 'scheduled' | 'live' | 'paused' | 'ended';
      visibility: 'public' | 'followers' | 'subscribers';
      agora?: {
           channelName: string;

@@ -45,6 +45,16 @@ router.post(
      streamController.startStream,
 );
 router.post(
+     '/:streamId/pause',
+     auth(USER_ROLES.USER),
+     streamController.pauseStream,
+);
+router.post(
+     '/:streamId/resume',
+     auth(USER_ROLES.USER),
+     streamController.resumeStream,
+);
+router.post(
      '/:streamId/end',
      auth(USER_ROLES.USER),
      streamController.endStream,

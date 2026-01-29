@@ -137,6 +137,36 @@ class StreamService {
      /**
       * End a live stream
       */
+     static async pauseStream(streamId: string) {
+          const stream = await Stream.findById(streamId);
+          if (!stream) {
+               throw new AppError(StatusCodes.NOT_FOUND, 'Stream not found');
+          }
+          if (stream.status !== 'live') {
+               throw new AppError(StatusCodes.BAD_REQUEST, 'Only live streams can be paused');
+          }
+
+          stream.status = 'paused';
+          await stream.save();
+
+          return stream;
+     }
+
+     static async resumeStream(streamId: string) {
+          const stream = await Stream.findById(streamId);
+          if (!stream) {
+               throw new AppError(StatusCodes.NOT_FOUND, 'Stream not found');
+          }
+          if (stream.status !== 'paused') {
+               throw new AppError(StatusCodes.BAD_REQUEST, 'Only paused streams can be resumed');
+          }
+
+          stream.status = 'live';
+          await stream.save();
+
+          return stream;
+     }
+
      static async endStream(streamId: string) {
           try {
                const stream = await Stream.findById(streamId);

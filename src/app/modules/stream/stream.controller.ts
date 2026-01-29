@@ -34,6 +34,32 @@ class StreamController {
           });
      });
 
+     pauseStream = catchAsync(async (req: Request, res: Response) => {
+          const { streamId } = req.params;
+
+          const stream = await StreamService.pauseStream(streamId);
+
+          sendResponse(res, {
+               statusCode: StatusCodes.OK,
+               success: true,
+               message: 'Stream paused successfully',
+               data: stream,
+          });
+     });
+
+     resumeStream = catchAsync(async (req: Request, res: Response) => {
+          const { streamId } = req.params;
+
+          const stream = await StreamService.resumeStream(streamId);
+
+          sendResponse(res, {
+               statusCode: StatusCodes.OK,
+               success: true,
+               message: 'Stream resumed successfully',
+               data: stream,
+          });
+     });
+
      endStream = catchAsync(async (req: Request, res: Response) => {
           const { streamId } = req.params;
 

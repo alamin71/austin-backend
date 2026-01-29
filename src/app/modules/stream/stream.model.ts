@@ -37,7 +37,7 @@ const streamSchema = new Schema<IStream>(
           },
           status: {
                type: String,
-               enum: ['scheduled', 'live', 'ended'],
+               enum: ['scheduled', 'live', 'paused', 'ended'],
                default: 'scheduled',
           },
           visibility: {
