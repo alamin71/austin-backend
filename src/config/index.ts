@@ -60,6 +60,14 @@ export default {
      agora: {
           app_id: process.env.AGORA_APP_ID,
           app_certificate: process.env.AGORA_APP_CERTIFICATE,
+          customer_id: process.env.AGORA_CUSTOMER_ID,
+          customer_secret: process.env.AGORA_CUSTOMER_SECRET,
+          recording_callback_url: process.env.AGORA_RECORDING_CALLBACK_URL,
+          storage_vendor: process.env.AGORA_STORAGE_VENDOR,
+          storage_region: process.env.AGORA_STORAGE_REGION,
+          storage_bucket: process.env.AGORA_STORAGE_BUCKET,
+          storage_access_key: process.env.AGORA_STORAGE_ACCESS_KEY,
+          storage_secret_key: process.env.AGORA_STORAGE_SECRET_KEY,
      },
      super_admin: {
           email: process.env.SUPER_ADMIN_EMAIL,

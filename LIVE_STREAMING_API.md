@@ -218,7 +218,7 @@ GET /api/v1/stream/{streamId}
     "_id": "507f1f77bcf86cd799439011",
     "title": "Gaming Stream",
     "description": "Epic gaming session",
-    "streamer": { ... },
+    "streamer": { ... },v
     "category": { ... },
     "status": "live",
     "agora": {

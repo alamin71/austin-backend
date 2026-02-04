@@ -36,6 +36,8 @@ export interface IStream {
      isAgeRestricted: boolean;
      thumbnail?: string;
      recordingUrl?: string;
+     recordingResourceId?: string;
+     recordingSid?: string;
      isRecordingEnabled: boolean;
      streamControls: {
           cameraOn: boolean;

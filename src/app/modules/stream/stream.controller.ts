@@ -85,6 +85,31 @@ class StreamController {
                data: stream,
           });
      });
+     getAllRecordings = catchAsync(async (req: Request, res: Response) => {
+          const page = parseInt(req.query.page as string) || 1;
+          const limit = parseInt(req.query.limit as string) || 20;
+
+          const result = await StreamService.getAllRecordings(page, limit);
+
+          sendResponse(res, {
+               statusCode: StatusCodes.OK,
+               success: true,
+               message: 'Recordings retrieved successfully',
+               data: result.data,
+               meta: result.meta,
+          });
+     });
+
+     handleRecordingWebhook = catchAsync(async (req: Request, res: Response) => {
+          const result = await StreamService.handleRecordingWebhook(req.body);
+
+          sendResponse(res, {
+               statusCode: StatusCodes.OK,
+               success: true,
+               message: 'Recording webhook processed successfully',
+               data: result,
+          });
+     });
 
      getLiveStreams = catchAsync(async (req: Request, res: Response) => {
           const page = parseInt(req.query.page as string) || 1;

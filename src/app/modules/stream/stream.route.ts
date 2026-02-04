@@ -34,6 +34,9 @@ router.get(
      '/streamer/:streamerId/history',
      streamController.getStreamerHistory,
 );
+// Agora Cloud Recording webhook (no auth)
+router.post('/recording/webhook', streamController.handleRecordingWebhook);
+router.get('/recordings', streamController.getAllRecordings);
 router.get('/:streamId', streamController.getStreamDetails);
 
 // Protected routes (authenticated users only)

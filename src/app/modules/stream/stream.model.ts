@@ -32,7 +32,14 @@ const streamSchema = new Schema<IStream>(
           },
           bannerPosition: {
                type: String,
-               enum: ['top', 'bottom', 'center'],
+               enum: [
+                    'top',
+                    'bottom',
+                    'top-left',
+                    'top-right',
+                    'bottom-left',
+                    'bottom-right',
+               ],
                default: 'top',
           },
           status: {
@@ -126,6 +133,8 @@ const streamSchema = new Schema<IStream>(
           },
           thumbnail: String,
           recordingUrl: String,
+          recordingResourceId: String,
+          recordingSid: String,
           isRecordingEnabled: {
                type: Boolean,
                default: false,

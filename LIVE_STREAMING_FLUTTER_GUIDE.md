@@ -83,18 +83,36 @@ flutter pub get
 ```dart
 class Constants {
   // API Configuration
-  static const String baseUrl = 'http://192.168.1.100:5000/api';
-  static const String socketUrl = 'http://192.168.1.100:6002';
+  static const String baseUrl = 'http://65.1.20.111:5000/api/v1';
+  static const String socketUrl = 'http://65.1.20.111:6002';
   
   // Agora Configuration
-  static const String agoraAppId = 'YOUR_AGORA_APP_ID';
+  static const String agoraAppId = '0521b3b0b08140808bb1d7a1fa7bd739';
   
-  // API Endpoints
+  // API Endpoints - Stream
   static const String startStreamEndpoint = '/stream/start';
   static const String endStreamEndpoint = '/stream/{streamId}/end';
+  static const String pauseStreamEndpoint = '/stream/{streamId}/pause';
+  static const String resumeStreamEndpoint = '/stream/{streamId}/resume';
   static const String getLiveStreamsEndpoint = '/stream/live';
-  static const String sendChatEndpoint = '/stream/{streamId}/chat';
+  static const String getStreamDetailsEndpoint = '/stream/{streamId}';
   static const String searchStreamsEndpoint = '/stream/search';
+  static const String streamerHistoryEndpoint = '/stream/streamer/{streamerId}/history';
+  
+  // API Endpoints - Stream Interactions
+  static const String joinStreamEndpoint = '/stream/{streamId}/join';
+  static const String leaveStreamEndpoint = '/stream/{streamId}/leave';
+  static const String likeStreamEndpoint = '/stream/{streamId}/like';
+  static const String sendChatEndpoint = '/stream/{streamId}/chat';
+  static const String updateSettingsEndpoint = '/stream/{streamId}/settings';
+  static const String toggleControlsEndpoint = '/stream/{streamId}/controls';
+  static const String getAnalyticsEndpoint = '/stream/{streamId}/analytics';
+  
+  // API Endpoints - Recordings
+  static const String getAllRecordingsEndpoint = '/stream/recordings';
+  
+  // API Endpoints - Category
+  static const String getCategoriesEndpoint = '/category';
   
   // Socket Events
   static const String socketStreamJoin = 'stream:join';
@@ -124,11 +142,11 @@ part 'stream_model.g.dart';
 @JsonSerializable()
 class StreamModel {
   final String? id;
-  final String streamer;
+  final StreamerInfo? streamer;
   final String title;
   final String? description;
   final String category;
-  final String status; // 'scheduled', 'live', 'ended'
+  final String status; // 'scheduled', 'live', 'paused', 'ended'
   final AgoraConfig? agora;
   final List<String> viewers;
   final int currentViewerCount;
@@ -137,18 +155,26 @@ class StreamModel {
   final DateTime? endedAt;
   final int duration;
   final String contentRating; // 'G', 'PG', 'PG-13', 'R', '18+'
+  final String? banner;
+  final String? bannerPosition; // 'top', 'bottom', 'center'
+  final String? visibility; // 'public', 'followers', 'subscribers'
   final bool allowComments;
   final bool allowGifts;
+  final bool enablePolls;
+  final bool enableAdBanners;
   final bool isAgeRestricted;
   final String? thumbnail;
+  final String? recordingUrl;
   final bool isRecordingEnabled;
+  final StreamControls? streamControls;
+  final int likes;
   final List<String> tags;
   final DateTime? createdAt;
   final DateTime? updatedAt;
 
   StreamModel({
     this.id,
-    required this.streamer,
+    this.streamer,
     required this.title,
     this.description,
     required this.category,
@@ -161,11 +187,19 @@ class StreamModel {
     this.endedAt,
     required this.duration,
     required this.contentRating,
+    this.banner,
+    this.bannerPosition,
+    this.visibility,
     required this.allowComments,
     required this.allowGifts,
+    required this.enablePolls,
+    required this.enableAdBanners,
     required this.isAgeRestricted,
     this.thumbnail,
+    this.recordingUrl,
     required this.isRecordingEnabled,
+    this.streamControls,
+    required this.likes,
     required this.tags,
     this.createdAt,
     this.updatedAt,
@@ -174,6 +208,40 @@ class StreamModel {
   factory StreamModel.fromJson(Map<String, dynamic> json) =>
       _$StreamModelFromJson(json);
   Map<String, dynamic> toJson() => _$StreamModelToJson(this);
+}
+
+@JsonSerializable()
+class StreamerInfo {
+  final String id;
+  final String name;
+  final String? avatar;
+
+  StreamerInfo({
+    required this.id,
+    required this.name,
+    this.avatar,
+  });
+
+  factory StreamerInfo.fromJson(Map<String, dynamic> json) =>
+      _$StreamerInfoFromJson(json);
+  Map<String, dynamic> toJson() => _$StreamerInfoToJson(this);
+}
+
+@JsonSerializable()
+class StreamControls {
+  final bool cameraOn;
+  final bool micOn;
+  final String? background;
+
+  StreamControls({
+    required this.cameraOn,
+    required this.micOn,
+    this.background,
+  });
+
+  factory StreamControls.fromJson(Map<String, dynamic> json) =>
+      _$StreamControlsFromJson(json);
+  Map<String, dynamic> toJson() => _$StreamControlsToJson(this);
 }
 
 @JsonSerializable()
@@ -1641,6 +1709,171 @@ _logger.i('User logged in'); // Not: _logger.i('Token: $token');
 
 ---
 
+## Recording Feature
+
+### Get All Recordings
+
+```dart
+Future<List<StreamModel>> getAllRecordings({int page = 1, int limit = 20}) async {
+  try {
+    final response = await _dio.get(
+      '/stream/recordings',
+      queryParameters: {'page': page, 'limit': limit},
+    );
+    
+    final apiResponse = ApiResponse.fromJson(
+      response.data,
+      (data) => (data as List).map((e) => StreamModel.fromJson(e)).toList(),
+    );
+    
+    return apiResponse.data ?? [];
+  } catch (e) {
+    _logger.e('Get recordings error: $e');
+    rethrow;
+  }
+}
+```
+
+### Recording List UI
+
+```dart
+class RecordingsListScreen extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text('Recordings')),
+      body: FutureBuilder<List<StreamModel>>(
+        future: apiService.getAllRecordings(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return Center(child: CircularProgressIndicator());
+          }
+          
+          final recordings = snapshot.data ?? [];
+          
+          return ListView.builder(
+            itemCount: recordings.length,
+            itemBuilder: (context, index) {
+              final rec = recordings[index];
+              return ListTile(
+                leading: rec.banner != null
+                    ? Image.network(rec.banner!, width: 80, fit: BoxFit.cover)
+                    : Icon(Icons.videocam),
+                title: Text(rec.title),
+                subtitle: Text('${rec.duration}s · ${rec.currentViewerCount} viewers'),
+                trailing: rec.recordingUrl != null
+                    ? Icon(Icons.play_circle_fill, color: Colors.green)
+                    : Icon(Icons.hourglass_empty, color: Colors.grey),
+                onTap: () {
+                  if (rec.recordingUrl != null) {
+                    // Play recording
+                  }
+                },
+              );
+            },
+          );
+        },
+      ),
+    );
+  }
+}
+```
+
+---
+
+## Stream Controls
+
+### Toggle Camera/Mic
+
+```dart
+Future<void> toggleStreamControls({
+  bool? cameraOn,
+  bool? micOn,
+  String? background,
+}) async {
+  try {
+    await _dio.put(
+      '/stream/$currentStreamId/controls',
+      data: {
+        if (cameraOn != null) 'cameraOn': cameraOn,
+        if (micOn != null) 'micOn': micOn,
+        if (background != null) 'background': background,
+      },
+    );
+  } catch (e) {
+    _logger.e('Toggle controls error: $e');
+    rethrow;
+  }
+}
+```
+
+### Update Stream Settings
+
+```dart
+Future<void> updateStreamSettings({
+  String? title,
+  String? description,
+  bool? allowComments,
+  bool? allowGifts,
+}) async {
+  try {
+    await _dio.put(
+      '/stream/$currentStreamId/settings',
+      data: {
+        if (title != null) 'title': title,
+        if (description != null) 'description': description,
+        if (allowComments != null) 'allowComments': allowComments,
+        if (allowGifts != null) 'allowGifts': allowGifts,
+      },
+    );
+  } catch (e) {
+    _logger.e('Update settings error: $e');
+    rethrow;
+  }
+}
+```
+
+---
+
+## Backend Configuration
+
+### Agora Cloud Recording Webhook
+
+Agora Console → Cloud Recording → Callback URL:
+```
+https://YOUR_DOMAIN/api/v1/stream/recording/webhook
+```
+
+### Complete API Endpoints
+
+**Stream Lifecycle:**
+- POST `/api/v1/stream/start` - Start (with banner file)
+- POST `/api/v1/stream/:streamId/pause` - Pause
+- POST `/api/v1/stream/:streamId/resume` - Resume  
+- POST `/api/v1/stream/:streamId/end` - End
+
+**Discovery:**
+- GET `/api/v1/stream/live` - Live streams
+- GET `/api/v1/stream/search?q=query` - Search
+- GET `/api/v1/stream/:streamId` - Details (includes recordingUrl)
+- GET `/api/v1/stream/streamer/:streamerId/history` - History
+
+**Interactions:**
+- POST `/api/v1/stream/:streamId/join` - Join
+- POST `/api/v1/stream/:streamId/leave` - Leave
+- POST `/api/v1/stream/:streamId/like` - Like
+- POST `/api/v1/stream/:streamId/chat` - Chat
+
+**Management:**
+- PUT `/api/v1/stream/:streamId/settings` - Settings
+- PUT `/api/v1/stream/:streamId/controls` - Controls
+- GET `/api/v1/stream/:streamId/analytics` - Analytics
+
+**Recordings:**
+- GET `/api/v1/stream/recordings` - All recordings
+
+---
+
 ## পারফরম্যান্স অপটিমাইজেশন
 
 ```dart
@@ -1679,8 +1912,21 @@ void dispose() {
 - ✅ Broadcaster UI তৈরি করা হয়েছে
 - ✅ Viewer UI তৈরি করা হয়েছে
 - ✅ Chat ফিচার ইমপ্লিমেন্ট করা হয়েছে
+- ✅ Recording webhook কনফিগার করা হয়েছে
+- ✅ Stream controls (camera/mic toggle) যোগ করা হয়েছে
 - ✅ এরর হ্যান্ডলিং যোগ করা হয়েছে
 - ✅ টেস্টিং সম্পন্ন করা হয়েছে
+
+---
+
+## Backend Environment
+
+```bash
+# Current Production Config
+BASE_URL=http://65.1.20.111:5000/api/v1
+SOCKET_URL=http://65.1.20.111:6002
+AGORA_APP_ID=0521b3b0b08140808bb1d7a1fa7bd739
+```
 
 ---
 
@@ -1693,6 +1939,21 @@ void dispose() {
 
 ---
 
-Version: 1.0
-Updated: January 23, 2026
+**Features Implemented:**
+✅ Stream start/pause/resume/end  
+✅ Live viewer count tracking  
+✅ Real-time chat via Socket.io  
+✅ Banner upload to S3  
+✅ Agora RTC integration  
+✅ Recording webhook support  
+✅ Stream analytics  
+✅ Category filtering  
+✅ Search functionality  
+✅ Stream controls (camera/mic)  
+✅ Recordings list  
+
+---
+
+Version: 2.0  
+Updated: February 4, 2026  
 Language: Bengali and English
