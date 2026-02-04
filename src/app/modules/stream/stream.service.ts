@@ -844,7 +844,7 @@ async function startRecording({
                          },
                          storageConfig: {
                               vendor: 1, // AWS S3
-                              region: 6, // ap-southeast-1 (Singapore)
+                              region: 5, // India (ap-south-1)
                               bucket: config.aws_s3_bucket_name || 'austin-buckets',
                               accessKey: config.aws_access_key_id,
                               secretKey: config.aws_secret_access_key,
