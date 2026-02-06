@@ -13,65 +13,231 @@ export const welcome = () => {
      }
 
      return `
-      <div style="text-align:center; font-family: 'Verdana', sans-serif; color:#4CAF50; padding: 50px 20px; border-radius: 10px; box-shadow: 0 0 20px rgba(0, 0, 0, 0.1); max-width: 100%; margin: 0 auto; animation: fadeIn 2s;">
-        <h1 style="font-size: 48px; color: #FF6347; animation: scaleUp 1s ease-in-out;">Beep-beep! The server is alive and kicking 🚀</h1>
-        <p style="font-size: 24px; color: #2F4F4F; animation: slideIn 1.5s ease-in-out;">${greeting}</p>
-        <p style="font-size: 20px; color: #3B3B3B;">The current date and time is: <strong style="color: #FF6347;">${date}</strong></p>
-        <p style="font-size: 18px; color: #555;">This server is a highly caffeinated web machine ready to serve your requests with super speed!</p>
-        <p style="font-size: 22px; color: #2E8B57;">We're up and running with style! 😎</p>
-        <p><em style="font-size: 16px;">If you're seeing this message, congratulations – you're looking at a live server! 🎉</em></p>
-        <p style="font-size: 16px; color: #888;">Don’t forget to stay awesome! 🌟</p>
-  
-        <div style="margin-top: 20px; animation: fadeIn 2s;">
-          <h3 style="font-size: 24px; color: #32CD32;">Just a few things:</h3>
-          <ul style="font-size: 18px; list-style-type: none; padding: 0; color: #4682B4;">
-            <li>✅ Server is alive</li>
-            <li>✅ Date & time are correct</li>
-            <li>✅ Feeling awesome!</li>
-          </ul>
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Austin Backend</title>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap');
+
+      :root {
+        --ink: #0f172a;
+        --muted: #475569;
+        --accent: #ff7a59;
+        --accent-2: #22c55e;
+        --panel: rgba(255, 255, 255, 0.9);
+        --shadow: 0 20px 60px rgba(2, 6, 23, 0.18);
+        --ring: 0 0 0 1px rgba(15, 23, 42, 0.08);
+      }
+
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        font-family: 'Space Grotesk', system-ui, -apple-system, sans-serif;
+        color: var(--ink);
+        background: radial-gradient(1200px 600px at 10% -20%, #ffe1d6, transparent 60%),
+                    radial-gradient(1000px 600px at 120% 10%, #d7f4e3, transparent 55%),
+                    linear-gradient(120deg, #f8fafc 0%, #eef2ff 100%);
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 32px 20px 56px;
+      }
+
+      .wrap {
+        width: min(1100px, 100%);
+        background: var(--panel);
+        border-radius: 28px;
+        box-shadow: var(--shadow);
+        padding: 36px 36px 28px;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .glow {
+        position: absolute;
+        inset: -40% -10% auto auto;
+        height: 320px;
+        width: 320px;
+        background: radial-gradient(circle, rgba(255, 122, 89, 0.25), transparent 70%);
+        filter: blur(10px);
+        pointer-events: none;
+      }
+
+      .hero {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 24px;
+        flex-wrap: wrap;
+      }
+
+      .title {
+        font-size: clamp(2rem, 3.5vw, 3rem);
+        margin: 0 0 8px;
+        letter-spacing: -0.02em;
+      }
+
+      .subtitle {
+        font-size: 1.1rem;
+        color: var(--muted);
+        margin: 0;
+      }
+
+      .chip-row {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-top: 18px;
+      }
+
+      .chip {
+        padding: 8px 14px;
+        border-radius: 999px;
+        background: #fff;
+        box-shadow: var(--ring);
+        font-size: 0.9rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .chip span {
+        height: 8px;
+        width: 8px;
+        border-radius: 999px;
+        background: var(--accent-2);
+        display: inline-block;
+      }
+
+      .time {
+        font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+        background: #0f172a;
+        color: #e2e8f0;
+        padding: 14px 16px;
+        border-radius: 14px;
+        font-size: 0.95rem;
+        box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+        gap: 16px;
+        margin-top: 28px;
+      }
+
+      .card {
+        background: #ffffff;
+        border-radius: 16px;
+        padding: 18px;
+        box-shadow: var(--ring);
+        min-height: 120px;
+      }
+
+      .card h3 {
+        margin: 0 0 8px;
+        font-size: 1rem;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: #94a3b8;
+      }
+
+      .card p {
+        margin: 0;
+        font-size: 1.05rem;
+      }
+
+      .pulse {
+        height: 10px;
+        width: 10px;
+        border-radius: 999px;
+        background: var(--accent-2);
+        box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7);
+        animation: pulse 2s infinite;
+        display: inline-block;
+        margin-right: 8px;
+      }
+
+      .footer {
+        margin-top: 28px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        flex-wrap: wrap;
+        color: var(--muted);
+        font-size: 0.95rem;
+      }
+
+      .cta {
+        background: var(--ink);
+        color: #fff;
+        border-radius: 12px;
+        padding: 10px 16px;
+        font-size: 0.95rem;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      @keyframes pulse {
+        0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.6); }
+        70% { box-shadow: 0 0 0 12px rgba(34, 197, 94, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
+      }
+
+      @media (max-width: 720px) {
+        .wrap { padding: 28px 22px; }
+        .time { width: 100%; }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="wrap">
+      <div class="glow"></div>
+      <div class="hero">
+        <div>
+          <h1 class="title">Austin Backend is live</h1>
+          <p class="subtitle">${greeting} Production-grade APIs are ready to serve.</p>
+          <div class="chip-row">
+            <div class="chip"><span></span> Health: OK</div>
+            <div class="chip">Environment: API Gateway</div>
+            <div class="chip">Version: v1</div>
+          </div>
         </div>
-        <div style="margin-top: 40px; animation: fadeIn 3s;">
-          <p style="font-size: 18px; color: #8B0000;">Wait... you’re still here? 🤔 Well, go ahead and try some cool routes! 😄</p>
-        </div>
-        <div style="margin-top: 40px; animation: fadeIn 4s;">
-          <h2 style="font-size: 28px; color: #FFD700;">Let’s create some magic together! ✨</h2>
-        </div>
-  
-        <div style="margin-top: 20px; animation: fadeIn 5s;">
-          <h3 style="font-size: 24px; color: #FF1493;">🧑‍💻 Developer Tip:</h3>
-          <p style="font-size: 18px; color: #800080;">Every time you refresh this page, the server gets a little more powerful! 💪🔥</p>
-        </div>
+        <div class="time">${date}</div>
       </div>
-  
-      <style>
-        @keyframes fadeIn {
-          from {
-            opacity: 0;
-          }
-          to {
-            opacity: 1;
-          }
-        }
-  
-        @keyframes scaleUp {
-          from {
-            transform: scale(0.8);
-          }
-          to {
-            transform: scale(1);
-          }
-        }
-  
-        @keyframes slideIn {
-          from {
-            transform: translateX(-50px);
-            opacity: 0;
-          }
-          to {
-            transform: translateX(0);
-            opacity: 1;
-          }
-        }
-      </style>
-    `;
+
+      <section class="grid">
+        <div class="card">
+          <h3>Status</h3>
+          <p><span class="pulse"></span>Server listening on port 5000</p>
+        </div>
+        <div class="card">
+          <h3>Auth</h3>
+          <p>Admin & user auth enabled with JWT + refresh tokens.</p>
+        </div>
+        <div class="card">
+          <h3>Streams</h3>
+          <p>Live streaming modules are armed and ready.</p>
+        </div>
+        <div class="card">
+          <h3>Docs</h3>
+          <p>Check API docs in the repository for full routes.</p>
+        </div>
+      </section>
+
+      <div class="footer">
+        <span>Tip: Use /api/v1 for all routes.</span>
+        <a class="cta" href="/api/v1">Explore API</a>
+      </div>
+    </main>
+  </body>
+</html>
+     `;
 };
