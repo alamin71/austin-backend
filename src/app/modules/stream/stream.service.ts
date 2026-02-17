@@ -10,6 +10,7 @@ import { User } from '../user/user.model.js';
 import CategoryService from '../category/category.service.js';
 import { logger, errorLogger } from '../../../shared/logger.js';
 import { uploadFileToS3 } from '../../../helpers/s3Helper.js';
+import AgoraRecordingHelper from '../../../helpers/agoraRecordingHelper.js';
 
 class StreamService {
      /**
@@ -128,15 +129,16 @@ class StreamService {
                // Start Agora Cloud Recording if enabled
                if (stream.isRecordingEnabled) {
                     try {
-                         const resourceId = await acquireRecordingResource(
+                         const recordingUid = '999'; // Use a fixed UID for recording bot
+                         const resourceId = await AgoraRecordingHelper.acquire(
                               stream.agora?.channelName || channelName,
-                              stream.agora?.uid || uid,
+                              recordingUid,
                          );
-                         const sid = await startRecording({
-                              channelName: stream.agora?.channelName || channelName,
-                              uid: stream.agora?.uid || uid,
+                         const { sid } = await AgoraRecordingHelper.start(
                               resourceId,
-                         });
+                              stream.agora?.channelName || channelName,
+                              recordingUid,
+                         );
 
                          stream.recordingResourceId = resourceId;
                          stream.recordingSid = sid;
@@ -214,19 +216,28 @@ class StreamService {
                     )
                     : 0;
 
-               // TODO: Get recording from Agora and upload to S3
-               // When stream ends, fetch recording from Agora's cloud recording service
-               // For now, we're marking it ready for recording data
+               // Stop Agora Cloud Recording if enabled
                if (stream.isRecordingEnabled) {
                     // Stop Agora cloud recording if started
                     if (stream.recordingResourceId && stream.recordingSid) {
                          try {
-                              await stopRecording({
-                                   channelName: stream.agora?.channelName as string,
-                                   uid: stream.agora?.uid as number,
-                                   resourceId: stream.recordingResourceId,
-                                   sid: stream.recordingSid,
-                              });
+                              const recordingUid = '999'; // Same UID used when starting
+                              const stopResponse = await AgoraRecordingHelper.stop(
+                                   stream.recordingResourceId,
+                                   stream.recordingSid,
+                                   stream.agora?.channelName as string,
+                                   recordingUid,
+                              );
+                              
+                              // Build recording URL from stop response
+                              if (stopResponse?.serverResponse?.fileList?.length > 0) {
+                                   const file = stopResponse.serverResponse.fileList[0];
+                                   const bucketName = config.aws_s3_bucket_name || 'austin-mahoney-buckets';
+                                   const region = config.aws_region || 'us-east-1';
+                                   const recordingUrl = `https://${bucketName}.s3.${region}.amazonaws.com/recordings/streams/${file.filename}`;
+                                   stream.recordingUrl = recordingUrl;
+                                   logger.info(`Recording URL saved: ${recordingUrl}`);
+                              }
                          } catch (err) {
                               errorLogger.error('Stop recording error', err);
                          }
@@ -271,6 +282,8 @@ class StreamService {
       */
      static async handleRecordingWebhook(payload: any) {
           try {
+               logger.info('Recording webhook received:', JSON.stringify(payload, null, 2));
+               
                // Agora webhook may send data in different shapes depending on event
                const cname =
                     payload?.cname ||
@@ -282,30 +295,44 @@ class StreamService {
                     payload?.fileList ||
                     payload?.payload?.fileList ||
                     payload?.payload?.details?.fileList ||
-                    payload?.payload?.details?.files;
+                    payload?.payload?.details?.files ||
+                    payload?.serverResponse?.fileList;
 
                if (!cname) {
+                    logger.warn('Channel name not provided in webhook payload');
                     return { updated: false, reason: 'Channel name not provided' };
                }
 
                const stream = await Stream.findOne({ 'agora.channelName': cname });
                if (!stream) {
+                    logger.warn(`Stream not found for channel: ${cname}`);
                     return { updated: false, reason: 'Stream not found', cname };
                }
 
                let recordingUrl: string | undefined;
                if (Array.isArray(fileList) && fileList.length > 0) {
-                    const firstFile: any = fileList[0];
-                    recordingUrl = firstFile?.fileUrl || firstFile?.url || firstFile?.fileName;
+                    const firstFile: any = fileList.find((f: any) => f.filename?.endsWith('.mp4') || f.trackType === 'audio_and_video');
+                    const file = firstFile || fileList[0];
+                    
+                    // Build S3 URL from filename
+                    if (file?.filename) {
+                         const bucketName = config.aws_s3_bucket_name || 'austin-mahoney-buckets';
+                         const region = config.aws_region || 'us-east-1';
+                         recordingUrl = `https://${bucketName}.s3.${region}.amazonaws.com/recordings/streams/${file.filename}`;
+                    } else {
+                         recordingUrl = file?.fileUrl || file?.url;
+                    }
                }
 
                if (recordingUrl) {
                     stream.recordingUrl = recordingUrl;
+                    logger.info(`Recording URL saved for stream ${stream._id}: ${recordingUrl}`);
+               } else {
+                    logger.warn(`No recording URL found in webhook payload for stream ${stream._id}`);
                }
 
                await stream.save();
 
-               logger.info(`Recording webhook processed for stream ${stream._id}`);
                return { updated: true, streamId: stream._id, recordingUrl };
           } catch (error) {
                errorLogger.error('Recording webhook error', error);
@@ -757,163 +784,6 @@ class StreamService {
  * Agora Cloud Recording Helper Functions
  */
 
-async function acquireRecordingResource(
-     channelName: string,
-     uid: number,
-): Promise<string> {
-     try {
-          const appId = config.agora?.app_id;
-          const appCertificate = config.agora?.app_certificate;
-
-          if (!appId || !appCertificate) {
-               throw new Error('Agora credentials not configured');
-          }
-
-          const url = `https://api.agora.io/v1/apps/${appId}/cloud_recording/acquire`;
-          
-          const auth = Buffer.from(`${appId}:${appCertificate}`).toString('base64');
-
-          const response = await fetch(url, {
-               method: 'POST',
-               headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Basic ${auth}`,
-               },
-               body: JSON.stringify({
-                    cname: channelName,
-                    uid: uid.toString(),
-                    clientRequest: {},
-               }),
-          });
-
-          if (!response.ok) {
-               const error = await response.json();
-               throw new Error(`Agora acquire failed: ${JSON.stringify(error)}`);
-          }
-
-          const data = await response.json();
-          return data.resourceId;
-     } catch (error) {
-          errorLogger.error('Acquire recording resource error', error);
-          throw error;
-     }
-}
-
-async function startRecording({
-     resourceId,
-     channelName,
-     uid,
-}: {
-     resourceId: string;
-     channelName: string;
-     uid: number;
-}): Promise<string> {
-     try {
-          const appId = config.agora?.app_id;
-          const appCertificate = config.agora?.app_certificate;
-
-          if (!appId || !appCertificate) {
-               throw new Error('Agora credentials not configured');
-          }
-
-          const url = `https://api.agora.io/v1/apps/${appId}/cloud_recording/resourceid/${resourceId}/start`;
-          
-          const auth = Buffer.from(`${appId}:${appCertificate}`).toString('base64');
-
-          const response = await fetch(url, {
-               method: 'POST',
-               headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Basic ${auth}`,
-               },
-               body: JSON.stringify({
-                    cname: channelName,
-                    uid: uid.toString(),
-                    clientRequest: {
-                         recordingConfig: {
-                              maxIdleTime: 30,
-                              streamTypes: 2,
-                              audioProfile: 1,
-                              channelType: 0,
-                              videoStreamType: 0,
-                              recordingFileConfig: [
-                                   {
-                                        avFileType: ['m3u8', 'mp4'],
-                                   },
-                              ],
-                         },
-                         storageConfig: {
-                              vendor: 1, // AWS S3
-                              region: 5, // India (ap-south-1)
-                              bucket: config.aws_s3_bucket_name || 'austin-buckets',
-                              accessKey: config.aws_access_key_id,
-                              secretKey: config.aws_secret_access_key,
-                              fileNamePrefix: ['stream_recordings'],
-                         },
-                         extensionServiceUrl: 'https://65.1.20.111:5000/api/v1/stream/recording/webhook',
-                    },
-               }),
-          });
-
-          if (!response.ok) {
-               const error = await response.json();
-               throw new Error(`Agora start recording failed: ${JSON.stringify(error)}`);
-          }
-
-          const data = await response.json();
-          return data.sid;
-     } catch (error) {
-          errorLogger.error('Start recording error', error);
-          throw error;
-     }
-}
-
-async function stopRecording({
-     resourceId,
-     sid,
-     channelName,
-     uid,
-}: {
-     resourceId: string;
-     sid: string;
-     channelName: string;
-     uid: number;
-}): Promise<void> {
-     try {
-          const appId = config.agora?.app_id;
-          const appCertificate = config.agora?.app_certificate;
-
-          if (!appId || !appCertificate) {
-               throw new Error('Agora credentials not configured');
-          }
-
-          const url = `https://api.agora.io/v1/apps/${appId}/cloud_recording/resourceid/${resourceId}/sid/${sid}/stop`;
-          
-          const auth = Buffer.from(`${appId}:${appCertificate}`).toString('base64');
-
-          const response = await fetch(url, {
-               method: 'POST',
-               headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Basic ${auth}`,
-               },
-               body: JSON.stringify({
-                    cname: channelName,
-                    uid: uid.toString(),
-                    clientRequest: {},
-               }),
-          });
-
-          if (!response.ok) {
-               const error = await response.json();
-               throw new Error(`Agora stop recording failed: ${JSON.stringify(error)}`);
-          }
-
-          logger.info(`Recording stopped: ${sid}`);
-     } catch (error) {
-          errorLogger.error('Stop recording error', error);
-          throw error;
-     }
-}
+// Helper functions removed - now using AgoraRecordingHelper class
 
 export default StreamService;

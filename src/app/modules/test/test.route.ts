@@ -1,7 +1,7 @@
 import express from 'express';
-import { emailHelper } from '../../../helpers/emailHelper.js';
-import catchAsync from '../../../shared/catchAsync.js';
-import sendResponse from '../../../shared/sendResponse.js';
+import { emailHelper } from '../../../helpers/emailHelper';
+import catchAsync from '../../../shared/catchAsync';
+import sendResponse from '../../../shared/sendResponse';
 
 const router = express.Router();
 
