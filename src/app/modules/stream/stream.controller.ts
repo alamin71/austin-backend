@@ -296,6 +296,31 @@ class StreamController {
                data: analytics,
           });
      });
+
+     checkRecordingStatus = catchAsync(async (req: Request, res: Response) => {
+          const { streamId } = req.params;
+
+          const stream = await StreamService.getStreamDetails(streamId);
+          if (!stream) {
+               throw new AppError(StatusCodes.NOT_FOUND, 'Stream not found');
+          }
+
+          if (!stream.recordingResourceId || !stream.recordingSid) {
+               throw new AppError(StatusCodes.BAD_REQUEST, 'No active recording for this stream');
+          }
+
+          const recordingStatus = await StreamService.checkRecordingStatus(
+               stream.recordingResourceId,
+               stream.recordingSid,
+          );
+
+          sendResponse(res, {
+               statusCode: StatusCodes.OK,
+               success: true,
+               message: 'Recording status retrieved successfully',
+               data: recordingStatus,
+          });
+     });
 }
 
 export default new StreamController();

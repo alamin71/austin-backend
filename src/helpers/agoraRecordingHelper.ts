@@ -155,7 +155,7 @@ class AgoraRecordingHelper {
                     clientRequest: {
                          token: token || '',
                          recordingConfig: {
-                              maxIdleTime: 300, // 5 minutes idle time before auto-stop
+                              maxIdleTime: 1800, // 30 minutes idle time before auto-stop
                               streamTypes: 2, // 0: audio only, 1: video only, 2: audio+video
                               channelType: 0, // 0: communication, 1: live broadcast
                               videoStreamType: 0, // 0: high-stream, 1: low-stream

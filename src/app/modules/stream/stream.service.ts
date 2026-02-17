@@ -778,6 +778,19 @@ class StreamService {
                throw error;
           }
      }
+
+     /**
+      * Check recording status
+      */
+     static async checkRecordingStatus(resourceId: string, sid: string): Promise<any> {
+          try {
+               const status = await AgoraRecordingHelper.query(resourceId, sid);
+               return status;
+          } catch (error) {
+               errorLogger.error('Check recording status error', error);
+               throw error;
+          }
+     }
 }
 
 /**

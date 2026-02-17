@@ -100,5 +100,10 @@ router.get(
      auth(USER_ROLES.USER),
      streamController.getStreamAnalytics,
 );
+router.get(
+     '/:streamId/recording/status',
+     auth(USER_ROLES.USER),
+     streamController.checkRecordingStatus,
+);
 
 export const StreamRouter = router;
