@@ -1,14 +1,14 @@
-import express from 'express';
-import { emailHelper } from '../../../helpers/emailHelper';
-import catchAsync from '../../../shared/catchAsync';
-import sendResponse from '../../../shared/sendResponse';
+import express, { Request, Response } from 'express';
+import { emailHelper } from '../../../helpers/emailHelper.js';
+import catchAsync from '../../../shared/catchAsync.js';
+import sendResponse from '../../../shared/sendResponse.js';
 
 const router = express.Router();
 
 // Test email endpoint
 router.post(
      '/send-test-email',
-     catchAsync(async (req, res) => {
+     catchAsync(async (req: Request, res: Response) => {
           const { to } = req.body;
 
           if (!to) {
@@ -40,7 +40,7 @@ router.post(
 // Email connection verification
 router.get(
      '/verify-email-config',
-     catchAsync(async (req, res) => {
+     catchAsync(async (req: Request, res: Response) => {
           const isConnected = await emailHelper.verifyEmailConnection();
 
           sendResponse(res, {
