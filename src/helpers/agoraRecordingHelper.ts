@@ -125,7 +125,7 @@ class AgoraRecordingHelper {
                const token = config.agora?.app_certificate; // Use app certificate or generate token
                const callbackUrl = config.agora?.recording_callback_url;
                const storageVendor = parseInt(config.agora?.storage_vendor || '1'); // 1: AWS S3
-               const storageRegion = parseInt(config.agora?.storage_region || '0');
+               const storageRegion = parseInt(config.agora?.storage_region || '0'); // 0: us-east-1
                const storageBucket = config.agora?.storage_bucket || config.aws_s3_bucket_name;
                const storageAccessKey = config.agora?.storage_access_key || config.aws_access_key_id;
                const storageSecretKey = config.agora?.storage_secret_key || config.aws_secret_access_key;
@@ -144,6 +144,9 @@ class AgoraRecordingHelper {
                     );
                }
 
+               // Debug log storage config
+               logger.info(`Storage Config - Vendor: ${storageVendor}, Region: ${storageRegion}, Bucket: ${storageBucket}, AccessKey: ${storageAccessKey?.substring(0, 8)}...`);
+
                const url = `${this.BASE_URL}/${appId}/cloud_recording/resourceid/${resourceId}/mode/mix/start`;
 
                const requestBody = {
@@ -152,7 +155,7 @@ class AgoraRecordingHelper {
                     clientRequest: {
                          token: token || '',
                          recordingConfig: {
-                              maxIdleTime: 30,
+                              maxIdleTime: 300, // 5 minutes idle time before auto-stop
                               streamTypes: 2, // 0: audio only, 1: video only, 2: audio+video
                               channelType: 0, // 0: communication, 1: live broadcast
                               videoStreamType: 0, // 0: high-stream, 1: low-stream
@@ -170,8 +173,8 @@ class AgoraRecordingHelper {
                               avFileType: ['hls', 'mp4'], // HLS + MP4
                          },
                          storageConfig: {
-                              vendor: storageVendor,
-                              region: storageRegion,
+                              vendor: storageVendor, // 1 = AWS S3
+                              region: storageRegion, // 0 = us-east-1
                               bucket: storageBucket,
                               accessKey: storageAccessKey,
                               secretKey: storageSecretKey,
@@ -179,6 +182,9 @@ class AgoraRecordingHelper {
                          },
                     },
                };
+
+               logger.info(`Recording file config - avFileType: hls, mp4`);
+               logger.info(`Storage - Bucket: ${storageBucket}, Region: ${storageRegion}, Vendor: ${storageVendor}`);
 
                // Add callback URL if configured
                if (callbackUrl) {
@@ -206,6 +212,9 @@ class AgoraRecordingHelper {
                     };
                }
 
+               logger.info(`Agora Recording Start - URL: ${url}`);
+               logger.info(`Agora Recording Start - Channel: ${channelName}, UID: ${uid}`);
+
                const response = await axios.post<StartResponse>(url, requestBody, {
                     headers: {
                          'Content-Type': 'application/json',
@@ -213,7 +222,8 @@ class AgoraRecordingHelper {
                     },
                });
 
-               logger.info(`Agora recording started: ${response.data.sid}`);
+               logger.info(`Agora recording started successfully: ${response.data.sid}`);
+               logger.info(`Agora start response resourceId: ${response.data.resourceId}`);
                return {
                     resourceId: response.data.resourceId,
                     sid: response.data.sid,
@@ -245,15 +255,22 @@ class AgoraRecordingHelper {
                     );
                }
 
+               logger.info(`Agora Recording Stop - Resource ID: ${resourceId}, SID: ${sid}, Channel: ${channelName}, UID: ${uid}`);
+
                const url = `${this.BASE_URL}/${appId}/cloud_recording/resourceid/${resourceId}/sid/${sid}/mode/mix/stop`;
+               
+               const requestBody = {
+                    cname: channelName,
+                    uid: uid,
+                    clientRequest: {},
+               };
+
+               logger.info(`Agora stop request URL: ${url}`);
+               logger.info(`Agora stop request body: ${JSON.stringify(requestBody)}`);
 
                const response = await axios.post<StopResponse>(
                     url,
-                    {
-                         cname: channelName,
-                         uid: uid,
-                         clientRequest: {},
-                    },
+                    requestBody,
                     {
                          headers: {
                               'Content-Type': 'application/json',
@@ -262,10 +279,29 @@ class AgoraRecordingHelper {
                     },
                );
 
-               logger.info(`Agora recording stopped: ${response.data.sid}`);
+               logger.info(`Agora recording stopped successfully: ${response.data.sid}`);
+               logger.info(`Agora stop response: ${JSON.stringify(response.data)}`);
                return response.data;
           } catch (error: any) {
-               errorLogger.error('Agora stop recording error:', error?.response?.data || error.message);
+               errorLogger.error('Agora stop recording error - Status:', error?.response?.status);
+               errorLogger.error('Agora stop recording error - Full response:', JSON.stringify(error?.response?.data));
+               errorLogger.error('Agora stop recording error - Message:', error.message);
+               
+               // If 404, the recording might have already stopped automatically
+               if (error?.response?.status === 404) {
+                    logger.warn(`Recording not found (404) - might have already stopped automatically due to maxIdleTime. Resource ID: ${resourceId}, SID: ${sid}`);
+                    // Return a mock response to avoid breaking the flow
+                    return {
+                         resourceId,
+                         sid,
+                         serverResponse: {
+                              fileListMode: 'string',
+                              fileList: [],
+                              uploadingStatus: 'uploaded',
+                         },
+                    };
+               }
+               
                throw new AppError(
                     StatusCodes.INTERNAL_SERVER_ERROR,
                     `Failed to stop cloud recording: ${error?.response?.data?.message || error.message}`,
