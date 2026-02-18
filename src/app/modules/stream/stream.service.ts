@@ -131,11 +131,12 @@ class StreamService {
                     try {
                          const recordingUid = '999'; // Use a fixed UID for recording bot
                          
-                         // Generate token for recording bot
+                         // Generate SUBSCRIBER token for recording bot (not publisher)
+                         // Recording bot needs to receive audio/video, not send
                          const recordingToken = this.generateAgoraToken(
                               stream.agora?.channelName || channelName,
                               parseInt(recordingUid),
-                              'publisher',
+                              'subscriber',  // Recording bot is a SUBSCRIBER
                          );
                          
                          const resourceId = await AgoraRecordingHelper.acquire(
