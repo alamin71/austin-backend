@@ -37,6 +37,14 @@ router.get(
 // Agora Cloud Recording webhook (no auth)
 router.post('/recording/webhook', streamController.handleRecordingWebhook);
 router.get('/recordings', streamController.getAllRecordings);
+
+// Recording status check (must be before /:streamId to avoid route conflict)
+router.get(
+     '/:streamId/recording/status',
+     auth(USER_ROLES.USER),
+     streamController.checkRecordingStatus,
+);
+
 router.get('/:streamId', streamController.getStreamDetails);
 
 // Protected routes (authenticated users only)
@@ -99,11 +107,6 @@ router.get(
      '/:streamId/analytics',
      auth(USER_ROLES.USER),
      streamController.getStreamAnalytics,
-);
-router.get(
-     '/:streamId/recording/status',
-     auth(USER_ROLES.USER),
-     streamController.checkRecordingStatus,
 );
 
 export const StreamRouter = router;
