@@ -248,7 +248,9 @@ class StreamService {
                                    if (fileName) {
                                         const bucketName = config.aws_s3_bucket_name || 'austin-mahoney-buckets';
                                         const region = config.aws_region || 'us-east-1';
-                                        const recordingUrl = `https://${bucketName}.s3.${region}.amazonaws.com/recordings/streams/${fileName}`;
+                                        // Agora fileName already includes full path like "recordings/streams/filename.mp4"
+                                        // Don't prepend "recordings/streams/" again to avoid duplication
+                                        const recordingUrl = `https://${bucketName}.s3.${region}.amazonaws.com/${fileName}`;
                                         stream.recordingUrl = recordingUrl;
                                         logger.info(`Recording URL saved from stop response: ${recordingUrl}`);
                                    } else {
@@ -339,7 +341,9 @@ class StreamService {
                     if (fileName) {
                          const bucketName = config.aws_s3_bucket_name || 'austin-mahoney-buckets';
                          const region = config.aws_region || 'us-east-1';
-                         recordingUrl = `https://${bucketName}.s3.${region}.amazonaws.com/recordings/streams/${fileName}`;
+                         // Agora fileName already includes full path like "recordings/streams/filename.mp4"
+                         // Don't prepend "recordings/streams/" again to avoid duplication
+                         recordingUrl = `https://${bucketName}.s3.${region}.amazonaws.com/${fileName}`;
                          logger.info(`Recording URL constructed from webhook: ${recordingUrl}`);
                     } else {
                          logger.warn('Filename not found in webhook fileList:', JSON.stringify(file));
