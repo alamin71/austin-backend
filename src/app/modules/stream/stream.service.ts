@@ -240,12 +240,21 @@ class StreamService {
                               
                               // Build recording URL from stop response
                               if (stopResponse?.serverResponse?.fileList?.length > 0) {
-                                   const file = stopResponse.serverResponse.fileList[0];
-                                   const bucketName = config.aws_s3_bucket_name || 'austin-mahoney-buckets';
-                                   const region = config.aws_region || 'us-east-1';
-                                   const recordingUrl = `https://${bucketName}.s3.${region}.amazonaws.com/recordings/streams/${file.filename}`;
-                                   stream.recordingUrl = recordingUrl;
-                                   logger.info(`Recording URL saved: ${recordingUrl}`);
+                                   const file: any = stopResponse.serverResponse.fileList[0];
+                                   // Agora may use 'filename' or 'fileName'
+                                   const fileName = file.filename || file.fileName;
+                                   
+                                   if (fileName) {
+                                        const bucketName = config.aws_s3_bucket_name || 'austin-mahoney-buckets';
+                                        const region = config.aws_region || 'us-east-1';
+                                        const recordingUrl = `https://${bucketName}.s3.${region}.amazonaws.com/recordings/streams/${fileName}`;
+                                        stream.recordingUrl = recordingUrl;
+                                        logger.info(`Recording URL saved from stop response: ${recordingUrl}`);
+                                   } else {
+                                        logger.warn('Filename not found in stop response fileList[0]:', JSON.stringify(file));
+                                   }
+                              } else {
+                                   logger.warn('No fileList in stop response, will wait for webhook callback');
                               }
                          } catch (err) {
                               errorLogger.error('Stop recording error', err);
@@ -320,15 +329,20 @@ class StreamService {
 
                let recordingUrl: string | undefined;
                if (Array.isArray(fileList) && fileList.length > 0) {
-                    const firstFile: any = fileList.find((f: any) => f.filename?.endsWith('.mp4') || f.trackType === 'audio_and_video');
+                    const firstFile: any = fileList.find((f: any) => f.filename?.endsWith('.mp4') || f.fileName?.endsWith('.mp4') || f.trackType === 'audio_and_video');
                     const file = firstFile || fileList[0];
                     
-                    // Build S3 URL from filename
-                    if (file?.filename) {
+                    // Build S3 URL from filename (Agora may use 'filename' or 'fileName')
+                    const fileName = file?.filename || file?.fileName;
+                    
+                    if (fileName) {
                          const bucketName = config.aws_s3_bucket_name || 'austin-mahoney-buckets';
                          const region = config.aws_region || 'us-east-1';
-                         recordingUrl = `https://${bucketName}.s3.${region}.amazonaws.com/recordings/streams/${file.filename}`;
+                         recordingUrl = `https://${bucketName}.s3.${region}.amazonaws.com/recordings/streams/${fileName}`;
+                         logger.info(`Recording URL constructed from webhook: ${recordingUrl}`);
                     } else {
+                         logger.warn('Filename not found in webhook fileList:', JSON.stringify(file));
+                         // Fallback to direct URL if provided
                          recordingUrl = file?.fileUrl || file?.url;
                     }
                }

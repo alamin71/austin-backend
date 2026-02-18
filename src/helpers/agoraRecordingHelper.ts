@@ -280,7 +280,16 @@ class AgoraRecordingHelper {
                );
 
                logger.info(`Agora recording stopped successfully: ${response.data.sid}`);
-               logger.info(`Agora stop response: ${JSON.stringify(response.data)}`);
+               logger.info(`Agora stop response FULL: ${JSON.stringify(response.data, null, 2)}`);
+               
+               // Log fileList details for debugging
+               if (response.data?.serverResponse?.fileList) {
+                    logger.info(`FileList length: ${response.data.serverResponse.fileList.length}`);
+                    response.data.serverResponse.fileList.forEach((file: any, index: number) => {
+                         logger.info(`File[${index}]: ${JSON.stringify(file)}`);
+                    });
+               }
+               
                return response.data;
           } catch (error: any) {
                errorLogger.error('Agora stop recording error - Status:', error?.response?.status);
