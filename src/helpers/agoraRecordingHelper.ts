@@ -119,10 +119,10 @@ class AgoraRecordingHelper {
           resourceId: string,
           channelName: string,
           uid: string,
+          token?: string, // Optional RTC token for recording bot
      ): Promise<{ resourceId: string; sid: string }> {
           try {
                const appId = config.agora?.app_id;
-               const token = config.agora?.app_certificate; // Use app certificate or generate token
                const callbackUrl = config.agora?.recording_callback_url;
                const storageVendor = parseInt(config.agora?.storage_vendor || '1'); // 1: AWS S3
                const storageRegion = parseInt(config.agora?.storage_region || '0'); // 0: us-east-1
