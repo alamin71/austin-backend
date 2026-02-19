@@ -86,10 +86,15 @@ class StreamController {
           });
      });
      getAllRecordings = catchAsync(async (req: Request, res: Response) => {
+          const userId = (req.user as any)?._id || (req.user as any)?.id;
           const page = parseInt(req.query.page as string) || 1;
           const limit = parseInt(req.query.limit as string) || 20;
 
-          const result = await StreamService.getAllRecordings(page, limit);
+          if (!userId) {
+               throw new AppError(StatusCodes.UNAUTHORIZED, 'User not authenticated');
+          }
+
+          const result = await StreamService.getAllRecordings(userId, page, limit);
 
           sendResponse(res, {
                statusCode: StatusCodes.OK,

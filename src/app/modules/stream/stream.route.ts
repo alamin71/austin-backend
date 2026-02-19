@@ -36,7 +36,9 @@ router.get(
 );
 // Agora Cloud Recording webhook (no auth)
 router.post('/recording/webhook', streamController.handleRecordingWebhook);
-router.get('/recordings', streamController.getAllRecordings);
+
+// Get user's recordings (requires auth)
+router.get('/recordings', auth(USER_ROLES.USER), streamController.getAllRecordings);
 
 // Recording status check (must be before /:streamId to avoid route conflict)
 router.get(

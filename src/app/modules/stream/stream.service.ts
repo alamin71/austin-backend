@@ -390,19 +390,25 @@ class StreamService {
      }
 
      /**
-      * Get all recordings (paginated)
+      * Get all recordings filtered by user (paginated)
       */
-     static async getAllRecordings(page: number, limit: number) {
+     static async getAllRecordings(userId: string, page: number, limit: number) {
           const skip = (page - 1) * limit;
 
           const [data, total] = await Promise.all([
-               Stream.find({ recordingUrl: { $exists: true, $ne: '' } })
+               Stream.find({ 
+                    streamer: userId,  // Only recordings by this user
+                    recordingUrl: { $exists: true, $ne: '' } 
+               })
                     .select('recordingUrl status title streamer createdAt endedAt')
                     .populate('streamer', 'name avatar')
                     .sort({ endedAt: -1 })
                     .skip(skip)
                     .limit(limit),
-               Stream.countDocuments({ recordingUrl: { $exists: true, $ne: '' } }),
+               Stream.countDocuments({ 
+                    streamer: userId,
+                    recordingUrl: { $exists: true, $ne: '' } 
+               }),
           ]);
 
           return {
