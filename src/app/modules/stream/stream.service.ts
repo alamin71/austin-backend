@@ -781,18 +781,33 @@ class StreamService {
       */
      static async joinStream(streamId: string, userId: string) {
           try {
-               const stream = await this.addViewer(streamId, userId);
+               const stream = await Stream.findById(streamId);
+
+               if (!stream) {
+                    throw new AppError(StatusCodes.NOT_FOUND, 'Stream not found');
+               }
+
+               // Check if stream is live
+               if (stream.status !== 'live') {
+                    throw new AppError(
+                         StatusCodes.BAD_REQUEST,
+                         `Cannot join stream. Stream is ${stream.status}`,
+                    );
+               }
+
+               // Add viewer
+               const updatedStream = await this.addViewer(streamId, userId);
 
                // Generate viewer token
                const uid = Math.floor(Math.random() * 100000);
                const agoraToken = this.generateAgoraToken(
-                    stream.agora?.channelName || '',
+                    updatedStream.agora?.channelName || '',
                     uid,
                     'subscriber',
                );
 
                return {
-                    stream,
+                    stream: updatedStream,
                     viewerToken: agoraToken,
                };
           } catch (error) {
