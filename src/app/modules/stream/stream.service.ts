@@ -270,7 +270,8 @@ class StreamService {
                stream.endedAt = new Date();
                stream.duration = duration;
 
-               await stream.save();
+               const savedStream = await stream.save();
+               logger.info(`✓ Stream status updated to 'ended': ${streamId}, Status: ${savedStream.status}`);
 
                // Decrement category stream count
                if (stream.category) {
@@ -288,9 +289,9 @@ class StreamService {
                     });
                }
 
-               logger.info(`Stream ended: ${streamId}`);
+               logger.info(`✓ Stream ended successfully: ${streamId}, Final Status: ${savedStream.status}`);
 
-               return stream;
+               return savedStream;
           } catch (error) {
                errorLogger.error('End stream error', error);
                throw error;
