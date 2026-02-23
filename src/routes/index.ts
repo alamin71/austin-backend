@@ -8,6 +8,7 @@ import GiftRouter from '../app/modules/gift/gift.route.js';
 import PollRouter from '../app/modules/poll/poll.route.js';
 import { TestRouter } from '../app/modules/test/test.route.js';
 import AnalyticsRouter from '../app/modules/stream/analytics.route.js';
+import SubscriptionRouter from '../app/modules/subscription/subscription.route.js';
 
 const router = express.Router();
 const routes = [
@@ -34,6 +35,10 @@ const routes = [
      {
           path: '/category',
           route: CategoryRouter,
+     },
+     {
+          path: '/subscription',
+          route: SubscriptionRouter,
      },
      {
           path: '/gift',
