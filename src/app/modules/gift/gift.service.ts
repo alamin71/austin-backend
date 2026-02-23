@@ -5,6 +5,8 @@ import { logger, errorLogger } from '../../../shared/logger.js';
 import { Stream } from '../stream/stream.model.js';
 import { StreamAnalytics } from '../stream/streamAnalytics.model.js';
 import { IGift } from './gift.interface.js';
+import WalletService from '../wallet/wallet.service.js';
+import { Subscription } from '../subscription/subscription.model.js';
 
 class GiftService {
      /**
@@ -163,14 +165,36 @@ class GiftService {
                     );
                }
 
+               // ✅ NEW: Check if sender is subscribed to streamer
+               const isSubscribed = await Subscription.findOne({
+                    userId: senderId,
+                    streamerId: stream.streamer,
+                    status: 'active',
+                    currentPeriodEnd: { $gt: new Date() },
+               });
+
+               if (!isSubscribed) {
+                    throw new AppError(
+                         StatusCodes.FORBIDDEN,
+                         'You must be subscribed to this streamer to send gifts',
+                    );
+               }
+
                // Get gift details
                const gift = await this.getGiftById(giftData.giftId);
 
-               // Calculate total amount
-               const totalAmount = gift.price * giftData.quantity;
+               // ✅ NEW: Calculate feather cost instead of USD
+               const featherCost = gift.price * giftData.quantity;
+               const usdValue = (gift.price / 100) * giftData.quantity; // Convert to USD
 
-               // TODO: Process payment (Stripe integration)
-               // For now, we'll assume payment is successful
+               // ✅ NEW: Use wallet service to transfer feathers
+               const walletResult = await WalletService.sendGift(
+                    senderId,
+                    stream.streamer._id.toString(),
+                    streamId,
+                    featherCost,
+                    usdValue
+               );
 
                // Create gift transaction
                const transaction = new GiftTransaction({
@@ -179,7 +203,7 @@ class GiftService {
                     stream: streamId,
                     gift: gift._id,
                     quantity: giftData.quantity,
-                    totalAmount,
+                    totalAmount: usdValue, // Store USD value
                     message: giftData.message,
                     isAnonymous: giftData.isAnonymous,
                     status: 'completed',
@@ -192,7 +216,7 @@ class GiftService {
                     await StreamAnalytics.findByIdAndUpdate(stream.analytics, {
                          $inc: {
                               giftsReceived: giftData.quantity,
-                              revenue: totalAmount / 100, // Convert cents to dollars
+                              revenue: usdValue,
                          },
                     });
                }
@@ -210,7 +234,7 @@ class GiftService {
                });
 
                logger.info(
-                    `Gift sent: ${gift.name} x${giftData.quantity} to stream ${streamId}`,
+                    `✓ Gift sent: ${gift.name} x${giftData.quantity} (${featherCost} feathers, $${usdValue}) to stream ${streamId}`,
                );
 
                return transaction.populate([
