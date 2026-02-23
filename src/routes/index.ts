@@ -9,6 +9,7 @@ import PollRouter from '../app/modules/poll/poll.route.js';
 import { TestRouter } from '../app/modules/test/test.route.js';
 import AnalyticsRouter from '../app/modules/stream/analytics.route.js';
 import SubscriptionRouter from '../app/modules/subscription/subscription.route.js';
+import WalletRouter from '../app/modules/wallet/wallet.route.js';
 
 const router = express.Router();
 const routes = [
@@ -39,6 +40,10 @@ const routes = [
      {
           path: '/subscription',
           route: SubscriptionRouter,
+     },
+     {
+          path: '/wallet',
+          route: WalletRouter,
      },
      {
           path: '/gift',
