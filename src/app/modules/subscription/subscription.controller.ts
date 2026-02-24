@@ -15,7 +15,7 @@ class SubscriptionController {
    * Create subscription tier
    */
   createSubscriptionTier = catchAsync(async (req: Request, res: Response) => {
-    const result = await SubscriptionService.createSubscriptionTier(req.body);
+    const result = await SubscriptionService.createSubscriptionTier(req.body, req.file);
 
     sendResponse(res, {
       statusCode: StatusCodes.CREATED,
@@ -45,7 +45,7 @@ class SubscriptionController {
    */
   updateSubscriptionTier = catchAsync(async (req: Request, res: Response) => {
     const { tierId } = req.params;
-    const result = await SubscriptionService.updateSubscriptionTier(tierId, req.body);
+    const result = await SubscriptionService.updateSubscriptionTier(tierId, req.body, req.file);
 
     sendResponse(res, {
       statusCode: StatusCodes.OK,

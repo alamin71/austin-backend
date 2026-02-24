@@ -1,4 +1,5 @@
 import express from 'express';
+import multer from 'multer';
 import subscriptionController from './subscription.controller.js';
 import auth from '../../middleware/auth.js';
 import { USER_ROLES } from '../../../enums/user.js';
@@ -6,6 +7,12 @@ import validateRequest from '../../middleware/validateRequest.js';
 import { subscriptionValidation } from './subscription.validation.js';
 
 const router = express.Router();
+
+// Multer setup for file upload
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
+});
 
 /**
  * ==================== PUBLIC ROUTES ====================
@@ -72,7 +79,7 @@ router.post(
 router.post(
   '/admin/tiers',
   auth(USER_ROLES.ADMIN),
-  validateRequest(subscriptionValidation.createTierSchema),
+  upload.single('badgeIcon'),
   subscriptionController.createSubscriptionTier
 );
 
@@ -80,6 +87,7 @@ router.post(
 router.put(
   '/admin/tiers/:tierId',
   auth(USER_ROLES.ADMIN),
+  upload.single('badgeIcon'),
   subscriptionController.updateSubscriptionTier
 );
 

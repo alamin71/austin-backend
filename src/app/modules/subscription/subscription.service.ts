@@ -5,6 +5,7 @@ import { User } from '../user/user.model.js';
 import { logger, errorLogger } from '../../../shared/logger.js';
 import config from '../../../config/index.js';
 import Stripe from 'stripe';
+import { uploadFileToS3 } from '../../../helpers/s3Helper.js';
 
 let stripeClient: Stripe | null = null;
 const getStripeClient = () => {
@@ -28,12 +29,24 @@ class SubscriptionService {
   /**
    * Create new subscription tier (Admin only)
    */
-  static async createSubscriptionTier(tierData: Partial<ISubscriptionTier>) {
+  static async createSubscriptionTier(
+    tierData: Partial<ISubscriptionTier>,
+    badgeIconFile?: Express.Multer.File
+  ) {
     try {
       // Check if tier already exists
       const existingTier = await SubscriptionTier.findOne({ slug: tierData.slug });
       if (existingTier) {
         throw new AppError(StatusCodes.CONFLICT, `Tier '${tierData.slug}' already exists`);
+      }
+
+      // Upload badge icon to S3 if provided
+      if (badgeIconFile) {
+        const badgeIconUrl = await uploadFileToS3(badgeIconFile, 'subscription-badges');
+        if (!tierData.badge) {
+          tierData.badge = { icon: '', displayName: '' };
+        }
+        tierData.badge.icon = badgeIconUrl;
       }
 
       const tier = await SubscriptionTier.create(tierData);
@@ -62,8 +75,21 @@ class SubscriptionService {
   /**
    * Update subscription tier (Admin only)
    */
-  static async updateSubscriptionTier(tierId: string, updateData: Partial<ISubscriptionTier>) {
+  static async updateSubscriptionTier(
+    tierId: string,
+    updateData: Partial<ISubscriptionTier>,
+    badgeIconFile?: Express.Multer.File
+  ) {
     try {
+      // Upload new badge icon to S3 if provided
+      if (badgeIconFile) {
+        const badgeIconUrl = await uploadFileToS3(badgeIconFile, 'subscription-badges');
+        if (!updateData.badge) {
+          updateData.badge = { icon: '', displayName: '' };
+        }
+        updateData.badge.icon = badgeIconUrl;
+      }
+
       const tier = await SubscriptionTier.findByIdAndUpdate(tierId, updateData, {
         new: true,
         runValidators: true,
