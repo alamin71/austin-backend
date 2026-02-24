@@ -23,10 +23,11 @@ const getUserProfile = catchAsync(async (req, res) => {
      const result = await UserService.getUserProfileFromDB(user);
 
      // Transform response: avatar → image
-     const responseData = result ? {
-          ...result.toObject(),
-          image: result.toObject().avatar,
-     } : result;
+     const plainResult = result && (result as any).toObject ? (result as any).toObject() : result;
+     const responseData = plainResult ? {
+          ...plainResult,
+          image: plainResult.avatar,
+     } : plainResult;
      
      // Remove avatar field from response
      if (responseData && 'avatar' in responseData) {
@@ -61,10 +62,11 @@ const updateProfile = catchAsync(async (req, res) => {
      const result = await UserService.updateProfileToDB(user, req.body);
 
      // Transform response: avatar → image
-     const responseData = result ? {
-          ...result.toObject(),
-          image: result.toObject().avatar,
-     } : result;
+     const plainResult = result && (result as any).toObject ? (result as any).toObject() : result;
+     const responseData = plainResult ? {
+          ...plainResult,
+          image: plainResult.avatar,
+     } : plainResult;
      
      // Remove avatar field from response
      if (responseData && 'avatar' in responseData) {
