@@ -4,10 +4,6 @@ import { Wallet, WalletTransaction, FeatherPackage } from './wallet.model.js';
 import { User } from '../user/user.model.js';
 import { Subscription } from '../subscription/subscription.model.js';
 import { logger, errorLogger } from '../../../shared/logger.js';
-import config from '../../../config/index.js';
-import Stripe from 'stripe';
-
-const stripe = new Stripe((config.stripe as any)?.stripe_secret_key || '');
 
 class WalletService {
   /**

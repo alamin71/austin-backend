@@ -6,7 +6,19 @@ import { logger, errorLogger } from '../../../shared/logger.js';
 import config from '../../../config/index.js';
 import Stripe from 'stripe';
 
-const stripe = new Stripe((config.stripe as any)?.stripe_secret_key || '');
+let stripeClient: Stripe | null = null;
+const getStripeClient = () => {
+  const stripeKey = (config.stripe as any)?.stripe_secret_key;
+  if (!stripeKey) {
+    throw new AppError(StatusCodes.BAD_REQUEST, 'Stripe is not configured');
+  }
+
+  if (!stripeClient) {
+    stripeClient = new Stripe(stripeKey);
+  }
+
+  return stripeClient;
+};
 
 class SubscriptionService {
   /**
@@ -121,6 +133,7 @@ class SubscriptionService {
       }
 
       // Create Stripe customer if not exists
+      const stripe = getStripeClient();
       let stripeCustomerId = user.stripeCustomerId;
       if (!stripeCustomerId) {
         const customer = await stripe.customers.create({
@@ -235,6 +248,7 @@ class SubscriptionService {
     stripeSubscriptionId: string
   ) {
     try {
+      const stripe = getStripeClient();
       const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
 
       if (paymentIntent.status !== 'succeeded') {
@@ -344,6 +358,7 @@ class SubscriptionService {
 
       // Cancel Stripe subscription if applicable
       if (subscription.paymentMethod === 'stripe' && subscription.stripeSubscriptionId) {
+        const stripe = getStripeClient();
         await (stripe.subscriptions as any).cancel(subscription.stripeSubscriptionId);
       }
 
