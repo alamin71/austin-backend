@@ -72,4 +72,7 @@ router.post('/verify-email', validateRequest(AuthValidation.createVerifyEmailZod
 router.post('/verify-reset-otp', validateRequest(AuthValidation.createVerifyEmailZodSchema), AuthController.verifyResetOtp);
 router.post('/reset-password', validateRequest(AuthValidation.createResetPasswordZodSchema), AuthController.resetPassword);
 
+// Change password (authenticated user)
+router.patch('/change-password', auth(USER_ROLES.USER), AuthController.changePassword);
+
 export const AuthRouter = router;
