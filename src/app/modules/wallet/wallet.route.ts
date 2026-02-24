@@ -40,21 +40,21 @@ router.post(
 // Create feather package
 router.post(
   '/admin/feathers/packages',
-  auth(USER_ROLES.ADMIN),
+  auth(USER_ROLES.SUPER_ADMIN, USER_ROLES.ADMIN),
   walletController.createFeatherPackage
 );
 
 // Update feather package
 router.put(
   '/admin/feathers/packages/:packageId',
-  auth(USER_ROLES.ADMIN),
+  auth(USER_ROLES.SUPER_ADMIN, USER_ROLES.ADMIN),
   walletController.updateFeatherPackage
 );
 
 // Get all wallets
 router.get(
   '/admin/all',
-  auth(USER_ROLES.ADMIN),
+  auth(USER_ROLES.SUPER_ADMIN, USER_ROLES.ADMIN),
   walletController.getAllWallets
 );
 

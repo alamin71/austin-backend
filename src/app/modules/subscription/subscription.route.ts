@@ -78,7 +78,7 @@ router.post(
 // Create subscription tier
 router.post(
   '/admin/tiers',
-  auth(USER_ROLES.ADMIN),
+  auth(USER_ROLES.SUPER_ADMIN, USER_ROLES.ADMIN),
   upload.single('badgeIcon'),
   subscriptionController.createSubscriptionTier
 );
@@ -86,7 +86,7 @@ router.post(
 // Update subscription tier
 router.put(
   '/admin/tiers/:tierId',
-  auth(USER_ROLES.ADMIN),
+  auth(USER_ROLES.SUPER_ADMIN, USER_ROLES.ADMIN),
   upload.single('badgeIcon'),
   subscriptionController.updateSubscriptionTier
 );
@@ -94,21 +94,21 @@ router.put(
 // Delete subscription tier
 router.delete(
   '/admin/tiers/:tierId',
-  auth(USER_ROLES.ADMIN),
+  auth(USER_ROLES.SUPER_ADMIN, USER_ROLES.ADMIN),
   subscriptionController.deleteSubscriptionTier
 );
 
 // Get all subscriptions (admin)
 router.get(
   '/admin/all',
-  auth(USER_ROLES.ADMIN),
+  auth(USER_ROLES.SUPER_ADMIN, USER_ROLES.ADMIN),
   subscriptionController.getAllSubscriptions
 );
 
 // Get subscription analytics (admin)
 router.get(
   '/admin/analytics',
-  auth(USER_ROLES.ADMIN),
+  auth(USER_ROLES.SUPER_ADMIN, USER_ROLES.ADMIN),
   subscriptionController.getSubscriptionAnalytics
 );
 
