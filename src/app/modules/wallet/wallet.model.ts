@@ -155,7 +155,6 @@ const featherPackageSchema = new Schema<IFeatherPackage>(
 );
 
 // Indexes
-walletSchema.index({ userId: 1 });
 walletTransactionSchema.index({ userId: 1, type: 1, createdAt: -1 });
 walletTransactionSchema.index({ status: 1, createdAt: -1 });
 featherPackageSchema.index({ isActive: 1, order: 1 });
