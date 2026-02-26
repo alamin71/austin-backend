@@ -24,8 +24,8 @@ const streamSchema = new Schema<IStream>(
           },
           contentRating: {
                type: String,
-               enum: ['G', 'PG', 'PG-13', 'R', '18+'],
-               default: 'PG',
+               enum: ['all_ages', 'PG-13', 'R', '18+'] as const,
+               default: 'all_ages',
           },
           banner: {
                type: String,

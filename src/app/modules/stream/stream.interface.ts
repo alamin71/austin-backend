@@ -6,7 +6,7 @@ export interface IStream {
      title: string;
      description?: string;
      category: Types.ObjectId;
-     contentRating: 'G' | 'PG' | 'PG-13' | 'R' | '18+';
+     contentRating: 'all_ages' | 'PG-13' | 'R' | '18+';
      banner?: string;
      bannerPosition?: 'top' | 'bottom' | 'center';
      status: 'scheduled' | 'live' | 'paused' | 'ended';
