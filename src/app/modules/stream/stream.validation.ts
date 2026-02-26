@@ -11,7 +11,7 @@ export const startStreamSchema = z.object({
                })
                .optional(),
           banner: z.string().optional(), // Can be file path or URL
-          bannerPosition: z.enum(['top', 'bottom', 'center']).optional(),
+          bannerPosition: z.enum(['top', 'bottom', 'top_left', 'top_right', 'bottom_left', 'bottom_right']).optional(),
           visibility: z.enum(['public', 'followers', 'subscribers']).optional(),
           allowComments: z.preprocess(
                (val) => (typeof val === 'string' ? val === 'true' : val),
