@@ -6,7 +6,7 @@ export const startStreamSchema = z.object({
           description: z.string().max(1000).optional(),
           category: z.string({ required_error: 'Category is required' }),
           contentRating: z
-               .enum(['G', 'PG', 'PG-13', 'R', '18+'], {
+               .enum(['all_ages', 'PG-13', 'R', '18+'], {
                     errorMap: () => ({ message: 'Invalid content rating' }),
                })
                .optional(),
