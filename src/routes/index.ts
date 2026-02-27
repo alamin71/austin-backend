@@ -10,6 +10,10 @@ import { TestRouter } from '../app/modules/test/test.route.js';
 import AnalyticsRouter from '../app/modules/stream/analytics.route.js';
 import SubscriptionRouter from '../app/modules/subscription/subscription.route.js';
 import WalletRouter from '../app/modules/wallet/wallet.route.js';
+import { friendRequestRoutes } from '../app/modules/friendRequest/friendRequest.route.js';
+import { messageRoutes } from '../app/modules/message/message.route.js';
+import { followRoutes } from '../app/modules/follow/follow.route.js';
+import { notificationRoutes } from '../app/modules/notification/notification.route.js';
 
 const router = express.Router();
 const routes = [
@@ -52,6 +56,22 @@ const routes = [
      {
           path: '/poll',
           route: PollRouter,
+     },
+     {
+          path: '/friend-request',
+          route: friendRequestRoutes,
+     },
+     {
+          path: '/message',
+          route: messageRoutes,
+     },
+     {
+          path: '/follow',
+          route: followRoutes,
+     },
+     {
+          path: '/notification',
+          route: notificationRoutes,
      },
      {
           path: '/test',

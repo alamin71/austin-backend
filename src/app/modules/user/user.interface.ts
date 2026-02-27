@@ -34,6 +34,11 @@ export type IUser = {
           oneTimeCode: number;
           expireAt: Date;
      };
+     // Social features
+     followers?: any[];
+     following?: any[];
+     friends?: any[];
+     blockedUsers?: any[];
      _id?: any;
 };
 

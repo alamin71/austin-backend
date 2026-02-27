@@ -115,6 +115,31 @@ const userSchema = new Schema<IUser, UserModel>(
                },
                select: false,
           },
+          // Social features
+          followers: [
+               {
+                    type: Schema.Types.ObjectId,
+                    ref: 'User',
+               },
+          ],
+          following: [
+               {
+                    type: Schema.Types.ObjectId,
+                    ref: 'User',
+               },
+          ],
+          friends: [
+               {
+                    type: Schema.Types.ObjectId,
+                    ref: 'User',
+               },
+          ],
+          blockedUsers: [
+               {
+                    type: Schema.Types.ObjectId,
+                    ref: 'User',
+               },
+          ],
      },
      { timestamps: true },
 );
