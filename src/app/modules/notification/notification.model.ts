@@ -19,6 +19,7 @@ const notificationSchema = new Schema<INotification>(
                     'subscription_purchased',
                     'gift_received',
                     'stream_live',
+                    'new_follower',
                     'comment',
                ],
                required: true,

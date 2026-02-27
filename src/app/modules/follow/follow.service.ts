@@ -1,6 +1,7 @@
 import { StatusCodes } from 'http-status-codes';
 import AppError from '../../../errors/AppError.js';
 import { User } from '../user/user.model.js';
+import { NotificationService } from '../notification/notification.service.js';
 
 export class FollowService {
      // Follow a user/streamer
@@ -40,6 +41,17 @@ export class FollowService {
                followerId,
                { $addToSet: { following: followingId } },
                { new: true },
+          );
+
+          // Create notification for the followed user
+          await NotificationService.createNotification(
+               followingId,
+               'new_follower',
+               `${follower.name} started following you`,
+               followerId,
+               undefined,
+               `/profile/${follower.userName}`,
+               'user-plus',
           );
 
           return { message: 'Successfully followed' };
