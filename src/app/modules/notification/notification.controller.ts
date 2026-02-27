@@ -38,8 +38,9 @@ export const NotificationController = {
 
      markAsRead: catchAsync(async (req: Request, res: Response) => {
           const { notificationId } = req.params;
+          const userId = (req.user as any).id;
 
-          const result = await NotificationService.markAsRead(notificationId);
+          const result = await NotificationService.markAsRead(notificationId, userId);
 
           sendResponse(res, {
                statusCode: StatusCodes.OK,

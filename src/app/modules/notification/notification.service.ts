@@ -1,5 +1,6 @@
 import { Types } from 'mongoose';
 import { Notification } from './notification.model.js';
+import { isSocketInitialized, getSocketInstance } from '../../../helpers/socketInstance.js';
 
 export class NotificationService {
      static async createNotification(
@@ -22,6 +23,28 @@ export class NotificationService {
                     actionUrl,
                     icon,
                });
+
+               // Emit real-time notification via socket
+               if (isSocketInitialized()) {
+                    const io = getSocketInstance();
+                    io.to(userId).emit('new_notification', {
+                         _id: notification._id,
+                         type,
+                         content,
+                         relatedUser,
+                         actionUrl,
+                         icon,
+                         read: false,
+                         createdAt: notification.createdAt,
+                    });
+
+                    // Update unread count
+                    const unreadCount = await Notification.countDocuments({
+                         user: userId,
+                         read: false,
+                    });
+                    io.to(userId).emit('unread_count', { unreadCount });
+               }
 
                return notification;
           } catch (error) {
@@ -51,12 +74,22 @@ export class NotificationService {
           return { unreadCount: count };
      }
 
-     static async markAsRead(notificationId: string) {
+     static async markAsRead(notificationId: string, userId?: string) {
           const notification = await Notification.findByIdAndUpdate(
                notificationId,
                { read: true },
                { new: true },
           );
+
+          // Emit socket event to update UI
+          if (isSocketInitialized() && userId) {
+               const io = getSocketInstance();
+               const unreadCount = await Notification.countDocuments({
+                    user: userId,
+                    read: false,
+               });
+               io.to(userId).emit('unread_count', { unreadCount });
+          }
 
           return notification;
      }

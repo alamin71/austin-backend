@@ -6,6 +6,7 @@ import app from './app.js';
 import config from './config/index.js';
 import { logger } from './shared/logger.js';
 import { socketHelper } from './helpers/socketHelper.js';
+import { setSocketInstance } from './helpers/socketInstance.js';
 import { setupProcessHandlers } from './DB/processHandlers.js';
 import { setupSecurity } from './DB/security.js';
 import { setupCluster } from './DB/cluster.js';
@@ -53,6 +54,7 @@ export async function startServer() {
           });
 
           socketServer.listen(socketPort);
+          setSocketInstance(socketServer); // Initialize global socket instance
           socketHelper.socket(socketServer);
           logger.info(`♻️  Socket is listening on ${ipAddress}:${socketPort}`);
      } catch (error) {
