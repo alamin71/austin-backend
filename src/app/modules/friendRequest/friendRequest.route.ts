@@ -7,28 +7,28 @@ const router = Router();
 
 // Send friend request
 router.post(
-     '/send',
+     '/request-send',
      auth(USER_ROLES.USER),
      FriendRequestController.sendFriendRequest,
 );
 
 // Get pending requests for current user
 router.get(
-     '/pending',
+     '/request-pending',
      auth(USER_ROLES.USER),
      FriendRequestController.getPendingRequests,
 );
 
 // Accept friend request
 router.patch(
-     '/:requestId/accept',
+     '/:requestId/request-accept',
      auth(USER_ROLES.USER),
      FriendRequestController.acceptFriendRequest,
 );
 
 // Reject friend request
 router.patch(
-     '/:requestId/reject',
+     '/:requestId/request-reject',
      auth(USER_ROLES.USER),
      FriendRequestController.rejectFriendRequest,
 );

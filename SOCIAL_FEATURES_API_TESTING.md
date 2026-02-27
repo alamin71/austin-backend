@@ -79,10 +79,10 @@ Authorization: Bearer {{token}}
 
 ---
 
-## 2. FRIEND REQUEST SYSTEM (`/friend-request`)
+## 2. FRIEND REQUEST SYSTEM (`/friend`)
 
 ### 2.1 Send Friend Request
-**POST** `/friend-request/send`
+**POST** `/friend/request-send`
 ```json
 {
   "receiverId": "USER_ID"
@@ -114,7 +114,7 @@ Authorization: Bearer {{token}}
 **Triggers:** Notification sent to receiver
 
 ### 2.2 Get Pending Requests
-**GET** `/friend-request/pending`
+**GET** `/friend/request-pending`
 **Response:**
 ```json
 {
@@ -136,7 +136,7 @@ Authorization: Bearer {{token}}
 ```
 
 ### 2.3 Accept Friend Request
-**PATCH** `/friend-request/:requestId/accept`
+**PATCH** `/friend/:requestId/request-accept`
 **Response:**
 ```json
 {
@@ -154,11 +154,11 @@ Authorization: Bearer {{token}}
 - Notification sent to sender
 
 ### 2.4 Reject Friend Request
-**PATCH** `/friend-request/:requestId/reject`
+**PATCH** `/friend/:requestId/request-reject`
 **Triggers:** Notification sent to sender (optional)
 
 ### 2.5 Get Friends List
-**GET** `/friend-request/list/:userId?`
+**GET** `/friend/list/:userId?`
 **Response:**
 ```json
 {
@@ -177,7 +177,7 @@ Authorization: Bearer {{token}}
 ```
 
 ### 2.6 Remove Friend
-**DELETE** `/friend-request/:friendId`
+**DELETE** `/friend/:friendId`
 
 ---
 
@@ -303,7 +303,7 @@ Authorization: Bearer {{token}}
           "userName": "alice",
           "image": "https://..."
         },
-        "actionUrl": "/friend-request/req123",
+        "actionUrl": "/friend/req123",
         "icon": "https://...",
         "read": false,
         "createdAt": "2026-02-27T10:30:00Z"
@@ -367,7 +367,7 @@ Authorization: Bearer {{token}}
 ### Scenario 1: Complete Friend Request Flow
 1. **User A** sends friend request to **User B**
    ```
-   POST /friend-request/send
+   POST /friend/request-send
    Body: { "receiverId": "userB_id" }
    ```
    → Notification created for User B
@@ -380,12 +380,12 @@ Authorization: Bearer {{token}}
 
 3. **User B** checks pending requests
    ```
-   GET /friend-request/pending
+   GET /friend/request-pending
    ```
 
 4. **User B** accepts request
    ```
-   PATCH /friend-request/:requestId/accept
+   PATCH /friend/:requestId/request-accept
    ```
    → Both users now friends
    → Notification created for User A
@@ -398,7 +398,7 @@ Authorization: Bearer {{token}}
 
 6. **User B** views friends list
    ```
-   GET /friend-request/list
+   GET /friend/list
    ```
    → User A appears in list
 

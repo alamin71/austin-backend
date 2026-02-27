@@ -142,7 +142,7 @@ socket.on('new_notification', (data) => {
   //   type: 'friend_request_received', 'new_follower', etc.
   //   content: 'John sent you a friend request',
   //   relatedUser: user_id,
-  //   actionUrl: '/friend-requests',
+  //   actionUrl: '/friend/requests',
   //   icon: 'user-plus',
   //   read: false,
   //   createdAt: timestamp

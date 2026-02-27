@@ -68,7 +68,7 @@ export class FriendRequestService {
                `${senderUser?.name || senderUser?.userName} sent you a friend request`,
                senderId,
                friendRequest._id.toString(),
-               `/friend-request/${friendRequest._id}`,
+               `/friend/${friendRequest._id}`,
                senderUser?.image,
           );
 

@@ -16,7 +16,7 @@ export interface INotification {
      relatedUser?: Types.ObjectId; // The user who triggered the notification (sender of request, gifter, etc)
      relatedId?: Types.ObjectId; // Related document ID (friend request ID, gift ID, etc)
      read: boolean;
-     actionUrl?: string; // URL to navigate to (like /friend-requests or /user/:id)
+     actionUrl?: string; // URL to navigate to (like /friend/requests or /user/:id)
      icon?: string; // Icon or avatar URL
      createdAt?: Date;
      updatedAt?: Date;

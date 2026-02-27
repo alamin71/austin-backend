@@ -58,7 +58,7 @@ const routes = [
           route: PollRouter,
      },
      {
-          path: '/friend-request',
+          path: '/friend',
           route: friendRequestRoutes,
      },
      {
