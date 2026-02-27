@@ -1,4 +1,5 @@
-import { Schema, model, models } from 'mongoose';
+import { Schema, model } from 'mongoose';
+import mongoose from 'mongoose';
 import { IMessage, MessageModel } from './message.interface.js';
 
 const messageSchema = new Schema<IMessage, MessageModel>(
@@ -45,4 +46,4 @@ messageSchema.index({ sender: 1, receiver: 1 });
 messageSchema.index({ receiver: 1, isRead: 1 });
 messageSchema.index({ createdAt: -1 });
 
-export const Message = (models.Message as MessageModel) || model<IMessage, MessageModel>('Message', messageSchema);
+export const Message = (mongoose.models.Message as MessageModel) || model<IMessage, MessageModel>('Message', messageSchema);

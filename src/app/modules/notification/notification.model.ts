@@ -1,4 +1,5 @@
-import { Schema, model, models } from 'mongoose';
+import { Schema, model } from 'mongoose';
+import mongoose from 'mongoose';
 import { INotification } from './notification.interface.js';
 
 const notificationSchema = new Schema<INotification>(
@@ -57,4 +58,4 @@ const notificationSchema = new Schema<INotification>(
 notificationSchema.index({ user: 1, createdAt: -1 });
 notificationSchema.index({ user: 1, read: 1 });
 
-export const Notification = (models.Notification as any) || model<INotification>('Notification', notificationSchema);
+export const Notification = (mongoose.models.Notification as any) || model<INotification>('Notification', notificationSchema);

@@ -1,4 +1,5 @@
-import { Schema, model, models } from 'mongoose';
+import { Schema, model } from 'mongoose';
+import mongoose from 'mongoose';
 import { IFriendRequest, FriendRequestModel } from './friendRequest.interface.js';
 
 const friendRequestSchema = new Schema<IFriendRequest, FriendRequestModel>(
@@ -37,7 +38,7 @@ friendRequestSchema.index({ sender: 1, receiver: 1 }, { unique: true });
 friendRequestSchema.index({ receiver: 1, status: 1 });
 friendRequestSchema.index({ sender: 1, status: 1 });
 
-export const FriendRequest = (models.FriendRequest as FriendRequestModel) || model<IFriendRequest, FriendRequestModel>(
+export const FriendRequest = (mongoose.models.FriendRequest as FriendRequestModel) || model<IFriendRequest, FriendRequestModel>(
      'FriendRequest',
      friendRequestSchema,
 );
