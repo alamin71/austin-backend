@@ -27,6 +27,18 @@ export class MessageService {
                );
           }
 
+          // Check if sender is blocked by receiver
+          const isBlocked = receiver.blockedUsers?.some(
+               (b: any) => b.toString() === senderId,
+          );
+
+          if (isBlocked) {
+               throw new AppError(
+                    StatusCodes.FORBIDDEN,
+                    'You are blocked by this user. Cannot send message.',
+               );
+          }
+
           // Check if users are friends
           const areFriends = receiver.friends?.some(
                (f: any) => f.toString() === senderId,
@@ -168,5 +180,104 @@ export class MessageService {
           await Message.findByIdAndDelete(messageId);
 
           return { message: 'Message deleted successfully' };
+     }
+
+     // Block user
+     static async blockUser(userId: string, blockUserId: string) {
+          if (userId === blockUserId) {
+               throw new AppError(StatusCodes.BAD_REQUEST, 'Cannot block yourself');
+          }
+
+          const user = await User.findById(userId);
+          if (!user) {
+               throw new AppError(StatusCodes.NOT_FOUND, 'User not found');
+          }
+
+          const blockUser = await User.findById(blockUserId);
+          if (!blockUser) {
+               throw new AppError(StatusCodes.NOT_FOUND, 'User to block not found');
+          }
+
+          // Check if already blocked
+          const isAlreadyBlocked = user.blockedUsers?.some(
+               (b: any) => b.toString() === blockUserId,
+          );
+
+          if (isAlreadyBlocked) {
+               throw new AppError(StatusCodes.BAD_REQUEST, 'User already blocked');
+          }
+
+          // Add to blockedUsers
+          await User.findByIdAndUpdate(userId, {
+               $addToSet: { blockedUsers: blockUserId },
+          });
+
+          // Remove from friends if they were friends
+          await User.findByIdAndUpdate(userId, {
+               $pull: { friends: blockUserId },
+          });
+
+          // Also remove from blocker's friends array in the blocked user's record
+          await User.findByIdAndUpdate(blockUserId, {
+               $pull: { friends: userId },
+          });
+
+          return { message: 'User blocked successfully' };
+     }
+
+     // Unblock user
+     static async unblockUser(userId: string, unblockUserId: string) {
+          if (userId === unblockUserId) {
+               throw new AppError(
+                    StatusCodes.BAD_REQUEST,
+                    'Cannot unblock yourself',
+               );
+          }
+
+          const user = await User.findById(userId);
+          if (!user) {
+               throw new AppError(StatusCodes.NOT_FOUND, 'User not found');
+          }
+
+          const unblockUser = await User.findById(unblockUserId);
+          if (!unblockUser) {
+               throw new AppError(StatusCodes.NOT_FOUND, 'User to unblock not found');
+          }
+
+          // Remove from blockedUsers
+          await User.findByIdAndUpdate(userId, {
+               $pull: { blockedUsers: unblockUserId },
+          });
+
+          return { message: 'User unblocked successfully' };
+     }
+
+     // Get blocked users list
+     static async getBlockedUsers(userId: string) {
+          const user = await User.findById(userId).populate(
+               'blockedUsers',
+               'name userName image email bio',
+          );
+
+          if (!user) {
+               throw new AppError(StatusCodes.NOT_FOUND, 'User not found');
+          }
+
+          return { blockedUsers: user.blockedUsers || [] };
+     }
+
+     // Check if user is blocked
+     static async isUserBlocked(userId: string, checkUserId: string) {
+          const user = await User.findById(userId);
+
+          if (!user) {
+               throw new AppError(StatusCodes.NOT_FOUND, 'User not found');
+          }
+
+          const isBlocked = user.blockedUsers?.some(
+               (b: any) => b.toString() === checkUserId,
+          );
+
+          return { isBlocked: !!isBlocked };
      }
 }

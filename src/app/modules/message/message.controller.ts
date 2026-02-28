@@ -95,4 +95,62 @@ export const MessageController = {
                data: {},
           });
      }),
+
+     blockUser: catchAsync(async (req: Request, res: Response) => {
+          const { blockUserId } = req.params;
+          const userId = (req.user as any).id;
+
+          const result = await MessageService.blockUser(userId, blockUserId);
+
+          sendResponse(res, {
+               statusCode: StatusCodes.OK,
+               success: true,
+               message: result.message,
+               data: {},
+          });
+     }),
+
+     unblockUser: catchAsync(async (req: Request, res: Response) => {
+          const { unblockUserId } = req.params;
+          const userId = (req.user as any).id;
+
+          const result = await MessageService.unblockUser(
+               userId,
+               unblockUserId,
+          );
+
+          sendResponse(res, {
+               statusCode: StatusCodes.OK,
+               success: true,
+               message: result.message,
+               data: {},
+          });
+     }),
+
+     getBlockedUsers: catchAsync(async (req: Request, res: Response) => {
+          const userId = (req.user as any).id;
+
+          const result = await MessageService.getBlockedUsers(userId);
+
+          sendResponse(res, {
+               statusCode: StatusCodes.OK,
+               success: true,
+               message: 'Blocked users list retrieved',
+               data: result,
+          });
+     }),
+
+     isUserBlocked: catchAsync(async (req: Request, res: Response) => {
+          const { checkUserId } = req.params;
+          const userId = (req.user as any).id;
+
+          const result = await MessageService.isUserBlocked(userId, checkUserId);
+
+          sendResponse(res, {
+               statusCode: StatusCodes.OK,
+               success: true,
+               message: 'Block status retrieved',
+               data: result,
+          });
+     }),
 };

@@ -47,4 +47,32 @@ router.delete(
      MessageController.deleteMessage,
 );
 
+// Block user
+router.post(
+     '/block/:blockUserId',
+     auth(USER_ROLES.USER),
+     MessageController.blockUser,
+);
+
+// Unblock user
+router.post(
+     '/unblock/:unblockUserId',
+     auth(USER_ROLES.USER),
+     MessageController.unblockUser,
+);
+
+// Get blocked users list
+router.get(
+     '/blocked-users/list',
+     auth(USER_ROLES.USER),
+     MessageController.getBlockedUsers,
+);
+
+// Check if user is blocked
+router.get(
+     '/is-blocked/:checkUserId',
+     auth(USER_ROLES.USER),
+     MessageController.isUserBlocked,
+);
+
 export const messageRoutes = router;
