@@ -4,6 +4,8 @@ import bcrypt from 'bcrypt';
 import AppError from '../../../errors/AppError.js';
 import { IUser } from '../user/user.interface.js';
 import { User } from '../user/user.model.js';
+import { Stream } from '../stream/stream.model.js';
+import { StreamWarning } from '../stream/streamWarning.model.js';
 import config from '../../../config/index.js';
 import { emailHelper } from '../../../helpers/emailHelper.js';
 import { jwtHelper } from '../../../helpers/jwtHelper.js';
@@ -205,6 +207,171 @@ const adminResendOtpToDB = async (email: string) => {
      return { otp, email: admin.email, message: `OTP sent successfully to ${admin.email}` };
 };
 
+// Stream Management Functions
+const getActiveStreams = async () => {
+     const activeStreams = await Stream.find({ status: 'live' })
+          .populate('streamer', 'name userName image email')
+          .populate('category', 'name')
+          .sort({ createdAt: -1 });
+
+     return {
+          streams: activeStreams,
+          count: activeStreams.length,
+     };
+};
+
+const getStreamMonitoring = async () => {
+     const activeStreams = await Stream.find({ status: 'live' })
+          .populate('streamer', 'name userName email image')
+          .select(
+               'title streamer status currentViewerCount peakViewerCount startedAt duration',
+          )
+          .sort({ startedAt: -1 });
+
+     const totalViewers = activeStreams.reduce(
+          (sum, stream) => sum + (stream.currentViewerCount || 0),
+          0,
+     );
+
+     const warningsCount = await StreamWarning.countDocuments({
+          status: 'active',
+     });
+
+     return {
+          activeStreamsCount: activeStreams.length,
+          totalViewers,
+          warningsCount,
+          streams: activeStreams,
+     };
+};
+
+const warnStreamer = async (
+     adminId: string,
+     streamId: string,
+     reason: string,
+     severity: 'warning' | 'critical' | 'violation',
+     description: string,
+) => {
+     const stream = await Stream.findById(streamId).populate('streamer');
+
+     if (!stream) {
+          throw new AppError(StatusCodes.NOT_FOUND, 'Stream not found');
+     }
+
+     const admin = await User.findById(adminId);
+     if (!admin) {
+          throw new AppError(StatusCodes.NOT_FOUND, 'Admin not found');
+     }
+
+     const warning = await StreamWarning.create({
+          stream: streamId,
+          streamer: stream.streamer._id,
+          admin: adminId,
+          reason,
+          severity,
+          description,
+          status: 'active',
+     });
+
+     // Send email to streamer about warning
+     const streamer = await User.findById(stream.streamer._id);
+     if (streamer) {
+          const emailData = {
+               name: streamer.name,
+               streamTitle: stream.title,
+               reason,
+               description,
+               severity,
+          };
+          // Send warning email
+          // await emailHelper.sendEmail(...);
+     }
+
+     return warning.populate('streamer', 'name email');
+};
+
+const endStream = async (adminId: string, streamId: string, reason?: string) => {
+     const stream = await Stream.findById(streamId).populate('streamer');
+
+     if (!stream) {
+          throw new AppError(StatusCodes.NOT_FOUND, 'Stream not found');
+     }
+
+     if (stream.status !== 'live') {
+          throw new AppError(
+               StatusCodes.BAD_REQUEST,
+               'Only live streams can be ended',
+          );
+     }
+
+     const endedStream = await Stream.findByIdAndUpdate(
+          streamId,
+          {
+               status: 'ended',
+               endedAt: new Date(),
+          },
+          { new: true },
+     );
+
+     // If reason provided, create a warning
+     if (reason) {
+          await StreamWarning.create({
+               stream: streamId,
+               streamer: stream.streamer._id,
+               admin: adminId,
+               reason: 'violating_content',
+               description: reason,
+               severity: 'critical',
+               actionTaken: 'Stream ended by admin',
+               status: 'active',
+          });
+
+          // Send email to streamer
+          const streamer = await User.findById(stream.streamer._id);
+          if (streamer) {
+               // Send email notification
+          }
+     }
+
+     return endedStream;
+};
+
+const getStreamerWarnings = async (streamerId: string) => {
+     const warnings = await StreamWarning.find({ streamer: streamerId })
+          .populate('stream', 'title')
+          .populate('admin', 'name email')
+          .sort({ createdAt: -1 });
+
+     return {
+          warnings,
+          totalWarnings: warnings.length,
+          activeWarnings: warnings.filter((w) => w.status === 'active').length,
+     };
+};
+
+const resolveWarning = async (
+     warningId: string,
+     adminId: string,
+     actionTaken: string,
+) => {
+     const warning = await StreamWarning.findById(warningId);
+
+     if (!warning) {
+          throw new AppError(StatusCodes.NOT_FOUND, 'Warning not found');
+     }
+
+     const resolvedWarning = await StreamWarning.findByIdAndUpdate(
+          warningId,
+          {
+               status: 'resolved',
+               actionTaken,
+          },
+          { new: true },
+     );
+
+     return resolvedWarning;
+};
+
 export const AdminService = {
      createAdminToDB,
      deleteAdminFromDB,
@@ -217,4 +384,10 @@ export const AdminService = {
      adminVerifyResetOtpToDB,
      adminResetPasswordToDB,
      adminResendOtpToDB,
+     getActiveStreams,
+     getStreamMonitoring,
+     warnStreamer,
+     endStream,
+     getStreamerWarnings,
+     resolveWarning,
 };

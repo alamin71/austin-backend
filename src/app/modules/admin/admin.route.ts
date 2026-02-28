@@ -102,4 +102,44 @@ router.delete(
   categoryController.deleteCategory,
 );
 
+// ============================================
+// STREAM MONITORING & MODERATION ENDPOINTS
+// ============================================
+
+router.get(
+  '/stream/active',
+  auth(USER_ROLES.ADMIN, USER_ROLES.SUPER_ADMIN),
+  AdminController.getActiveStreams,
+);
+
+router.get(
+  '/stream/monitoring',
+  auth(USER_ROLES.ADMIN, USER_ROLES.SUPER_ADMIN),
+  AdminController.getStreamMonitoring,
+);
+
+router.post(
+  '/stream/:streamId/warn',
+  auth(USER_ROLES.ADMIN, USER_ROLES.SUPER_ADMIN),
+  AdminController.warnStreamer,
+);
+
+router.patch(
+  '/stream/:streamId/end',
+  auth(USER_ROLES.ADMIN, USER_ROLES.SUPER_ADMIN),
+  AdminController.endStream,
+);
+
+router.get(
+  '/stream/:streamerId/warnings',
+  auth(USER_ROLES.ADMIN, USER_ROLES.SUPER_ADMIN),
+  AdminController.getStreamerWarnings,
+);
+
+router.patch(
+  '/warning/:warningId/resolve',
+  auth(USER_ROLES.ADMIN, USER_ROLES.SUPER_ADMIN),
+  AdminController.resolveWarning,
+);
+
 export const AdminRoutes = router;

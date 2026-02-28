@@ -145,14 +145,111 @@ const adminResendOtp = catchAsync(async (req: Request, res: Response) => {
      });
 });
 
+const getActiveStreams = catchAsync(async (req: Request, res: Response) => {
+     const result = await AdminService.getActiveStreams();
+
+     sendResponse(res, {
+          statusCode: StatusCodes.OK,
+          success: true,
+          message: 'Active streams retrieved',
+          data: result,
+     });
+});
+
+const getStreamMonitoring = catchAsync(async (req: Request, res: Response) => {
+     const result = await AdminService.getStreamMonitoring();
+
+     sendResponse(res, {
+          statusCode: StatusCodes.OK,
+          success: true,
+          message: 'Stream monitoring data retrieved',
+          data: result,
+     });
+});
+
+const warnStreamer = catchAsync(async (req: Request, res: Response) => {
+     const adminId = (req.user as any).id;
+     const { streamId, reason, severity, description } = req.body;
+
+     const result = await AdminService.warnStreamer(
+          adminId,
+          streamId,
+          reason,
+          severity,
+          description,
+     );
+
+     sendResponse(res, {
+          statusCode: StatusCodes.CREATED,
+          success: true,
+          message: 'Warning issued to streamer',
+          data: result,
+     });
+});
+
+const endStream = catchAsync(async (req: Request, res: Response) => {
+     const adminId = (req.user as any).id;
+     const { streamId } = req.params;
+     const { reason } = req.body;
+
+     const result = await AdminService.endStream(adminId, streamId, reason);
+
+     sendResponse(res, {
+          statusCode: StatusCodes.OK,
+          success: true,
+          message: 'Stream ended by admin',
+          data: result,
+     });
+});
+
+const getStreamerWarnings = catchAsync(async (req: Request, res: Response) => {
+     const { streamerId } = req.params;
+
+     const result = await AdminService.getStreamerWarnings(streamerId);
+
+     sendResponse(res, {
+          statusCode: StatusCodes.OK,
+          success: true,
+          message: 'Streamer warnings retrieved',
+          data: result,
+     });
+});
+
+const resolveWarning = catchAsync(async (req: Request, res: Response) => {
+     const adminId = (req.user as any).id;
+     const { warningId } = req.params;
+     const { actionTaken } = req.body;
+
+     const result = await AdminService.resolveWarning(
+          warningId,
+          adminId,
+          actionTaken,
+     );
+
+     sendResponse(res, {
+          statusCode: StatusCodes.OK,
+          success: true,
+          message: 'Warning resolved',
+          data: result,
+     });
+});
+
 export const AdminController = {
      deleteAdmin,
      createAdmin,
      getAdmin,
-     getAdminProfile,     updateAdminProfile,     changePassword,
+     getAdminProfile,
+     updateAdminProfile,
+     changePassword,
      adminLogin,
      adminForgetPassword,
      adminVerifyResetOtp,
      adminResetPassword,
      adminResendOtp,
+     getActiveStreams,
+     getStreamMonitoring,
+     warnStreamer,
+     endStream,
+     getStreamerWarnings,
+     resolveWarning,
 };
