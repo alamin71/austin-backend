@@ -202,38 +202,6 @@ const endStream = catchAsync(async (req: Request, res: Response) => {
      });
 });
 
-const getStreamerWarnings = catchAsync(async (req: Request, res: Response) => {
-     const { streamerId } = req.params;
-
-     const result = await AdminService.getStreamerWarnings(streamerId);
-
-     sendResponse(res, {
-          statusCode: StatusCodes.OK,
-          success: true,
-          message: 'Streamer warnings retrieved',
-          data: result,
-     });
-});
-
-const resolveWarning = catchAsync(async (req: Request, res: Response) => {
-     const adminId = (req.user as any).id;
-     const { warningId } = req.params;
-     const { actionTaken } = req.body;
-
-     const result = await AdminService.resolveWarning(
-          warningId,
-          adminId,
-          actionTaken,
-     );
-
-     sendResponse(res, {
-          statusCode: StatusCodes.OK,
-          success: true,
-          message: 'Warning resolved',
-          data: result,
-     });
-});
-
 export const AdminController = {
      deleteAdmin,
      createAdmin,
@@ -250,6 +218,4 @@ export const AdminController = {
      getStreamMonitoring,
      warnStreamer,
      endStream,
-     getStreamerWarnings,
-     resolveWarning,
 };

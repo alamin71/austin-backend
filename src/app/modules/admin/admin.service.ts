@@ -336,42 +336,6 @@ const endStream = async (adminId: string, streamId: string, reason?: string) => 
      return endedStream;
 };
 
-const getStreamerWarnings = async (streamerId: string) => {
-     const warnings = await StreamWarning.find({ streamer: streamerId })
-          .populate('stream', 'title')
-          .populate('admin', 'name email')
-          .sort({ createdAt: -1 });
-
-     return {
-          warnings,
-          totalWarnings: warnings.length,
-          activeWarnings: warnings.filter((w) => w.status === 'active').length,
-     };
-};
-
-const resolveWarning = async (
-     warningId: string,
-     adminId: string,
-     actionTaken: string,
-) => {
-     const warning = await StreamWarning.findById(warningId);
-
-     if (!warning) {
-          throw new AppError(StatusCodes.NOT_FOUND, 'Warning not found');
-     }
-
-     const resolvedWarning = await StreamWarning.findByIdAndUpdate(
-          warningId,
-          {
-               status: 'resolved',
-               actionTaken,
-          },
-          { new: true },
-     );
-
-     return resolvedWarning;
-};
-
 export const AdminService = {
      createAdminToDB,
      deleteAdminFromDB,
@@ -388,6 +352,4 @@ export const AdminService = {
      getStreamMonitoring,
      warnStreamer,
      endStream,
-     getStreamerWarnings,
-     resolveWarning,
 };

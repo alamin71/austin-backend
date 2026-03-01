@@ -130,16 +130,4 @@ router.patch(
   AdminController.endStream,
 );
 
-router.get(
-  '/stream/:streamerId/warnings',
-  auth(USER_ROLES.ADMIN, USER_ROLES.SUPER_ADMIN),
-  AdminController.getStreamerWarnings,
-);
-
-router.patch(
-  '/warning/:warningId/resolve',
-  auth(USER_ROLES.ADMIN, USER_ROLES.SUPER_ADMIN),
-  AdminController.resolveWarning,
-);
-
 export const AdminRoutes = router;
