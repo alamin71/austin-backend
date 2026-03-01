@@ -223,8 +223,9 @@ const getActiveStreams = async () => {
 const getStreamMonitoring = async () => {
      const activeStreams = await Stream.find({ status: 'live' })
           .populate('streamer', 'name userName email image')
+          .populate('category', 'name')
           .select(
-               'title streamer status currentViewerCount peakViewerCount startedAt duration',
+               'title streamer category status currentViewerCount peakViewerCount startedAt duration',
           )
           .sort({ startedAt: -1 });
 
@@ -233,15 +234,35 @@ const getStreamMonitoring = async () => {
           0,
      );
 
+     const peakConcurrent = activeStreams.reduce(
+          (max, stream) => Math.max(max, stream.currentViewerCount || 0),
+          0,
+     );
+
      const warningsCount = await StreamWarning.countDocuments({
           status: 'active',
      });
 
+     // Get flagged count for each stream
+     const streamsWithFlags = await Promise.all(
+          activeStreams.map(async (stream) => {
+               const flaggedCount = await StreamWarning.countDocuments({
+                    stream: stream._id,
+                    status: 'active',
+               });
+               return {
+                    ...stream.toObject(),
+                    flaggedCount,
+               };
+          }),
+     );
+
      return {
           activeStreamsCount: activeStreams.length,
           totalViewers,
+          peakConcurrent,
           warningsCount,
-          streams: activeStreams,
+          streams: streamsWithFlags,
      };
 };
 
