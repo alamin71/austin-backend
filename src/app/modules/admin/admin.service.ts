@@ -340,7 +340,7 @@ const endStream = async (adminId: string, streamId: string, reason?: string) => 
                stream: streamId,
                streamer: stream.streamer._id,
                admin: adminId,
-               reason: 'violating_content',
+               reason: 'inappropriate_content',
                description: reason,
                severity: 'critical',
                actionTaken: 'Stream ended by admin',
@@ -355,6 +355,19 @@ const endStream = async (adminId: string, streamId: string, reason?: string) => 
      }
 
      return endedStream;
+};
+
+const getStreamerWarnings = async (streamerId: string) => {
+     const warnings = await StreamWarning.find({ streamer: streamerId })
+          .populate('stream', 'title status')
+          .populate('admin', 'name email')
+          .sort({ createdAt: -1 });
+
+     return {
+          warnings,
+          totalWarnings: warnings.length,
+          activeWarnings: warnings.filter((warning) => warning.status === 'active').length,
+     };
 };
 
 export const AdminService = {
@@ -373,4 +386,5 @@ export const AdminService = {
      getStreamMonitoring,
      warnStreamer,
      endStream,
+     getStreamerWarnings,
 };

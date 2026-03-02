@@ -169,7 +169,8 @@ const getStreamMonitoring = catchAsync(async (req: Request, res: Response) => {
 
 const warnStreamer = catchAsync(async (req: Request, res: Response) => {
      const adminId = (req.user as any).id;
-     const { streamId, reason, severity, description } = req.body;
+     const { streamId } = req.params;
+     const { reason, severity, description } = req.body;
 
      const result = await AdminService.warnStreamer(
           adminId,
@@ -202,6 +203,19 @@ const endStream = catchAsync(async (req: Request, res: Response) => {
      });
 });
 
+const getStreamerWarnings = catchAsync(async (req: Request, res: Response) => {
+     const { streamerId } = req.params;
+
+     const result = await AdminService.getStreamerWarnings(streamerId);
+
+     sendResponse(res, {
+          statusCode: StatusCodes.OK,
+          success: true,
+          message: 'Streamer warnings retrieved',
+          data: result,
+     });
+});
+
 export const AdminController = {
      deleteAdmin,
      createAdmin,
@@ -218,4 +232,5 @@ export const AdminController = {
      getStreamMonitoring,
      warnStreamer,
      endStream,
+     getStreamerWarnings,
 };
