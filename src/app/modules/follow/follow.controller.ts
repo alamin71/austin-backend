@@ -40,13 +40,16 @@ export const FollowController = {
           const userId = req.params.userId || (req.user as any).id;
           const result = await FollowService.getFollowers(userId);
 
-          // Transform avatar → image for each follower
+          // Transform avatar → image for each follower and remove avatar field
           const transformedResult = (result || []).map((follower: any) => {
                const plainData = follower && (follower as any).toObject ? (follower as any).toObject() : follower;
-               return {
+               const transformed = {
                     ...plainData,
                     image: plainData?.avatar,
                };
+               // Remove avatar field completely
+               delete transformed.avatar;
+               return transformed;
           });
 
           sendResponse(res, {
@@ -61,13 +64,16 @@ export const FollowController = {
           const userId = req.params.userId || (req.user as any).id;
           const result = await FollowService.getFollowing(userId);
 
-          // Transform avatar → image for each following user
+          // Transform avatar → image for each following user and remove avatar field
           const transformedResult = (result || []).map((following: any) => {
                const plainData = following && (following as any).toObject ? (following as any).toObject() : following;
-               return {
+               const transformed = {
                     ...plainData,
                     image: plainData?.avatar,
                };
+               // Remove avatar field completely
+               delete transformed.avatar;
+               return transformed;
           });
 
           sendResponse(res, {
