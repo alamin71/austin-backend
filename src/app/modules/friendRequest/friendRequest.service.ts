@@ -37,7 +37,7 @@ export class FriendRequestService {
                );
           }
 
-          // Check for existing request
+          // Check for existing pending request
           const existingRequest = await FriendRequest.findOne({
                $or: [
                     { sender: senderId, receiver: receiverId },
@@ -52,6 +52,13 @@ export class FriendRequestService {
                     'Friend request already exists',
                );
           }
+
+          // Delete any rejected requests so user can send again
+          await FriendRequest.deleteOne({
+               sender: senderId,
+               receiver: receiverId,
+               status: 'rejected',
+          });
 
           // Create new request
           const friendRequest = await FriendRequest.create({
