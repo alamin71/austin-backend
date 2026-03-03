@@ -10,6 +10,7 @@ import { TestRouter } from '../app/modules/test/test.route.js';
 import AnalyticsRouter from '../app/modules/stream/analytics.route.js';
 import SubscriptionRouter from '../app/modules/subscription/subscription.route.js';
 import WalletRouter from '../app/modules/wallet/wallet.route.js';
+import ChallengeRouter from '../app/modules/challenge/challenge.route.js';
 import { friendRequestRoutes } from '../app/modules/friendRequest/friendRequest.route.js';
 import { messageRoutes } from '../app/modules/message/message.route.js';
 import { followRoutes } from '../app/modules/follow/follow.route.js';
@@ -48,6 +49,10 @@ const routes = [
      {
           path: '/wallet',
           route: WalletRouter,
+     },
+     {
+          path: '/challenge',
+          route: ChallengeRouter,
      },
      {
           path: '/gift',

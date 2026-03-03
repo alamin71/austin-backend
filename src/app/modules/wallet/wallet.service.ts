@@ -283,6 +283,70 @@ class WalletService {
   }
 
   /**
+   * ==================== FEATHER CONVERSION ====================
+   */
+
+  /**
+   * Convert feathers to dollars (1200 feathers = $1)
+   */
+  static async convertFeathersToDollars(userId: string, featherAmount: number) {
+    try {
+      const FEATHER_TO_DOLLAR_RATE = 1200; // 1200 feathers = $1
+
+      if (featherAmount < FEATHER_TO_DOLLAR_RATE) {
+        throw new AppError(
+          StatusCodes.BAD_REQUEST,
+          `Minimum conversion is ${FEATHER_TO_DOLLAR_RATE} feathers ($1)`
+        );
+      }
+
+      if (featherAmount % FEATHER_TO_DOLLAR_RATE !== 0) {
+        throw new AppError(
+          StatusCodes.BAD_REQUEST,
+          `Feather amount must be a multiple of ${FEATHER_TO_DOLLAR_RATE}`
+        );
+      }
+
+      const wallet = await this.getOrCreateWallet(userId);
+
+      if (wallet.balance < featherAmount) {
+        throw new AppError(
+          StatusCodes.BAD_REQUEST,
+          'Insufficient feather balance'
+        );
+      }
+
+      const dollarAmount = featherAmount / FEATHER_TO_DOLLAR_RATE;
+
+      // Deduct feathers, add dollars to balance
+      wallet.balance -= featherAmount;
+      wallet.balance += dollarAmount;
+      await wallet.save();
+
+      // Create transaction record
+      await WalletTransaction.create({
+        userId,
+        type: 'feather_conversion',
+        amount: dollarAmount,
+        description: `Converted ${featherAmount} feathers to $${dollarAmount.toFixed(2)}`,
+        status: 'completed',
+        metadata: { featherAmount, dollarAmount },
+      });
+
+      logger.info(`✓ Feathers converted: ${userId} (${featherAmount} → \$${dollarAmount})`);
+
+      return {
+        feathersConverted: featherAmount,
+        dollarsReceived: dollarAmount,
+        newBalance: wallet.balance,
+      };
+    } catch (error) {
+      errorLogger.error('Convert feathers error', error);
+      throw error;
+    }
+  }
+
+  /**
    * ==================== WITHDRAWAL ====================
    */
 
@@ -292,12 +356,8 @@ class WalletService {
   static async createWithdrawal(
     userId: string,
     amount: number,
-    bankDetails: {
-      accountHolder: string;
-      bankName: string;
-      accountNumber: string;
-      routingNumber: string;
-    }
+    payoutMethod: 'bank_transfer' | 'stripe' | 'paypal' = 'bank_transfer',
+    payoutDetails?: Record<string, any>
   ) {
     try {
       const wallet = await this.getOrCreateWallet(userId);
@@ -316,6 +376,14 @@ class WalletService {
         );
       }
 
+      if (!['bank_transfer', 'stripe', 'paypal'].includes(payoutMethod)) {
+        throw new AppError(StatusCodes.BAD_REQUEST, 'Invalid payout method');
+      }
+
+      if (!payoutDetails) {
+        throw new AppError(StatusCodes.BAD_REQUEST, 'Payout details are required');
+      }
+
       // Deduct from balance
       wallet.balance -= amount;
       wallet.totalWithdrawn += amount;
@@ -326,17 +394,21 @@ class WalletService {
         userId,
         type: 'withdrawal',
         amount: -amount,
-        description: `Withdrawal request ($${amount})`,
+        description: `Withdrawal request via ${payoutMethod} ($${amount})`,
         status: 'pending',
-        metadata: { bankDetails },
+        metadata: {
+          payoutMethod,
+          payoutDetails,
+        },
       });
 
-      logger.info(`✓ Withdrawal created: ${userId} ($${amount})`);
+      logger.info(`✓ Withdrawal created: ${userId} ($${amount}) via ${payoutMethod}`);
 
       return {
         message: 'Withdrawal request created successfully',
         transactionId: transaction._id,
         amount,
+        payoutMethod,
         status: 'pending',
       };
     } catch (error) {
@@ -408,6 +480,56 @@ class WalletService {
       };
     } catch (error) {
       errorLogger.error('Get all wallets error', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get platform revenue/commission (Admin)
+   */
+  static async getPlatformRevenue() {
+    try {
+      // Get all platform commission transactions
+      const platformTransactions = await WalletTransaction.find({
+        type: 'platform_commission',
+        status: 'completed',
+      }).sort({ createdAt: -1 });
+
+      // Calculate total revenue
+      const totalRevenue = platformTransactions.reduce(
+        (sum, txn) => sum + txn.amount,
+        0
+      );
+
+      // Group by source (subscription, gift, etc.)
+      const revenueBySource = platformTransactions.reduce((acc: any, txn) => {
+        const source = txn.metadata?.source || 'other';
+        if (!acc[source]) {
+          acc[source] = 0;
+        }
+        acc[source] += txn.amount;
+        return acc;
+      }, {});
+
+      // Last 30 days revenue
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+      
+      const last30DaysRevenue = platformTransactions
+        .filter(txn => new Date(txn.createdAt) >= thirtyDaysAgo)
+        .reduce((sum, txn) => sum + txn.amount, 0);
+
+      logger.info(`✓ Platform revenue calculated: $${totalRevenue.toFixed(2)}`);
+      
+      return {
+        totalRevenue,
+        revenueBySource,
+        last30DaysRevenue,
+        totalTransactions: platformTransactions.length,
+        recentTransactions: platformTransactions.slice(0, 10), // Last 10 transactions
+      };
+    } catch (error) {
+      errorLogger.error('Get platform revenue error', error);
       throw error;
     }
   }

@@ -2,7 +2,10 @@ import { StatusCodes } from 'http-status-codes';
 import AppError from '../../../errors/AppError.js';
 import { Subscription, SubscriptionTier, ISubscriptionTier } from './subscription.model.js';
 import { User } from '../user/user.model.js';
+import { Wallet, WalletTransaction } from '../wallet/wallet.model.js';
+import { sendNotifications } from '../../../helpers/notificationsHelper.js';
 import { logger, errorLogger } from '../../../shared/logger.js';
+import { USER_ROLES } from '../../../enums/user.js';
 import config from '../../../config/index.js';
 import Stripe from 'stripe';
 import { uploadFileToS3 } from '../../../helpers/s3Helper.js';
@@ -22,6 +25,21 @@ const getStripeClient = () => {
 };
 
 class SubscriptionService {
+  private static async getPlatformAdminUserId() {
+    const adminUser = await User.findOne({
+      role: { $in: [USER_ROLES.SUPER_ADMIN, USER_ROLES.ADMIN] },
+    }).select('_id');
+
+    if (!adminUser) {
+      throw new AppError(
+        StatusCodes.NOT_FOUND,
+        'No admin user found to receive platform commission'
+      );
+    }
+
+    return adminUser._id;
+  }
+
   /**
    * ==================== ADMIN: Subscription Tier Management ====================
    */
@@ -245,6 +263,58 @@ class SubscriptionService {
         iapReceiptToken: receiptData,
       });
 
+      // Revenue split: 33% platform, 67% streamer
+      const totalAmount = (tier as any).price;
+      const platformFee = totalAmount * 0.33;
+      const streamerEarnings = totalAmount * 0.67;
+
+      const platformAdminUserId = await this.getPlatformAdminUserId();
+
+      // Add earnings to streamer wallet
+      await Wallet.findOneAndUpdate(
+        { userId: streamerId },
+        {
+          $inc: {
+            balance: streamerEarnings,
+            totalEarned: streamerEarnings,
+          },
+        },
+        { upsert: true, new: true }
+      );
+
+      // Create transaction record for streamer
+      await WalletTransaction.create({
+        userId: streamerId,
+        type: 'subscription_earning',
+        amount: streamerEarnings,
+        description: `Subscription earning from ${(tier as any).name} tier`,
+        status: 'completed',
+        metadata: {
+          subscriberId: userId,
+          tierId: tierId,
+          tierName: (tier as any).name,
+          platform: platform,
+          totalAmount: totalAmount,
+          platformFee: platformFee,
+        },
+      });
+
+      // Track platform commission
+      await WalletTransaction.create({
+        userId: platformAdminUserId,
+        type: 'platform_commission',
+        amount: platformFee,
+        description: `Platform commission from subscription ${(tier as any).name}`,
+        status: 'completed',
+        metadata: {
+          streamerId: streamerId,
+          subscriberId: userId,
+          tierId: tierId,
+          source: 'subscription',
+          platform: platform,
+        },
+      });
+
       // Add subscriber badge to user
       await User.findByIdAndUpdate(userId, {
         $push: {
@@ -258,7 +328,39 @@ class SubscriptionService {
         },
       });
 
-      logger.info(`✓ IAP subscription created: ${userId} → ${streamerId} (${platform})`);
+      // Send notifications
+      const subscriber = await User.findById(userId).select('name');
+      const streamer = await User.findById(streamerId).select('name');
+      
+      // Notify streamer about new subscriber
+      await sendNotifications({
+        receiver: streamerId,
+        title: 'New Subscriber! 🎉',
+        message: `${subscriber?.name} subscribed to your channel with ${(tier as any).name} tier!`,
+        type: 'subscription',
+        read: false,
+        data: {
+          subscriberId: userId,
+          tierName: (tier as any).name,
+          amount: streamerEarnings,
+        },
+      });
+
+      // Notify subscriber about successful subscription
+      await sendNotifications({
+        receiver: userId,
+        title: 'Subscription Active! ✨',
+        message: `You're now subscribed to ${streamer?.name} with ${(tier as any).name} tier!`,
+        type: 'subscription',
+        read: false,
+        data: {
+          streamerId: streamerId,
+          tierName: (tier as any).name,
+          expiresAt: periodEnd,
+        },
+      });
+
+      logger.info(`✓ IAP subscription created: ${userId} → ${streamerId} (${platform}) | Streamer: $${streamerEarnings.toFixed(2)}, Platform: $${platformFee.toFixed(2)}`);
       return subscription;
     } catch (error) {
       errorLogger.error('Verify and create IAP subscription error', error);
@@ -306,6 +408,58 @@ class SubscriptionService {
         stripeSubscriptionId,
       });
 
+      // Revenue split: 33% platform, 67% streamer
+      const totalAmount = paymentIntent.amount / 100; // Convert cents to dollars
+      const platformFee = totalAmount * 0.33;
+      const streamerEarnings = totalAmount * 0.67;
+
+      const platformAdminUserId = await this.getPlatformAdminUserId();
+
+      // Add earnings to streamer wallet
+      await Wallet.findOneAndUpdate(
+        { userId: streamerId },
+        {
+          $inc: {
+            balance: streamerEarnings,
+            totalEarned: streamerEarnings,
+          },
+        },
+        { upsert: true, new: true }
+      );
+
+      // Create transaction record for streamer
+      await WalletTransaction.create({
+        userId: streamerId,
+        type: 'subscription_earning',
+        amount: streamerEarnings,
+        description: `Subscription earning from ${(tier as any).name} tier`,
+        status: 'completed',
+        metadata: {
+          subscriberId: userId,
+          tierId: tierId,
+          tierName: (tier as any).name,
+          paymentIntentId: paymentIntentId,
+          totalAmount: totalAmount,
+          platformFee: platformFee,
+        },
+      });
+
+      // Track platform commission
+      await WalletTransaction.create({
+        userId: platformAdminUserId,
+        type: 'platform_commission',
+        amount: platformFee,
+        description: `Platform commission from subscription ${(tier as any).name}`,
+        status: 'completed',
+        metadata: {
+          streamerId: streamerId,
+          subscriberId: userId,
+          tierId: tierId,
+          source: 'subscription',
+          paymentIntentId: paymentIntentId,
+        },
+      });
+
       // Add badge
       await User.findByIdAndUpdate(userId, {
         $push: {
@@ -319,7 +473,39 @@ class SubscriptionService {
         },
       });
 
-      logger.info(`✓ Stripe subscription confirmed: ${userId} → ${streamerId}`);
+      // Send notifications
+      const subscriber = await User.findById(userId).select('name');
+      const streamer = await User.findById(streamerId).select('name');
+      
+      // Notify streamer about new subscriber
+      await sendNotifications({
+        receiver: streamerId,
+        title: 'New Subscriber! 🎉',
+        message: `${subscriber?.name} subscribed to your channel with ${(tier as any).name} tier!`,
+        type: 'subscription',
+        read: false,
+        data: {
+          subscriberId: userId,
+          tierName: (tier as any).name,
+          amount: streamerEarnings,
+        },
+      });
+
+      // Notify subscriber about successful subscription
+      await sendNotifications({
+        receiver: userId,
+        title: 'Subscription Active! ✨',
+        message: `You're now subscribed to ${streamer?.name} with ${(tier as any).name} tier!`,
+        type: 'subscription',
+        read: false,
+        data: {
+          streamerId: streamerId,
+          tierName: (tier as any).name,
+          expiresAt: periodEnd,
+        },
+      });
+
+      logger.info(`✓ Stripe subscription confirmed: ${userId} → ${streamerId} | Streamer: $${streamerEarnings.toFixed(2)}, Platform: $${platformFee.toFixed(2)}`);
       return subscription;
     } catch (error) {
       errorLogger.error('Confirm Stripe subscription error', error);
@@ -359,6 +545,27 @@ class SubscriptionService {
       return subscriptions;
     } catch (error) {
       errorLogger.error('Get user subscriptions error', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get streamer's subscribers
+   */
+  static async getMySubscribers(streamerId: string) {
+    try {
+      const subscribers = await Subscription.find({
+        streamerId,
+        status: 'active',
+        currentPeriodEnd: { $gt: new Date() },
+      })
+        .populate('userId', 'name avatar userName')
+        .populate('tier', 'name slug badge price')
+        .sort({ createdAt: -1 });
+
+      return subscribers;
+    } catch (error) {
+      errorLogger.error('Get my subscribers error', error);
       throw error;
     }
   }

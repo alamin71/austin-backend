@@ -40,11 +40,20 @@ export const FollowController = {
           const userId = req.params.userId || (req.user as any).id;
           const result = await FollowService.getFollowers(userId);
 
+          // Transform avatar → image for each follower
+          const transformedResult = (result || []).map((follower: any) => {
+               const plainData = follower && (follower as any).toObject ? (follower as any).toObject() : follower;
+               return {
+                    ...plainData,
+                    image: plainData?.avatar,
+               };
+          });
+
           sendResponse(res, {
                statusCode: StatusCodes.OK,
                success: true,
                message: 'Followers retrieved',
-               data: result,
+               data: transformedResult,
           });
      }),
 
@@ -52,11 +61,20 @@ export const FollowController = {
           const userId = req.params.userId || (req.user as any).id;
           const result = await FollowService.getFollowing(userId);
 
+          // Transform avatar → image for each following user
+          const transformedResult = (result || []).map((following: any) => {
+               const plainData = following && (following as any).toObject ? (following as any).toObject() : following;
+               return {
+                    ...plainData,
+                    image: plainData?.avatar,
+               };
+          });
+
           sendResponse(res, {
                statusCode: StatusCodes.OK,
                success: true,
                message: 'Following list retrieved',
-               data: result,
+               data: transformedResult,
           });
      }),
 

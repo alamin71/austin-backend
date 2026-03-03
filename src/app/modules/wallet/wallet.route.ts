@@ -26,6 +26,13 @@ router.get(
 // Get feather packages (public)
 router.get('/feathers/packages', walletController.getFeatherPackages);
 
+// Convert feathers to dollars (1200 feathers = $1)
+router.post(
+  '/convert-feathers',
+  auth(USER_ROLES.USER),
+  walletController.convertFeathers
+);
+
 // Create withdrawal request
 router.post(
   '/withdraw',
@@ -56,6 +63,13 @@ router.get(
   '/admin/all',
   auth(USER_ROLES.SUPER_ADMIN, USER_ROLES.ADMIN),
   walletController.getAllWallets
+);
+
+// Get platform revenue/commission
+router.get(
+  '/admin/platform-revenue',
+  auth(USER_ROLES.SUPER_ADMIN, USER_ROLES.ADMIN),
+  walletController.getPlatformRevenue
 );
 
 export default router;

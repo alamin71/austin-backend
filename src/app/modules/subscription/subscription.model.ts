@@ -2,10 +2,26 @@ import mongoose, { Schema, Document } from 'mongoose';
 
 export interface ISubscriptionTier {
   name: string;
-  slug: 'basic' | 'standard' | 'premium';
+  slug: 'supporter' | 'premium' | 'exclusive';
   price: number;
   billingPeriod: 'monthly' | 'yearly';
+  
+  // Feature flags
+  adFree: boolean;
+  chatBadge: boolean;
+  creatorOnlyPosts: boolean;
+  earlyStreamAccess: boolean;
+  vipRoomAccess: boolean;
+  directQA: boolean;
+  earlyContentAccess: boolean;
+  
+  // Bonus percentages
+  pulsePointsBonus: number; // e.g., 25 for 25%, 50 for 50x
+  marketplaceDiscount: number; // e.g., 5 for 5x, 10 for 10%
+  
+  // Additional features (legacy support)
   features: string[];
+  
   badge: {
     icon: string;
     displayName: string;
@@ -46,7 +62,7 @@ const subscriptionTierSchema = new Schema<ISubscriptionTier>(
     },
     slug: {
       type: String,
-      enum: ['basic', 'standard', 'premium'],
+      enum: ['supporter', 'premium', 'exclusive'],
       required: true,
       unique: true,
     },
@@ -60,6 +76,49 @@ const subscriptionTierSchema = new Schema<ISubscriptionTier>(
       enum: ['monthly', 'yearly'],
       default: 'monthly',
     },
+    
+    // Feature flags
+    adFree: {
+      type: Boolean,
+      default: false,
+    },
+    chatBadge: {
+      type: Boolean,
+      default: false,
+    },
+    creatorOnlyPosts: {
+      type: Boolean,
+      default: false,
+    },
+    earlyStreamAccess: {
+      type: Boolean,
+      default: false,
+    },
+    vipRoomAccess: {
+      type: Boolean,
+      default: false,
+    },
+    directQA: {
+      type: Boolean,
+      default: false,
+    },
+    earlyContentAccess: {
+      type: Boolean,
+      default: false,
+    },
+    
+    // Bonus percentages
+    pulsePointsBonus: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+    marketplaceDiscount: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+    
     features: [String],
     badge: {
       icon: String,

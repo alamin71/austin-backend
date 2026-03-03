@@ -7,6 +7,7 @@ import { StreamAnalytics } from '../stream/streamAnalytics.model.js';
 import { IGift } from './gift.interface.js';
 import WalletService from '../wallet/wallet.service.js';
 import { Subscription } from '../subscription/subscription.model.js';
+import ChallengeService from '../challenge/challenge.service.js';
 
 class GiftService {
      /**
@@ -210,6 +211,15 @@ class GiftService {
                });
 
                await transaction.save();
+
+               // Update challenge progress (non-blocking)
+               ChallengeService.updateProgress(
+                    senderId,
+                    'gift_giver',
+                    giftData.quantity,
+               ).catch((challengeError) => {
+                    errorLogger.error('Challenge progress update failed (gift_giver)', challengeError);
+               });
 
                // Update stream analytics
                if (stream.analytics) {

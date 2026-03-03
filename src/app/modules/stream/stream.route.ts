@@ -110,5 +110,10 @@ router.get(
      auth(USER_ROLES.USER),
      streamController.getStreamAnalytics,
 );
+router.get(
+     '/:streamId/insights',
+     auth(USER_ROLES.USER),
+     streamController.getStreamInsights,
+);
 
 export const StreamRouter = router;

@@ -65,16 +65,52 @@ class WalletController {
   });
 
   /**
+   * Convert feathers to dollars (1200 feathers = $1)
+   */
+  convertFeathers = catchAsync(async (req: Request, res: Response) => {
+    const userId = (req.user as any)._id;
+    const { featherAmount } = req.body;
+
+    const result = await WalletService.convertFeathersToDollars(
+      userId,
+      featherAmount
+    );
+
+    sendResponse(res, {
+      statusCode: StatusCodes.OK,
+      success: true,
+      message: 'Feathers converted successfully',
+      data: result,
+    });
+  });
+
+  /**
    * Create withdrawal request
    */
   createWithdrawal = catchAsync(async (req: Request, res: Response) => {
     const userId = (req.user as any)._id;
-    const { amount, bankDetails } = req.body;
+    const {
+      amount,
+      payoutMethod = 'bank_transfer',
+      payoutDetails,
+      bankDetails,
+      stripeDetails,
+      paypalDetails,
+    } = req.body;
+
+    const resolvedPayoutDetails =
+      payoutDetails ||
+      (payoutMethod === 'bank_transfer'
+        ? bankDetails
+        : payoutMethod === 'stripe'
+        ? stripeDetails
+        : paypalDetails);
 
     const result = await WalletService.createWithdrawal(
       userId,
       amount,
-      bankDetails
+      payoutMethod,
+      resolvedPayoutDetails
     );
 
     sendResponse(res, {
@@ -138,6 +174,20 @@ class WalletController {
         total: result.pagination.total,
         totalPage: result.pagination.pages,
       },
+    });
+  });
+
+  /**
+   * Get platform revenue/commission
+   */
+  getPlatformRevenue = catchAsync(async (req: Request, res: Response) => {
+    const result = await WalletService.getPlatformRevenue();
+
+    sendResponse(res, {
+      statusCode: StatusCodes.OK,
+      success: true,
+      message: 'Platform revenue retrieved successfully',
+      data: result,
     });
   });
 }

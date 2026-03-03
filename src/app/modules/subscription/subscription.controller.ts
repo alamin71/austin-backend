@@ -175,6 +175,21 @@ class SubscriptionController {
   });
 
   /**
+   * Get streamer's subscribers
+   */
+  getMySubscribers = catchAsync(async (req: Request, res: Response) => {
+    const streamerId = (req.user as any)._id;
+    const result = await SubscriptionService.getMySubscribers(streamerId);
+
+    sendResponse(res, {
+      statusCode: StatusCodes.OK,
+      success: true,
+      message: 'My subscribers retrieved successfully',
+      data: result,
+    });
+  });
+
+  /**
    * Cancel subscription
    */
   cancelSubscription = catchAsync(async (req: Request, res: Response) => {

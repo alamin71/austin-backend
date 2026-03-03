@@ -302,6 +302,19 @@ class StreamController {
           });
      });
 
+     getStreamInsights = catchAsync(async (req: Request, res: Response) => {
+          const { streamId } = req.params;
+
+          const insights = await StreamService.getStreamInsights(streamId);
+
+          sendResponse(res, {
+               statusCode: StatusCodes.OK,
+               success: true,
+               message: 'Stream insights retrieved successfully',
+               data: insights,
+          });
+     });
+
      checkRecordingStatus = catchAsync(async (req: Request, res: Response) => {
           const { streamId } = req.params;
 

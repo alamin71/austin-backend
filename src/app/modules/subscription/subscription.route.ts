@@ -63,6 +63,13 @@ router.get(
   subscriptionController.getUserSubscriptions
 );
 
+// Get streamer's subscribers
+router.get(
+  '/my-subscribers',
+  auth(USER_ROLES.USER),
+  subscriptionController.getMySubscribers
+);
+
 // Cancel subscription
 router.post(
   '/cancel/:streamerId',

@@ -12,7 +12,16 @@ export interface IWallet extends Document {
 
 export interface IWalletTransaction extends Document {
   userId: mongoose.Types.ObjectId;
-  type: 'gift_received' | 'gift_sent' | 'feather_purchase' | 'withdrawal' | 'subscription' | 'subscription_commission';
+  type:
+    | 'gift_received'
+    | 'gift_sent'
+    | 'feather_purchase'
+    | 'withdrawal'
+    | 'subscription'
+    | 'subscription_earning'
+    | 'subscription_commission'
+    | 'platform_commission'
+    | 'feather_conversion';
   amount: number;
   description: string;
   streamerId?: mongoose.Types.ObjectId;
@@ -85,7 +94,10 @@ const walletTransactionSchema = new Schema<IWalletTransaction>(
         'feather_purchase',
         'withdrawal',
         'subscription',
+        'subscription_earning',
         'subscription_commission',
+        'platform_commission',
+        'feather_conversion',
       ],
       required: true,
     },
