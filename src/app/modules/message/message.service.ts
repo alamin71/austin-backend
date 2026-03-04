@@ -11,6 +11,7 @@ export class MessageService {
           content: string,
           type: string = 'text',
           mediaUrl?: string,
+          replyToId?: string,
      ) {
           // Validate users exist
           const sender = await User.findById(senderId);
@@ -51,6 +52,17 @@ export class MessageService {
                );
           }
 
+          // Validate replyTo message if provided
+          if (replyToId) {
+               const replyMessage = await Message.findById(replyToId);
+               if (!replyMessage) {
+                    throw new AppError(
+                         StatusCodes.NOT_FOUND,
+                         'Message to reply to not found',
+                    );
+               }
+          }
+
           const message = await Message.create({
                sender: senderId,
                receiver: receiverId,
@@ -58,9 +70,10 @@ export class MessageService {
                type,
                mediaUrl,
                isRead: false,
+               replyTo: replyToId || null,
           });
 
-          return message.populate(['sender', 'receiver']);
+          return message.populate(['sender', 'receiver', 'replyTo']);
      }
 
      // Get conversation between two users
@@ -71,7 +84,15 @@ export class MessageService {
                     { sender: otherUserId, receiver: userId },
                ],
           })
-               .populate(['sender', 'receiver'])
+               .populate('sender', 'name userName image')
+               .populate('receiver', 'name userName image')
+               .populate({
+                    path: 'replyTo',
+                    populate: [
+                         { path: 'sender', select: 'name userName image' },
+                         { path: 'receiver', select: 'name userName image' },
+                    ],
+               })
                .sort({ createdAt: -1 })
                .limit(limit);
 

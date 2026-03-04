@@ -35,6 +35,11 @@ const messageSchema = new Schema<IMessage, MessageModel>(
                type: Date,
                default: null,
           },
+          replyTo: {
+               type: Schema.Types.ObjectId,
+               ref: 'Message',
+               default: null,
+          },
      },
      {
           timestamps: true,

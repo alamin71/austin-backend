@@ -8,6 +8,7 @@ export type IMessage = {
      mediaUrl?: string;
      isRead: boolean;
      readAt?: Date;
+     replyTo?: Types.ObjectId; // Reply to another message
      createdAt?: Date;
      updatedAt?: Date;
      _id?: Types.ObjectId;

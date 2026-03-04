@@ -6,7 +6,7 @@ import { MessageService } from './message.service.js';
 
 export const MessageController = {
      sendMessage: catchAsync(async (req: Request, res: Response) => {
-          const { receiverId, content, type, mediaUrl } = req.body;
+          const { receiverId, content, type, mediaUrl, replyToId } = req.body;
           const senderId = (req.user as any).id;
 
           const result = await MessageService.sendMessage(
@@ -15,6 +15,7 @@ export const MessageController = {
                content,
                type,
                mediaUrl,
+               replyToId,
           );
 
           sendResponse(res, {
