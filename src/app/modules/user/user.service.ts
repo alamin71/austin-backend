@@ -216,6 +216,10 @@ const updatePrivacySettings = async (userId: string, settings: Partial<any>) => 
           throw new AppError(StatusCodes.NOT_FOUND, 'User not found');
      }
 
+     if (!settings || Object.keys(settings).length === 0) {
+          throw new AppError(StatusCodes.BAD_REQUEST, 'No privacy settings provided');
+     }
+
      // Update only provided fields (merge with existing)
      const updateObject: any = {};
      Object.keys(settings).forEach((key) => {
@@ -246,6 +250,10 @@ const updateSecuritySettings = async (userId: string, settings: any) => {
 
      if (!user) {
           throw new AppError(StatusCodes.NOT_FOUND, 'User not found');
+     }
+
+     if (!settings || Object.keys(settings).length === 0) {
+          throw new AppError(StatusCodes.BAD_REQUEST, 'No security settings provided');
      }
 
      // Update only provided fields (merge with existing)

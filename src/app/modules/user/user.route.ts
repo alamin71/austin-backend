@@ -50,6 +50,7 @@ router.get('/privacy-settings', auth(USER_ROLES.USER), UserController.getPrivacy
 router.patch(
      '/privacy-settings',
      auth(USER_ROLES.USER),
+     upload.none(),
      (req: Request, res: Response, next: NextFunction) => {
           if (req.body.data) {
                try {
@@ -69,6 +70,7 @@ router.get('/security-settings', auth(USER_ROLES.USER), UserController.getSecuri
 router.patch(
      '/security-settings',
      auth(USER_ROLES.USER),
+     upload.none(),
      (req: Request, res: Response, next: NextFunction) => {
           if (req.body.data) {
                try {
