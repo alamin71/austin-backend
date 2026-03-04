@@ -132,10 +132,51 @@ const userSchema = new Schema<IUser, UserModel>(
           ],
           blockedUsers: [
                {
-                    type: Schema.Types.ObjectId,
-                    ref: 'User',
+                    userId: {
+                         type: Schema.Types.ObjectId,
+                         ref: 'User',
+                    },
+                    blockedAt: {
+                         type: Date,
+                         default: Date.now,
+                    },
                },
           ],
+          privacySettings: {
+               type: {
+                    publicProfile: { type: Boolean, default: true },
+                    whoCanSeeFollowers: { 
+                         type: String, 
+                         enum: ['everyone', 'friends', 'none'],
+                         default: 'everyone' 
+                    },
+                    whoCanSeeFriendsList: { 
+                         type: String, 
+                         enum: ['everyone', 'friends', 'none'],
+                         default: 'everyone' 
+                    },
+                    allowFriendRequests: { 
+                         type: String, 
+                         enum: ['everyone', 'friends', 'none'],
+                         default: 'everyone' 
+                    },
+               },
+               default: {
+                    publicProfile: true,
+                    whoCanSeeFollowers: 'everyone',
+                    whoCanSeeFriendsList: 'everyone',
+                    allowFriendRequests: 'everyone',
+               },
+          },
+          securitySettings: {
+               type: {
+                    twoFactorEnabled: { type: Boolean, default: false },
+                    twoFactorSecret: { type: String, default: null, select: false },
+               },
+               default: {
+                    twoFactorEnabled: false,
+               },
+          },
      },
      { timestamps: true },
 );

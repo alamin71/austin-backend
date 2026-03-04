@@ -32,8 +32,25 @@ router
           UserController.updateProfile,
      );
 
+// Get other user's profile
+router.get('/profile/:userId', auth(USER_ROLES.USER), UserController.getUserProfileById);
+
 router.route('/').post(validateRequest(UserValidation.createUserZodSchema), UserController.createUser);
 
 router.delete('/delete', auth(USER_ROLES.USER), UserController.deleteProfile);
+
+// Block/Unblock endpoints
+router.post('/block/:blockUserId', auth(USER_ROLES.USER), UserController.blockUser);
+router.post('/unblock/:unblockUserId', auth(USER_ROLES.USER), UserController.unblockUser);
+router.get('/blocked-users', auth(USER_ROLES.USER), UserController.getBlockedUsers);
+router.get('/is-blocked/:checkUserId', auth(USER_ROLES.USER), UserController.isUserBlocked);
+
+// Privacy & Safety endpoints
+router.get('/privacy-settings', auth(USER_ROLES.USER), UserController.getPrivacySettings);
+router.patch('/privacy-settings', auth(USER_ROLES.USER), UserController.updatePrivacySettings);
+
+// Security endpoints
+router.get('/security-settings', auth(USER_ROLES.USER), UserController.getSecuritySettings);
+router.patch('/security-settings', auth(USER_ROLES.USER), UserController.updateSecuritySettings);
 
 export const UserRouter = router;

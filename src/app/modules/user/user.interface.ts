@@ -7,6 +7,23 @@ export type ISocialLinks = {
      youtube?: string;
 };
 
+export type IPrivacySettings = {
+     publicProfile: boolean;
+     whoCanSeeFollowers: 'everyone' | 'friends' | 'none';
+     whoCanSeeFriendsList: 'everyone' | 'friends' | 'none';
+     allowFriendRequests: 'everyone' | 'friends' | 'none';
+};
+
+export type ISecuritySettings = {
+     twoFactorEnabled: boolean;
+     twoFactorSecret?: string;
+};
+
+export type IBlockedUser = {
+     userId: any;
+     blockedAt: Date;
+};
+
 export type IUser = {
      name: string;
      userName: string;
@@ -38,7 +55,9 @@ export type IUser = {
      followers?: any[];
      following?: any[];
      friends?: any[];
-     blockedUsers?: any[];
+     blockedUsers?: IBlockedUser[];
+     privacySettings?: IPrivacySettings;
+     securitySettings?: ISecuritySettings;
      _id?: any;
 };
 

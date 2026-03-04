@@ -30,6 +30,21 @@ const getUserProfile = catchAsync(async (req, res) => {
      });
 });
 
+// Get user profile by ID (with permission check)
+const getUserProfileById = catchAsync(async (req: Request, res: Response) => {
+     const requesterId = (req.user as any).id;
+     const { userId } = req.params;
+
+     const result = await UserService.getUserProfileById(requesterId, userId);
+
+     sendResponse(res, {
+          success: true,
+          statusCode: StatusCodes.OK,
+          message: 'User profile retrieved successfully',
+          data: result,
+     });
+});
+
 //update profile
 const updateProfile = catchAsync(async (req, res) => {
      const user: any = req.user;
@@ -79,9 +94,135 @@ const deleteProfile = catchAsync(async (req, res) => {
      });
 });
 
+// Block user
+const blockUser = catchAsync(async (req: Request, res: Response) => {
+     const userId = (req.user as any).id;
+     const { blockUserId } = req.params;
+
+     const result = await UserService.blockUser(userId, blockUserId);
+
+     sendResponse(res, {
+          success: true,
+          statusCode: StatusCodes.OK,
+          message: result.message,
+          data: {},
+     });
+});
+
+// Unblock user
+const unblockUser = catchAsync(async (req: Request, res: Response) => {
+     const userId = (req.user as any).id;
+     const { unblockUserId } = req.params;
+
+     const result = await UserService.unblockUser(userId, unblockUserId);
+
+     sendResponse(res, {
+          success: true,
+          statusCode: StatusCodes.OK,
+          message: result.message,
+          data: {},
+     });
+});
+
+// Get blocked users
+const getBlockedUsers = catchAsync(async (req: Request, res: Response) => {
+     const userId = (req.user as any).id;
+
+     const result = await UserService.getBlockedUsers(userId);
+
+     sendResponse(res, {
+          success: true,
+          statusCode: StatusCodes.OK,
+          message: 'Blocked users retrieved successfully',
+          data: result.blockedUsers,
+     });
+});
+
+// Check if user is blocked
+const isUserBlocked = catchAsync(async (req: Request, res: Response) => {
+     const userId = (req.user as any).id;
+     const { checkUserId } = req.params;
+
+     const result = await UserService.isUserBlocked(userId, checkUserId);
+
+     sendResponse(res, {
+          success: true,
+          statusCode: StatusCodes.OK,
+          message: 'Block status retrieved',
+          data: result,
+     });
+});
+
+// Update privacy settings
+const updatePrivacySettings = catchAsync(async (req: Request, res: Response) => {
+     const userId = (req.user as any).id;
+     const settings = req.body;
+
+     const result = await UserService.updatePrivacySettings(userId, settings);
+
+     sendResponse(res, {
+          success: true,
+          statusCode: StatusCodes.OK,
+          message: result.message,
+          data: {},
+     });
+});
+
+// Get privacy settings
+const getPrivacySettings = catchAsync(async (req: Request, res: Response) => {
+     const userId = (req.user as any).id;
+
+     const result = await UserService.getPrivacySettings(userId);
+
+     sendResponse(res, {
+          success: true,
+          statusCode: StatusCodes.OK,
+          message: 'Privacy settings retrieved',
+          data: result,
+     });
+});
+
+// Update security settings
+const updateSecuritySettings = catchAsync(async (req: Request, res: Response) => {
+     const userId = (req.user as any).id;
+     const settings = req.body;
+
+     const result = await UserService.updateSecuritySettings(userId, settings);
+
+     sendResponse(res, {
+          success: true,
+          statusCode: StatusCodes.OK,
+          message: result.message,
+          data: {},
+     });
+});
+
+// Get security settings
+const getSecuritySettings = catchAsync(async (req: Request, res: Response) => {
+     const userId = (req.user as any).id;
+
+     const result = await UserService.getSecuritySettings(userId);
+
+     sendResponse(res, {
+          success: true,
+          statusCode: StatusCodes.OK,
+          message: 'Security settings retrieved',
+          data: result,
+     });
+});
+
 export const UserController = {
      createUser,
      getUserProfile,
+     getUserProfileById,
      updateProfile,
      deleteProfile,
+     blockUser,
+     unblockUser,
+     getBlockedUsers,
+     isUserBlocked,
+     updatePrivacySettings,
+     getPrivacySettings,
+     updateSecuritySettings,
+     getSecuritySettings,
 };

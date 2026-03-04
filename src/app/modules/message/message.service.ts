@@ -30,7 +30,7 @@ export class MessageService {
 
           // Check if sender is blocked by receiver
           const isBlocked = receiver.blockedUsers?.some(
-               (b: any) => b.toString() === senderId,
+               (b: any) => b.userId?.toString() === senderId,
           );
 
           if (isBlocked) {
