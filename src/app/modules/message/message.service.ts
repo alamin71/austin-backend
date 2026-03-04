@@ -94,7 +94,8 @@ export class MessageService {
                     ],
                })
                .sort({ createdAt: -1 })
-               .limit(limit);
+               .limit(limit)
+               .lean();
 
           return messages.reverse();
      }
