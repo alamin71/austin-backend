@@ -227,6 +227,15 @@ export class FriendRequestService {
                { new: true },
           );
 
+          // Delete the friend request record to allow sending request again
+          await FriendRequest.deleteOne({
+               $or: [
+                    { sender: userId, receiver: friendId },
+                    { sender: friendId, receiver: userId },
+               ],
+               status: 'accepted',
+          });
+
           return { message: 'Friend removed successfully' };
      }
 }
