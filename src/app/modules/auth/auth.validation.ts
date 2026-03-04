@@ -14,6 +14,13 @@ const createLoginZodSchema = z.object({
      }),
 });
 
+const createVerifyLoginTwoFactorZodSchema = z.object({
+     body: z.object({
+          twoFactorToken: z.string({ required_error: 'Two factor token is required' }),
+          oneTimeCode: z.number({ required_error: 'One time code is required' }),
+     }),
+});
+
 const createRegisterZodSchema = z.object({
      body: z
           .object({
@@ -72,6 +79,7 @@ export const AuthValidation = {
      createVerifyEmailZodSchema,
      createForgetPasswordZodSchema,
      createLoginZodSchema,
+     createVerifyLoginTwoFactorZodSchema,
      createResetPasswordZodSchema,
      createChangePasswordZodSchema,
      createRegisterZodSchema,

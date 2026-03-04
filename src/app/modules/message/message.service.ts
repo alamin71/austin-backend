@@ -151,6 +151,13 @@ export class MessageService {
           await Message.populate(messages, [
                { path: 'lastMessage.sender' },
                { path: 'lastMessage.receiver' },
+               { 
+                    path: 'lastMessage.replyTo',
+                    populate: [
+                         { path: 'sender', select: 'name userName image' },
+                         { path: 'receiver', select: 'name userName image' },
+                    ],
+               },
           ]);
 
           return messages;

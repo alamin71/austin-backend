@@ -56,6 +56,11 @@ router.post(
      AuthController.registerUser,
 );
 router.post('/login', validateRequest(AuthValidation.createLoginZodSchema), AuthController.loginUser);
+router.post(
+     '/verify-login-2fa',
+     validateRequest(AuthValidation.createVerifyLoginTwoFactorZodSchema),
+     AuthController.verifyLoginTwoFactorOtp,
+);
 router.post('/refresh-token', AuthController.refreshToken);
 
 // OAuth endpoints (User only)

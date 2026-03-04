@@ -118,11 +118,118 @@ const loginUserFromDB = async (payload: ILoginData) => {
 
      if (!isExistUser.password || !(await User.isMatchPassword(password, isExistUser.password))) throw new AppError(StatusCodes.BAD_REQUEST, 'Password is incorrect!');
 
+     // 2FA login flow: password is valid, now require OTP verification
+     if (isExistUser.securitySettings?.twoFactorEnabled) {
+          const otp = generateOTP(6);
+          const value = { otp, email: isExistUser.email };
+          const emailContent = emailTemplate.resetPassword(value);
+          await emailHelper.sendEmail(emailContent);
+
+          const authentication = { oneTimeCode: otp, expireAt: new Date(Date.now() + 3 * 60000) };
+          await User.findOneAndUpdate({ _id: isExistUser._id }, { $set: { authentication } });
+
+          const twoFactorToken = createToken(
+               {
+                    id: isExistUser._id.toString(),
+                    email: isExistUser.email,
+                    role: isExistUser.role,
+                    purpose: 'login_2fa',
+               },
+               config.jwt.jwt_secret as string,
+               '10m',
+          );
+
+          return {
+               requiresTwoFactor: true,
+               twoFactorToken,
+               email: isExistUser.email,
+               role: isExistUser.role,
+          };
+     }
+
      const jwtData = { id: isExistUser._id, role: isExistUser.role, email: isExistUser.email, userName: isExistUser.userName };
      const accessToken = jwtHelper.createToken(jwtData, config.jwt.jwt_secret as Secret, config.jwt.jwt_expire_in as string);
      const refreshToken = jwtHelper.createToken(jwtData, config.jwt.jwt_refresh_secret as string, config.jwt.jwt_refresh_expire_in as string);
 
-     return { accessToken, refreshToken, role: isExistUser.role, email: isExistUser.email, userName: isExistUser.userName };
+     return {
+          requiresTwoFactor: false,
+          accessToken,
+          refreshToken,
+          role: isExistUser.role,
+          email: isExistUser.email,
+          userName: isExistUser.userName,
+     };
+};
+
+const verifyLoginTwoFactorOtpToDB = async (payload: { twoFactorToken: string; oneTimeCode: number }) => {
+     const { twoFactorToken, oneTimeCode } = payload;
+
+     if (!twoFactorToken) {
+          throw new AppError(StatusCodes.BAD_REQUEST, 'Two factor token is required');
+     }
+
+     if (!oneTimeCode) {
+          throw new AppError(StatusCodes.BAD_REQUEST, 'OTP is required');
+     }
+
+     let decodedToken: any;
+     try {
+          decodedToken = await verifyToken(twoFactorToken, config.jwt.jwt_secret as Secret);
+     } catch (error) {
+          throw new AppError(StatusCodes.UNAUTHORIZED, 'Invalid or expired two factor token');
+     }
+
+     if (decodedToken?.purpose !== 'login_2fa') {
+          throw new AppError(StatusCodes.UNAUTHORIZED, 'Invalid two factor token purpose');
+     }
+
+     const user = await User.findById(decodedToken.id).select('+authentication');
+     if (!user) {
+          throw new AppError(StatusCodes.NOT_FOUND, 'User not found');
+     }
+
+     if (!user.authentication?.oneTimeCode || user.authentication.oneTimeCode !== oneTimeCode) {
+          throw new AppError(StatusCodes.BAD_REQUEST, 'Wrong OTP');
+     }
+
+     if (new Date() > user.authentication.expireAt) {
+          throw new AppError(StatusCodes.BAD_REQUEST, 'OTP expired');
+     }
+
+     await User.findByIdAndUpdate(user._id, {
+          $set: {
+               authentication: {
+                    oneTimeCode: null,
+                    expireAt: null,
+               },
+          },
+     });
+
+     const jwtData = {
+          id: user._id,
+          role: user.role,
+          email: user.email,
+          userName: user.userName,
+     };
+
+     const accessToken = jwtHelper.createToken(
+          jwtData,
+          config.jwt.jwt_secret as Secret,
+          config.jwt.jwt_expire_in as string,
+     );
+     const refreshToken = jwtHelper.createToken(
+          jwtData,
+          config.jwt.jwt_refresh_secret as string,
+          config.jwt.jwt_refresh_expire_in as string,
+     );
+
+     return {
+          accessToken,
+          refreshToken,
+          role: user.role,
+          email: user.email,
+          userName: user.userName,
+     };
 };
 
 const verifyEmailToDB = async (payload: IVerifyEmail) => {
@@ -305,6 +412,7 @@ export const AuthService = {
      verifyEmailToDB,
      verifyResetOtpToDB,
      loginUserFromDB,
+     verifyLoginTwoFactorOtpToDB,
      forgetPasswordToDB,
      resetPasswordToDB,
      changePasswordToDB,

@@ -59,13 +59,50 @@ const loginUser = catchAsync(async (req, res) => {
      if (config.node_env === 'production') cookieOptions.sameSite = 'none';
 
      const isAdmin = [USER_ROLES.ADMIN, USER_ROLES.SUPER_ADMIN].includes(result.role as USER_ROLES);
+     if (result.requiresTwoFactor) {
+          return sendResponse(res, {
+               success: true,
+               statusCode: StatusCodes.OK,
+               message: 'OTP sent to your email. Please verify to complete login.',
+               data: {
+                    requiresTwoFactor: true,
+                    twoFactorToken: result.twoFactorToken,
+                    email: result.email,
+               },
+          });
+     }
+
      const message = isAdmin ? 'Admin login successfully.' : 'User logged in successfully.';
 
      sendResponse(res, {
           success: true,
           statusCode: StatusCodes.OK,
           message,
-          data: { accessToken: result.accessToken, refreshToken: result.refreshToken, role: result.role, email: result.email, userName: result.userName },
+          data: {
+               requiresTwoFactor: false,
+               accessToken: result.accessToken,
+               refreshToken: result.refreshToken,
+               role: result.role,
+               email: result.email,
+               userName: result.userName,
+          },
+     });
+});
+
+const verifyLoginTwoFactorOtp = catchAsync(async (req, res) => {
+     const result = await AuthService.verifyLoginTwoFactorOtpToDB(req.body);
+
+     sendResponse(res, {
+          success: true,
+          statusCode: StatusCodes.OK,
+          message: 'Two factor verification successful. User logged in successfully.',
+          data: {
+               accessToken: result.accessToken,
+               refreshToken: result.refreshToken,
+               role: result.role,
+               email: result.email,
+               userName: result.userName,
+          },
      });
 });
 
@@ -240,6 +277,7 @@ export const AuthController = {
      verifyEmail,
      verifyResetOtp,
      loginUser,
+     verifyLoginTwoFactorOtp,
      forgetPassword,
      resetPassword,
      changePassword,
