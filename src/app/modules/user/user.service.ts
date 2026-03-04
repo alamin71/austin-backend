@@ -216,9 +216,15 @@ const updatePrivacySettings = async (userId: string, settings: Partial<any>) => 
           throw new AppError(StatusCodes.NOT_FOUND, 'User not found');
      }
 
-     await User.findByIdAndUpdate(userId, {
-          $set: { privacySettings: settings },
+     // Update only provided fields (merge with existing)
+     const updateObject: any = {};
+     Object.keys(settings).forEach((key) => {
+          updateObject[`privacySettings.${key}`] = settings[key];
      });
+
+     await User.findByIdAndUpdate(userId, {
+          $set: updateObject,
+     }, { new: true });
 
      return { message: 'Privacy settings updated successfully' };
 };
@@ -242,9 +248,15 @@ const updateSecuritySettings = async (userId: string, settings: any) => {
           throw new AppError(StatusCodes.NOT_FOUND, 'User not found');
      }
 
-     await User.findByIdAndUpdate(userId, {
-          $set: { securitySettings: settings },
+     // Update only provided fields (merge with existing)
+     const updateObject: any = {};
+     Object.keys(settings).forEach((key) => {
+          updateObject[`securitySettings.${key}`] = settings[key];
      });
+
+     await User.findByIdAndUpdate(userId, {
+          $set: updateObject,
+     }, { new: true });
 
      return { message: 'Security settings updated successfully' };
 };
@@ -258,6 +270,32 @@ const getSecuritySettings = async (userId: string) => {
      }
 
      return user.securitySettings;
+};
+
+// Get active sessions
+const getActiveSessions = async (userId: string) => {
+     const user = await User.findById(userId).select('securitySettings');
+
+     if (!user) {
+          throw new AppError(StatusCodes.NOT_FOUND, 'User not found');
+     }
+
+     return user.securitySettings?.activeSessions || [];
+};
+
+// Remove session
+const removeSession = async (userId: string, sessionId: string) => {
+     const user = await User.findById(userId);
+
+     if (!user) {
+          throw new AppError(StatusCodes.NOT_FOUND, 'User not found');
+     }
+
+     await User.findByIdAndUpdate(userId, {
+          $pull: { 'securitySettings.activeSessions': { sessionId } },
+     });
+
+     return { message: 'Session removed successfully' };
 };
 
 export const UserService = {
@@ -275,4 +313,6 @@ export const UserService = {
      getPrivacySettings,
      updateSecuritySettings,
      getSecuritySettings,
+     getActiveSessions,
+     removeSession,
 };

@@ -9,14 +9,24 @@ export type ISocialLinks = {
 
 export type IPrivacySettings = {
      publicProfile: boolean;
-     whoCanSeeFollowers: 'everyone' | 'friends' | 'none';
-     whoCanSeeFriendsList: 'everyone' | 'friends' | 'none';
-     allowFriendRequests: 'everyone' | 'friends' | 'none';
+     whoCanSeeFollowers: 'everyone' | 'friends' | 'onlyme';
+     whoCanSeeFriendsList: 'everyone' | 'friends' | 'onlyme';
+     allowFriendRequests: 'everyone' | 'nobody';
+};
+
+export type IActiveSession = {
+     deviceType: string;
+     deviceName: string;
+     lastActive: Date;
+     loginTime: Date;
+     ip?: string;
+     sessionId: string;
 };
 
 export type ISecuritySettings = {
      twoFactorEnabled: boolean;
      twoFactorSecret?: string;
+     activeSessions?: IActiveSession[];
 };
 
 export type IBlockedUser = {

@@ -156,7 +156,12 @@ const isUserBlocked = catchAsync(async (req: Request, res: Response) => {
 // Update privacy settings
 const updatePrivacySettings = catchAsync(async (req: Request, res: Response) => {
      const userId = (req.user as any).id;
-     const settings = req.body;
+     let settings = req.body;
+
+     // Parse form-data boolean values
+     if (settings.publicProfile) {
+          settings.publicProfile = settings.publicProfile === 'true' || settings.publicProfile === true;
+     }
 
      const result = await UserService.updatePrivacySettings(userId, settings);
 
@@ -185,7 +190,12 @@ const getPrivacySettings = catchAsync(async (req: Request, res: Response) => {
 // Update security settings
 const updateSecuritySettings = catchAsync(async (req: Request, res: Response) => {
      const userId = (req.user as any).id;
-     const settings = req.body;
+     let settings = req.body;
+
+     // Parse form-data boolean values
+     if (settings.twoFactorEnabled) {
+          settings.twoFactorEnabled = settings.twoFactorEnabled === 'true' || settings.twoFactorEnabled === true;
+     }
 
      const result = await UserService.updateSecuritySettings(userId, settings);
 
@@ -211,6 +221,35 @@ const getSecuritySettings = catchAsync(async (req: Request, res: Response) => {
      });
 });
 
+// Get active sessions
+const getActiveSessions = catchAsync(async (req: Request, res: Response) => {
+     const userId = (req.user as any).id;
+
+     const result = await UserService.getActiveSessions(userId);
+
+     sendResponse(res, {
+          success: true,
+          statusCode: StatusCodes.OK,
+          message: 'Active sessions retrieved',
+          data: result,
+     });
+});
+
+// Remove session
+const removeSession = catchAsync(async (req: Request, res: Response) => {
+     const userId = (req.user as any).id;
+     const { sessionId } = req.params;
+
+     const result = await UserService.removeSession(userId, sessionId);
+
+     sendResponse(res, {
+          success: true,
+          statusCode: StatusCodes.OK,
+          message: result.message,
+          data: {},
+     });
+});
+
 export const UserController = {
      createUser,
      getUserProfile,
@@ -225,4 +264,6 @@ export const UserController = {
      getPrivacySettings,
      updateSecuritySettings,
      getSecuritySettings,
+     getActiveSessions,
+     removeSession,
 };

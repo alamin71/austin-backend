@@ -45,12 +45,46 @@ router.post('/unblock/:unblockUserId', auth(USER_ROLES.USER), UserController.unb
 router.get('/blocked-users', auth(USER_ROLES.USER), UserController.getBlockedUsers);
 router.get('/is-blocked/:checkUserId', auth(USER_ROLES.USER), UserController.isUserBlocked);
 
-// Privacy & Safety endpoints
+// Privacy & Safety endpoints (form-data)
 router.get('/privacy-settings', auth(USER_ROLES.USER), UserController.getPrivacySettings);
-router.patch('/privacy-settings', auth(USER_ROLES.USER), UserController.updatePrivacySettings);
+router.patch(
+     '/privacy-settings',
+     auth(USER_ROLES.USER),
+     (req: Request, res: Response, next: NextFunction) => {
+          if (req.body.data) {
+               try {
+                    const data = JSON.parse(req.body.data);
+                    req.body = { ...data };
+               } catch (e) {
+                    // If not JSON, use body as is
+               }
+          }
+          next();
+     },
+     UserController.updatePrivacySettings,
+);
 
-// Security endpoints
+// Security endpoints (form-data)
 router.get('/security-settings', auth(USER_ROLES.USER), UserController.getSecuritySettings);
-router.patch('/security-settings', auth(USER_ROLES.USER), UserController.updateSecuritySettings);
+router.patch(
+     '/security-settings',
+     auth(USER_ROLES.USER),
+     (req: Request, res: Response, next: NextFunction) => {
+          if (req.body.data) {
+               try {
+                    const data = JSON.parse(req.body.data);
+                    req.body = { ...data };
+               } catch (e) {
+                    // If not JSON, use body as is
+               }
+          }
+          next();
+     },
+     UserController.updateSecuritySettings,
+);
+
+// Active sessions
+router.get('/security-settings/sessions', auth(USER_ROLES.USER), UserController.getActiveSessions);
+router.delete('/security-settings/sessions/:sessionId', auth(USER_ROLES.USER), UserController.removeSession);
 
 export const UserRouter = router;

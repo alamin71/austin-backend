@@ -147,17 +147,17 @@ const userSchema = new Schema<IUser, UserModel>(
                     publicProfile: { type: Boolean, default: true },
                     whoCanSeeFollowers: { 
                          type: String, 
-                         enum: ['everyone', 'friends', 'none'],
+                         enum: ['everyone', 'friends', 'onlyme'],
                          default: 'everyone' 
                     },
                     whoCanSeeFriendsList: { 
                          type: String, 
-                         enum: ['everyone', 'friends', 'none'],
+                         enum: ['everyone', 'friends', 'onlyme'],
                          default: 'everyone' 
                     },
                     allowFriendRequests: { 
                          type: String, 
-                         enum: ['everyone', 'friends', 'none'],
+                         enum: ['everyone', 'nobody'],
                          default: 'everyone' 
                     },
                },
@@ -172,6 +172,16 @@ const userSchema = new Schema<IUser, UserModel>(
                type: {
                     twoFactorEnabled: { type: Boolean, default: false },
                     twoFactorSecret: { type: String, default: null, select: false },
+                    activeSessions: [
+                         {
+                              deviceType: { type: String, default: 'Browser' },
+                              deviceName: { type: String, default: 'Unknown' },
+                              lastActive: { type: Date, default: Date.now },
+                              loginTime: { type: Date, default: Date.now },
+                              ip: { type: String, default: null },
+                              sessionId: { type: String, required: true },
+                         },
+                    ],
                },
                default: {
                     twoFactorEnabled: false,
