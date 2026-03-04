@@ -63,4 +63,4 @@ const messageSchema = new Schema<IMessage>(
 messageSchema.index({ stream: 1, createdAt: -1 });
 messageSchema.index({ sender: 1 });
 
-export const Message = model<IMessage>('Message', messageSchema);
+export const Message = model<IMessage>('StreamMessage', messageSchema);
