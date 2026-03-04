@@ -46,6 +46,7 @@ const getAdminProfile = catchAsync(async (req: Request, res: Response) => {
      }
 
      const result = await AdminService.getAdminProfileById(adminId);
+
      sendResponse(res, {
           statusCode: StatusCodes.OK,
           success: true,
@@ -65,6 +66,7 @@ const updateAdminProfile = catchAsync(async (req: Request, res: Response) => {
      const imageFile = (req.files as any)?.image?.[0];
 
      const result = await AdminService.updateAdminProfile(adminId, updateData, imageFile);
+
      sendResponse(res, {
           statusCode: StatusCodes.OK,
           success: true,

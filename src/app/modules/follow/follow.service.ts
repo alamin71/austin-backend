@@ -94,7 +94,7 @@ export class FollowService {
      static async getFollowers(userId: string) {
           const user = await User.findById(userId).populate(
                'followers',
-               'name userName avatar bio',
+               'name userName image bio',
           );
 
           if (!user) {
@@ -108,7 +108,7 @@ export class FollowService {
      static async getFollowing(userId: string) {
           const user = await User.findById(userId).populate(
                'following',
-               'name userName avatar bio',
+               'name userName image bio',
           );
 
           if (!user) {

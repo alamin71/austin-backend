@@ -164,7 +164,7 @@ class StreamService {
 
                logger.info(`Stream started: ${stream._id}`);
 
-               return stream.populate('streamer', 'name avatar');
+               return stream.populate('streamer', 'name image');
           } catch (error) {
                errorLogger.error('Start stream error', error);
                throw error;
@@ -376,7 +376,7 @@ class StreamService {
      static async getStreamDetails(streamId: string) {
           try {
                const stream = await Stream.findById(streamId)
-                    .populate('streamer', 'name avatar email')
+                    .populate('streamer', 'name image email')
                     .populate('category', 'title image')
                     .populate('analytics');
 
@@ -403,7 +403,7 @@ class StreamService {
                     recordingUrl: { $exists: true, $ne: '' } 
                })
                     .select('recordingUrl status title streamer createdAt endedAt')
-                    .populate('streamer', 'name avatar')
+                    .populate('streamer', 'name image')
                     .sort({ endedAt: -1 })
                     .skip(skip)
                     .limit(limit),
@@ -529,7 +529,7 @@ class StreamService {
                     errorLogger.error('Challenge progress update failed (daily_commentator)', challengeError);
                });
 
-               return await message.populate('sender', 'name avatar');
+               return await message.populate('sender', 'name image');
           } catch (error) {
                errorLogger.error('Send chat message error', error);
                throw error;
@@ -554,7 +554,7 @@ class StreamService {
 
                const [streams, total] = await Promise.all([
                     Stream.find(query)
-                         .populate('streamer', 'name avatar')
+                         .populate('streamer', 'name image')
                          .populate('category', 'title image')
                          .sort({ currentViewerCount: -1, startedAt: -1 })
                          .skip(skip)
@@ -623,7 +623,7 @@ class StreamService {
                          { $text: { $search: query }, status: 'live' },
                          { score: { $meta: 'textScore' } },
                     )
-                         .populate('streamer', 'name avatar')
+                         .populate('streamer', 'name image')
                          .populate('category', 'title image')
                          .sort({ score: { $meta: 'textScore' }, currentViewerCount: -1 })
                          .skip(skip)
@@ -794,7 +794,7 @@ class StreamService {
           try {
                const stream = await Stream.findById(streamId)
                     .populate('analytics')
-                    .populate('viewers', 'name avatar userName');
+                    .populate('viewers', 'name image userName');
 
                if (!stream) {
                     throw new AppError(StatusCodes.NOT_FOUND, 'Stream not found');
@@ -809,7 +809,7 @@ class StreamService {
                          _id: viewer?._id,
                          name: viewer?.name,
                          userName: viewer?.userName,
-                         avatar: viewer?.avatar,
+                         image: viewer?.image,
                     },
                     activityScore: Math.max(50, 100 - index * 5),
                }));

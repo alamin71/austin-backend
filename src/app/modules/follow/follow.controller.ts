@@ -40,23 +40,11 @@ export const FollowController = {
           const userId = req.params.userId || (req.user as any).id;
           const result = await FollowService.getFollowers(userId);
 
-          // Transform avatar → image for each follower and remove avatar field
-          const transformedResult = (result || []).map((follower: any) => {
-               const plainData = follower && (follower as any).toObject ? (follower as any).toObject() : follower;
-               const transformed = {
-                    ...plainData,
-                    image: plainData?.avatar,
-               };
-               // Remove avatar field completely
-               delete transformed.avatar;
-               return transformed;
-          });
-
           sendResponse(res, {
                statusCode: StatusCodes.OK,
                success: true,
                message: 'Followers retrieved',
-               data: transformedResult,
+               data: result,
           });
      }),
 
@@ -64,23 +52,11 @@ export const FollowController = {
           const userId = req.params.userId || (req.user as any).id;
           const result = await FollowService.getFollowing(userId);
 
-          // Transform avatar → image for each following user and remove avatar field
-          const transformedResult = (result || []).map((following: any) => {
-               const plainData = following && (following as any).toObject ? (following as any).toObject() : following;
-               const transformed = {
-                    ...plainData,
-                    image: plainData?.avatar,
-               };
-               // Remove avatar field completely
-               delete transformed.avatar;
-               return transformed;
-          });
-
           sendResponse(res, {
                statusCode: StatusCodes.OK,
                success: true,
                message: 'Following list retrieved',
-               data: transformedResult,
+               data: result,
           });
      }),
 

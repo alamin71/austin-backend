@@ -68,7 +68,7 @@ export class FriendRequestService {
           });
 
           // Create notification for receiver
-          const senderUser = await User.findById(senderId).select('name userName');
+          const senderUser = await User.findById(senderId).select('name userName image');
           await NotificationService.createNotification(
                receiverId,
                'friend_request_received',

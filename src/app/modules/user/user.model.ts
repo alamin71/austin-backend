@@ -40,10 +40,6 @@ const userSchema = new Schema<IUser, UserModel>(
                type: String,
                default: '',
           },
-          avatar: {
-               type: String,
-               default: '',
-          },
           bio: {
                type: String,
                default: '',

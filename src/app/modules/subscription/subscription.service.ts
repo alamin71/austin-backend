@@ -539,7 +539,7 @@ class SubscriptionService {
     try {
       const subscriptions = await Subscription.find({ userId })
         .populate('tier')
-        .populate('streamerId', 'name avatar')
+        .populate('streamerId', 'name image')
         .sort({ createdAt: -1 });
 
       return subscriptions;
@@ -559,7 +559,7 @@ class SubscriptionService {
         status: 'active',
         currentPeriodEnd: { $gt: new Date() },
       })
-        .populate('userId', 'name avatar userName')
+        .populate('userId', 'name image userName')
         .populate('tier', 'name slug badge price')
         .sort({ createdAt: -1 });
 
@@ -714,8 +714,8 @@ class SubscriptionService {
 
       const [subscriptions, total] = await Promise.all([
         Subscription.find(query)
-          .populate('userId', 'name email avatar')
-          .populate('streamerId', 'name avatar')
+          .populate('userId', 'name email image')
+          .populate('streamerId', 'name image')
           .populate('tier')
           .sort({ createdAt: -1 })
           .skip(skip)

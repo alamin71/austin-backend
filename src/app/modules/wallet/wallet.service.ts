@@ -221,7 +221,7 @@ class WalletService {
 
       const [transactions, total] = await Promise.all([
         WalletTransaction.find(query)
-          .populate('streamerId', 'name avatar')
+          .populate('streamerId', 'name image')
           .sort({ createdAt: -1 })
           .skip(skip)
           .limit(limit),
@@ -467,7 +467,7 @@ class WalletService {
 
       const [wallets, total] = await Promise.all([
         Wallet.find()
-          .populate('userId', 'name email avatar')
+          .populate('userId', 'name email image')
           .sort({ totalEarned: -1 })
           .skip(skip)
           .limit(limit),

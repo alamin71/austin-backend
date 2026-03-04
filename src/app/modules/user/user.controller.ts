@@ -22,23 +22,11 @@ const getUserProfile = catchAsync(async (req, res) => {
      const user: any = req.user;
      const result = await UserService.getUserProfileFromDB(user);
 
-     // Transform response: avatar → image
-     const plainResult = result && (result as any).toObject ? (result as any).toObject() : result;
-     const responseData = plainResult ? {
-          ...plainResult,
-          image: plainResult.avatar,
-     } : plainResult;
-     
-     // Remove avatar field from response
-     if (responseData && 'avatar' in responseData) {
-          delete responseData.avatar;
-     }
-
      sendResponse(res, {
           success: true,
           statusCode: StatusCodes.OK,
           message: 'Profile data retrieved successfully',
-          data: responseData,
+          data: result,
      });
 });
 
@@ -56,28 +44,16 @@ const updateProfile = catchAsync(async (req, res) => {
      // Upload image to S3 if provided
      if (req.file) {
           const s3Url = await uploadFileToS3(req.file, 'user/images');
-          req.body.avatar = s3Url;
+          req.body.image = s3Url;
      }
 
      const result = await UserService.updateProfileToDB(user, req.body);
-
-     // Transform response: avatar → image
-     const plainResult = result && (result as any).toObject ? (result as any).toObject() : result;
-     const responseData = plainResult ? {
-          ...plainResult,
-          image: plainResult.avatar,
-     } : plainResult;
-     
-     // Remove avatar field from response
-     if (responseData && 'avatar' in responseData) {
-          delete responseData.avatar;
-     }
 
      sendResponse(res, {
           success: true,
           statusCode: StatusCodes.OK,
           message: 'Profile updated successfully',
-          data: responseData,
+          data: result,
      });
 });
 //delete profile

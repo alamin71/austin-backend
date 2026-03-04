@@ -248,8 +248,8 @@ class GiftService {
                );
 
                return transaction.populate([
-                    { path: 'sender', select: 'name avatar' },
-                    { path: 'receiver', select: 'name avatar' },
+                    { path: 'sender', select: 'name image' },
+                    { path: 'receiver', select: 'name image' },
                     { path: 'gift' },
                ]);
           } catch (error) {
@@ -264,7 +264,7 @@ class GiftService {
      static async getStreamGifts(streamId: string) {
           try {
                const transactions = await GiftTransaction.find({ stream: streamId })
-                    .populate('sender', 'name avatar')
+                    .populate('sender', 'name image')
                     .populate('gift')
                     .sort({ createdAt: -1 });
 
@@ -283,7 +283,7 @@ class GiftService {
                const transactions = await GiftTransaction.find({
                     receiver: streamerId,
                })
-                    .populate('sender', 'name avatar')
+                    .populate('sender', 'name image')
                     .populate('stream', 'title')
                     .populate('gift')
                     .sort({ createdAt: -1 });

@@ -186,7 +186,7 @@ class PollService {
      static async getPollResults(pollId: string) {
           try {
                const poll = await Poll.findById(pollId)
-                    .populate('streamer', 'name avatar')
+                    .populate('streamer', 'name image')
                     .populate('stream', 'title');
 
                if (!poll) {
@@ -212,7 +212,7 @@ class PollService {
                     stream: streamId,
                     isActive: true,
                })
-                    .populate('streamer', 'name avatar')
+                    .populate('streamer', 'name image')
                     .sort({ startTime: -1 });
 
                return poll;
@@ -228,7 +228,7 @@ class PollService {
      static async getStreamPolls(streamId: string) {
           try {
                const polls = await Poll.find({ stream: streamId })
-                    .populate('streamer', 'name avatar')
+                    .populate('streamer', 'name image')
                     .sort({ startTime: -1 });
 
                return polls;

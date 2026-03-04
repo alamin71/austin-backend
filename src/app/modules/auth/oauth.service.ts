@@ -73,7 +73,7 @@ class OAuthService {
         if (!user.authProviderId) {
           user.authProvider = 'google';
           user.authProviderId = payload.sub;
-          user.avatar = payload.picture || user.avatar;
+          user.image = payload.picture || user.image;
           await user.save();
         }
       }
