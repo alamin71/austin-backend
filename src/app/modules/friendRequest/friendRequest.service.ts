@@ -53,11 +53,11 @@ export class FriendRequestService {
                );
           }
 
-          // Delete any rejected requests so user can send again
+          // Delete any previous requests (rejected/accepted) so user can send again
           await FriendRequest.deleteOne({
                sender: senderId,
                receiver: receiverId,
-               status: 'rejected',
+               status: { $in: ['rejected', 'accepted'] },
           });
 
           // Create new request
@@ -233,7 +233,6 @@ export class FriendRequestService {
                     { sender: userId, receiver: friendId },
                     { sender: friendId, receiver: userId },
                ],
-               status: 'accepted',
           });
 
           return { message: 'Friend removed successfully' };
