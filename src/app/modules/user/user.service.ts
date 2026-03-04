@@ -44,7 +44,7 @@ const createUserToDB = async (payload: IUser): Promise<IUser> => {
 // get user profile
 const getUserProfileFromDB = async (user: any) => {
      const userId = user?.id || user?._id;
-     const userProfile = await User.findById(userId).select('-password -authentication');
+     const userProfile = await User.findById(userId).select('-password -authentication -avatar');
 
      if (!userProfile) {
           throw new AppError(StatusCodes.NOT_FOUND, 'User not found');
@@ -65,7 +65,7 @@ const updateProfileToDB = async (user: JwtPayload, payload: Partial<IUser>): Pro
 
      const updateDoc = await User.findOneAndUpdate({ _id: id }, payload, {
           new: true,
-     });
+     }).select('-password -authentication -avatar');
 
      return updateDoc;
 };

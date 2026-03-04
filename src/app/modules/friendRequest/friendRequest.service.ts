@@ -82,18 +82,6 @@ export class FriendRequestService {
           return friendRequest.populate(['sender', 'receiver']);
      }
 
-     // Get pending friend requests
-     static async getPendingRequests(userId: string) {
-          const requests = await FriendRequest.find({
-               receiver: userId,
-               status: 'pending',
-          })
-               .populate('sender', 'name userName image')
-               .sort({ requestedAt: -1 });
-
-          return requests;
-     }
-
      // Accept friend request
      static async acceptFriendRequest(requestId: string, userId: string) {
           const request = await FriendRequest.findById(requestId);
@@ -192,7 +180,7 @@ export class FriendRequestService {
           return request;
      }
 
-     // Get friends list
+     // Get friends list with pending requests
      static async getFriendsList(userId: string) {
           const user = await User.findById(userId).populate(
                'friends',
@@ -203,7 +191,18 @@ export class FriendRequestService {
                throw new AppError(StatusCodes.NOT_FOUND, 'User not found');
           }
 
-          return user.friends || [];
+          // Get pending friend requests
+          const pendingRequests = await FriendRequest.find({
+               receiver: userId,
+               status: 'pending',
+          })
+               .populate('sender', 'name userName image')
+               .sort({ requestedAt: -1 });
+
+          return {
+               friends: user.friends || [],
+               pendingRequests: pendingRequests || [],
+          };
      }
 
      // Remove friend

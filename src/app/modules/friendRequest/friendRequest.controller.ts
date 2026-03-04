@@ -22,18 +22,6 @@ export const FriendRequestController = {
           });
      }),
 
-     getPendingRequests: catchAsync(async (req: Request, res: Response) => {
-          const userId = (req.user as any).id;
-          const result = await FriendRequestService.getPendingRequests(userId);
-
-          sendResponse(res, {
-               statusCode: StatusCodes.OK,
-               success: true,
-               message: 'Pending requests retrieved',
-               data: result,
-          });
-     }),
-
      acceptFriendRequest: catchAsync(async (req: Request, res: Response) => {
           const { requestId } = req.params;
           const userId = (req.user as any).id;

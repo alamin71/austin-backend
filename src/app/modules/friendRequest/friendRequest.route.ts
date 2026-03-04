@@ -12,13 +12,6 @@ router.post(
      FriendRequestController.sendFriendRequest,
 );
 
-// Get pending requests for current user
-router.get(
-     '/request-pending',
-     auth(USER_ROLES.USER),
-     FriendRequestController.getPendingRequests,
-);
-
 // Accept friend request
 router.patch(
      '/:requestId/request-accept',
