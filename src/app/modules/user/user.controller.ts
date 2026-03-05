@@ -250,6 +250,61 @@ const removeSession = catchAsync(async (req: Request, res: Response) => {
      });
 });
 
+const logoutAllDevices = catchAsync(async (req: Request, res: Response) => {
+     const userId = (req.user as any).id;
+
+     const result = await UserService.logoutAllDevices(userId);
+
+     sendResponse(res, {
+          success: true,
+          statusCode: StatusCodes.OK,
+          message: result.message,
+          data: {},
+     });
+});
+
+const disableAccount = catchAsync(async (req: Request, res: Response) => {
+     const userId = (req.user as any).id;
+
+     const result = await UserService.disableAccount(userId);
+
+     sendResponse(res, {
+          success: true,
+          statusCode: StatusCodes.OK,
+          message: result.message,
+          data: {},
+     });
+});
+
+const requestDeleteAccountOtp = catchAsync(async (req: Request, res: Response) => {
+     const userId = (req.user as any).id;
+     const { password } = req.body;
+
+     const result = await UserService.requestDeleteAccountOtp(userId, password);
+
+     sendResponse(res, {
+          success: true,
+          statusCode: StatusCodes.OK,
+          message: 'OTP sent to your email. Please verify OTP to delete account.',
+          data: {
+               deleteAccountToken: result.deleteAccountToken,
+               email: result.email,
+          },
+     });
+});
+
+const verifyDeleteAccountOtp = catchAsync(async (req: Request, res: Response) => {
+     const userId = (req.user as any).id;
+     const result = await UserService.verifyDeleteAccountOtp(userId, req.body);
+
+     sendResponse(res, {
+          success: true,
+          statusCode: StatusCodes.OK,
+          message: result.message,
+          data: {},
+     });
+});
+
 export const UserController = {
      createUser,
      getUserProfile,
@@ -266,4 +321,8 @@ export const UserController = {
      getSecuritySettings,
      getActiveSessions,
      removeSession,
+     logoutAllDevices,
+     disableAccount,
+     requestDeleteAccountOtp,
+     verifyDeleteAccountOtp,
 };

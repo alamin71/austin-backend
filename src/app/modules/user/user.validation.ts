@@ -32,8 +32,28 @@ const updateUserZodSchema = z.object({
      }),
 });
 
+const disableAccountZodSchema = z.object({
+     body: z.object({}),
+});
+
+const requestDeleteAccountOtpZodSchema = z.object({
+     body: z.object({
+          password: z.string({ required_error: 'Password is required' }),
+     }),
+});
+
+const verifyDeleteAccountOtpZodSchema = z.object({
+     body: z.object({
+          deleteAccountToken: z.string({ required_error: 'Delete account token is required' }),
+          oneTimeCode: z.number({ required_error: 'One time code is required' }),
+     }),
+});
+
 export const UserValidation = {
      createUserZodSchema,
      updateUserZodSchema,
      createBusinessUserZodSchema,
+     disableAccountZodSchema,
+     requestDeleteAccountOtpZodSchema,
+     verifyDeleteAccountOtpZodSchema,
 };

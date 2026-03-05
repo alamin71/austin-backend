@@ -89,4 +89,20 @@ router.patch(
 router.get('/security-settings/sessions', auth(USER_ROLES.USER), UserController.getActiveSessions);
 router.delete('/security-settings/sessions/:sessionId', auth(USER_ROLES.USER), UserController.removeSession);
 
+// Account actions
+router.post('/logout-all-devices', auth(USER_ROLES.USER), UserController.logoutAllDevices);
+router.patch('/disable-account', auth(USER_ROLES.USER), UserController.disableAccount);
+router.post(
+     '/delete-account/request-otp',
+     auth(USER_ROLES.USER),
+     validateRequest(UserValidation.requestDeleteAccountOtpZodSchema),
+     UserController.requestDeleteAccountOtp,
+);
+router.post(
+     '/delete-account/verify-otp',
+     auth(USER_ROLES.USER),
+     validateRequest(UserValidation.verifyDeleteAccountOtpZodSchema),
+     UserController.verifyDeleteAccountOtp,
+);
+
 export const UserRouter = router;

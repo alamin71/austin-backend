@@ -47,7 +47,7 @@ export type IUser = {
      isDeleted: boolean;
      stripeCustomerId: string;
      address?: string;
-     status: 'active' | 'blocked';
+     status: 'active' | 'inactive' | 'blocked';
      verified: boolean;
      // OAuth fields
      authProvider?: 'email' | 'google' | 'apple';

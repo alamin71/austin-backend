@@ -1,4 +1,6 @@
 import { StatusCodes } from 'http-status-codes';
+import { Secret } from 'jsonwebtoken';
+import config from '../../../config/index.js';
 import { JwtPayload } from 'jsonwebtoken';
 import { USER_ROLES } from '../../../enums/user.js';
 import { emailHelper } from '../../../helpers/emailHelper.js';
@@ -7,6 +9,8 @@ import { IUser } from './user.interface.js';
 import { User } from './user.model.js';
 import AppError from '../../../errors/AppError.js';
 import generateOTP from '../../../utils/generateOTP.js';
+import { createToken } from '../../../utils/createToken.js';
+import { verifyToken } from '../../../utils/verifyToken.js';
 // create user
 const createUserToDB = async (payload: IUser): Promise<IUser> => {
      //set role
@@ -306,6 +310,138 @@ const removeSession = async (userId: string, sessionId: string) => {
      return { message: 'Session removed successfully' };
 };
 
+const logoutAllDevices = async (userId: string) => {
+     const user = await User.findById(userId);
+
+     if (!user) {
+          throw new AppError(StatusCodes.NOT_FOUND, 'User not found');
+     }
+
+     await User.findByIdAndUpdate(userId, {
+          $set: { 'securitySettings.activeSessions': [] },
+     });
+
+     return { message: 'Logged out from all devices successfully' };
+};
+
+const disableAccount = async (userId: string) => {
+     const user = await User.findById(userId);
+
+     if (!user) {
+          throw new AppError(StatusCodes.NOT_FOUND, 'User not found');
+     }
+
+     await User.findByIdAndUpdate(userId, {
+          $set: {
+               status: 'inactive',
+               'securitySettings.activeSessions': [],
+          },
+     });
+
+     return { message: 'Account disabled successfully' };
+};
+
+const requestDeleteAccountOtp = async (userId: string, password: string) => {
+     const user = await User.findById(userId).select('+password +authentication');
+
+     if (!user) {
+          throw new AppError(StatusCodes.NOT_FOUND, 'User not found');
+     }
+
+     if (!password) {
+          throw new AppError(StatusCodes.BAD_REQUEST, 'Password is required');
+     }
+
+     if (!user.password || !(await User.isMatchPassword(password, user.password))) {
+          throw new AppError(StatusCodes.BAD_REQUEST, 'Password is incorrect');
+     }
+
+     const otp = generateOTP(6);
+     const authentication = {
+          oneTimeCode: otp,
+          expireAt: new Date(Date.now() + 3 * 60000),
+     };
+
+     await User.findByIdAndUpdate(userId, {
+          $set: { authentication },
+     });
+
+     const emailContent = emailTemplate.resetPassword({
+          otp,
+          email: user.email,
+     });
+     await emailHelper.sendEmail(emailContent);
+
+     const deleteAccountToken = createToken(
+          {
+               id: user._id.toString(),
+               email: user.email,
+               role: user.role,
+               purpose: 'delete_account',
+          },
+          config.jwt.jwt_secret as string,
+          '10m',
+     );
+
+     return {
+          deleteAccountToken,
+          email: user.email,
+     };
+};
+
+const verifyDeleteAccountOtp = async (
+     userId: string,
+     payload: { deleteAccountToken: string; oneTimeCode: number },
+) => {
+     const { deleteAccountToken, oneTimeCode } = payload;
+
+     if (!deleteAccountToken || !oneTimeCode) {
+          throw new AppError(StatusCodes.BAD_REQUEST, 'Delete token and OTP are required');
+     }
+
+     let decodedToken: any;
+     try {
+          decodedToken = verifyToken(deleteAccountToken, config.jwt.jwt_secret as Secret);
+     } catch (error) {
+          throw new AppError(StatusCodes.UNAUTHORIZED, 'Invalid or expired delete token');
+     }
+
+     if (decodedToken?.purpose !== 'delete_account') {
+          throw new AppError(StatusCodes.UNAUTHORIZED, 'Invalid token purpose');
+     }
+
+     if (decodedToken?.id !== userId) {
+          throw new AppError(StatusCodes.FORBIDDEN, 'Token does not match this user');
+     }
+
+     const user = await User.findById(userId).select('+authentication');
+     if (!user) {
+          throw new AppError(StatusCodes.NOT_FOUND, 'User not found');
+     }
+
+     if (!user.authentication?.oneTimeCode || user.authentication.oneTimeCode !== oneTimeCode) {
+          throw new AppError(StatusCodes.BAD_REQUEST, 'Wrong OTP');
+     }
+
+     if (new Date() > user.authentication.expireAt) {
+          throw new AppError(StatusCodes.BAD_REQUEST, 'OTP expired');
+     }
+
+     await User.findByIdAndUpdate(userId, {
+          $set: {
+               isDeleted: true,
+               status: 'inactive',
+               'securitySettings.activeSessions': [],
+               authentication: {
+                    oneTimeCode: null,
+                    expireAt: null,
+               },
+          },
+     });
+
+     return { message: 'Account deleted successfully' };
+};
+
 export const UserService = {
      createUserToDB,
      getUserProfileFromDB,
@@ -323,4 +459,8 @@ export const UserService = {
      getSecuritySettings,
      getActiveSessions,
      removeSession,
+     logoutAllDevices,
+     disableAccount,
+     requestDeleteAccountOtp,
+     verifyDeleteAccountOtp,
 };

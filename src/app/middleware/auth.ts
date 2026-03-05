@@ -39,6 +39,10 @@ const auth =
                          throw new AppError(StatusCodes.FORBIDDEN, 'This user is blocked !!');
                     }
 
+                    if (user?.status === 'inactive') {
+                         throw new AppError(StatusCodes.FORBIDDEN, 'This account is disabled. Please login again to reactivate.');
+                    }
+
                     if (user?.isDeleted) {
                          throw new AppError(StatusCodes.FORBIDDEN, 'This user accaunt is deleted !!');
                     }

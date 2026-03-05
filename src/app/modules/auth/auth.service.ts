@@ -118,6 +118,8 @@ const loginUserFromDB = async (payload: ILoginData) => {
 
      if (!isExistUser.password || !(await User.isMatchPassword(password, isExistUser.password))) throw new AppError(StatusCodes.BAD_REQUEST, 'Password is incorrect!');
 
+     const shouldReactivate = isExistUser.status === 'inactive';
+
      // 2FA login flow: password is valid, now require OTP verification
      if (isExistUser.securitySettings?.twoFactorEnabled) {
           const otp = generateOTP(6);
@@ -150,6 +152,12 @@ const loginUserFromDB = async (payload: ILoginData) => {
      const jwtData = { id: isExistUser._id, role: isExistUser.role, email: isExistUser.email, userName: isExistUser.userName };
      const accessToken = jwtHelper.createToken(jwtData, config.jwt.jwt_secret as Secret, config.jwt.jwt_expire_in as string);
      const refreshToken = jwtHelper.createToken(jwtData, config.jwt.jwt_refresh_secret as string, config.jwt.jwt_refresh_expire_in as string);
+
+     if (shouldReactivate) {
+          await User.findByIdAndUpdate(isExistUser._id, {
+               $set: { status: 'active' },
+          });
+     }
 
      return {
           requiresTwoFactor: false,
@@ -198,6 +206,7 @@ const verifyLoginTwoFactorOtpToDB = async (payload: { twoFactorToken: string; on
 
      await User.findByIdAndUpdate(user._id, {
           $set: {
+               status: 'active',
                authentication: {
                     oneTimeCode: null,
                     expireAt: null,

@@ -79,7 +79,7 @@ const userSchema = new Schema<IUser, UserModel>(
           },
           status: {
                type: String,
-               enum: ['active', 'blocked'],
+               enum: ['active', 'inactive', 'blocked'],
                default: 'active',
           },
           verified: {
