@@ -15,6 +15,8 @@ import { friendRequestRoutes } from '../app/modules/friendRequest/friendRequest.
 import { messageRoutes } from '../app/modules/message/message.route.js';
 import { followRoutes } from '../app/modules/follow/follow.route.js';
 import { notificationRoutes } from '../app/modules/notification/notification.route.js';
+import { FeedbackRouter } from '../app/modules/feedback/feedback.route.js';
+import { CustomerSupportRouter } from '../app/modules/customerSupport/customerSupport.route.js';
 
 const router = express.Router();
 const routes = [
@@ -77,6 +79,14 @@ const routes = [
      {
           path: '/notification',
           route: notificationRoutes,
+     },
+     {
+          path: '/feedback',
+          route: FeedbackRouter,
+     },
+     {
+          path: '/support',
+          route: CustomerSupportRouter,
      },
      {
           path: '/test',

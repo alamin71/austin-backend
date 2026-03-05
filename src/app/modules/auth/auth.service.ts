@@ -111,14 +111,19 @@ const loginUserFromDB = async (
      const adminRoles = [USER_ROLES.SUPER_ADMIN, USER_ROLES.ADMIN];
      if (!adminRoles.includes(isExistUser.role as USER_ROLES) && !isExistUser.verified) {
           const otp = generateOTP(6);
-          const value = { otp, email: isExistUser.email };
-          const emailContent = emailTemplate.resetPassword(value);
+          const value = { otp, email: isExistUser.email, name: isExistUser.name };
+          const emailContent = emailTemplate.createAccount(value);
           await emailHelper.sendEmail(emailContent);
 
           const authentication = { oneTimeCode: otp, expireAt: new Date(Date.now() + 3 * 60000) };
           await User.findOneAndUpdate({ email }, { $set: { authentication } });
 
-     throw new AppError(StatusCodes.CONFLICT, 'Please verify your account, then try to login again');
+          return {
+               requiresVerification: true,
+               message: 'OTP sent to your email. Please verify to complete login.',
+               email: isExistUser.email,
+               otp,
+          };
      }
 
      if (isExistUser?.status === 'blocked') throw new AppError(StatusCodes.BAD_REQUEST, 'Your account has been blocked.');
@@ -131,7 +136,7 @@ const loginUserFromDB = async (
      if (isExistUser.securitySettings?.twoFactorEnabled) {
           const otp = generateOTP(6);
           const value = { otp, email: isExistUser.email };
-          const emailContent = emailTemplate.resetPassword(value);
+          const emailContent = emailTemplate.twoFactorLogin(value);
           await emailHelper.sendEmail(emailContent);
 
           const authentication = { oneTimeCode: otp, expireAt: new Date(Date.now() + 3 * 60000) };
@@ -153,6 +158,7 @@ const loginUserFromDB = async (
                twoFactorToken,
                email: isExistUser.email,
                role: isExistUser.role,
+               otp,
           };
      }
 

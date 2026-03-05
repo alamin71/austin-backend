@@ -1,4 +1,4 @@
-import { IContact, ICreateAccount, IHelpContact, IResetPassword, IResetPasswordByEmail } from '../types/emailTamplate.js';
+import { IContact, ICreateAccount, IHelpContact, IResetPassword, IResetPasswordByEmail, ITwoFactorLogin } from '../types/emailTamplate.js';
 
 const createAccount = (values: ICreateAccount) => {
      const data = {
@@ -261,10 +261,107 @@ const contactFormTemplate = (values: IHelpContact) => {
      return data;
 };
 
+const twoFactorLogin = (values: ITwoFactorLogin) => {
+     const data = {
+          to: values.email,
+          subject: '🔐 Two-Factor Authentication - Login OTP',
+          html: `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Two-Factor Authentication OTP</title>
+</head>
+<body style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); margin: 0; padding: 0;">
+    <div style="width: 100%; max-width: 600px; margin: 40px auto; padding: 0;">
+        <!-- Header with gradient -->
+        <div style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); padding: 30px 20px; text-align: center; border-radius: 12px 12px 0 0;">
+            <img src="https://i.postimg.cc/DzG9Y8qY/vidzo-logo.png" alt="VidZo Streaming Logo" style="width: 120px; height: auto; margin-bottom: 15px;" />
+            <h1 style="color: #fff; margin: 0; font-size: 28px; font-weight: 600;">VidZo Streaming</h1>
+            <p style="color: rgba(255,255,255,0.9); margin: 5px 0 0 0; font-size: 14px;">Two-Factor Authentication</p>
+        </div>
+
+        <!-- Main Content -->
+        <div style="background: #fff; padding: 40px 30px; border-radius: 0 0 12px 12px; box-shadow: 0 10px 40px rgba(0,0,0,0.2);">
+            
+            <!-- Badge for OTP Type -->
+            <div style="display: inline-block; background: #e3f2fd; color: #1976d2; padding: 8px 16px; border-radius: 20px; font-size: 12px; font-weight: 600; margin-bottom: 20px; letter-spacing: 0.5px;">
+                🔐 TWO-FACTOR LOGIN OTP
+            </div>
+
+            <!-- Greeting -->
+            <h2 style="color: #333; font-size: 24px; margin: 15px 0 10px 0; font-weight: 600;">Login Verification Required 🔒</h2>
+            <p style="color: #666; font-size: 16px; line-height: 1.6; margin: 0 0 15px 0;">
+                A login attempt was detected on your VidZo Streaming account. To continue, please verify your identity using the OTP below.
+            </p>
+            <p style="color: #4facfe; font-size: 15px; line-height: 1.6; margin: 0 0 30px 0; font-weight: 600;">
+                Your Two-Factor Authentication Code:
+            </p>
+
+            <!-- OTP Section -->
+            <div style="background: #f8f9fa; border-left: 4px solid #4facfe; padding: 25px; border-radius: 8px; margin: 30px 0; text-align: center;">
+                <p style="color: #666; font-size: 14px; margin: 0 0 15px 0; text-transform: uppercase; letter-spacing: 1px;">Your Login Code</p>
+                <div style="background: #fff; border: 2px solid #4facfe; padding: 20px; border-radius: 8px; margin: 15px 0;">
+                    <p style="color: #4facfe; font-size: 36px; font-weight: 700; margin: 0; letter-spacing: 5px; font-family: 'Courier New', monospace;">
+                        ${values.otp}
+                    </p>
+                </div>
+                <p style="color: #d32f2f; font-size: 13px; margin: 15px 0 0 0; font-weight: 600;">
+                    ⏱️ This code expires in <strong>3 minutes</strong>
+                </p>
+            </div>
+
+            <!-- Instructions -->
+            <div style="background: #fff3e0; border: 1px solid #ffb74d; padding: 20px; border-radius: 8px; margin: 25px 0;">
+                <p style="color: #333; font-size: 14px; font-weight: 600; margin: 0 0 10px 0;">📋 Steps to complete login:</p>
+                <ol style="color: #666; font-size: 14px; margin: 10px 0; padding-left: 20px;">
+                    <li style="margin-bottom: 8px;">Copy the code above</li>
+                    <li style="margin-bottom: 8px;">Return to VidZo Streaming app</li>
+                    <li style="margin-bottom: 8px;">Enter the code in the verification field</li>
+                    <li>Complete your login</li>
+                </ol>
+            </div>
+
+            <!-- Did Not Request? -->
+            <div style="background: #ffebee; border-left: 4px solid #f44336; padding: 15px; border-radius: 8px; margin: 25px 0;">
+                <p style="color: #c62828; font-size: 13px; margin: 0; font-weight: 600;">
+                    ❓ Didn't try to login?
+                </p>
+                <p style="color: #d32f2f; font-size: 13px; margin: 8px 0 0 0;">
+                    If you didn't attempt to login, your account may be compromised. Please <a href="mailto:support@vidzostreaming.com" style="color: #d32f2f; text-decoration: underline; font-weight: 600;">contact our support team immediately</a> and change your password.
+                </p>
+            </div>
+
+            <!-- Security Notice -->
+            <div style="background: #f3e5f5; border-left: 4px solid #7b1fa2; padding: 15px; border-radius: 8px; margin: 25px 0;">
+                <p style="color: #6a1b9a; font-size: 13px; margin: 0;">
+                    <strong>🔒 Security Reminder:</strong> VidZo Streaming staff will never ask you for this code. Keep it confidential.
+                </p>
+            </div>
+
+            <!-- Footer -->
+            <div style="border-top: 1px solid #eee; margin-top: 30px; padding-top: 20px; text-align: center;">
+                <p style="color: #999; font-size: 13px; margin: 0 0 10px 0;">
+                    Need help? Contact us at <a href="mailto:support@vidzostreaming.com" style="color: #4facfe; text-decoration: none; font-weight: 600;">support@vidzostreaming.com</a>
+                </p>
+                <p style="color: #999; font-size: 12px; margin: 0;">
+                    © 2026 VidZo Streaming. All rights reserved.
+                </p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>`,
+     };
+     return data;
+};
+
 export const emailTemplate = {
      createAccount,
      resetPassword,
      resetPasswordByUrl,
      contactFormTemplate,
      contact,
+     twoFactorLogin,
 };
