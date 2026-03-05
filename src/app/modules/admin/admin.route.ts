@@ -8,6 +8,13 @@ import auth from '../../middleware/auth.js';
 import validateRequest from '../../middleware/validateRequest.js';
 import categoryController from '../category/category.controller.js';
 import { createCategorySchema, updateCategorySchema } from '../category/category.validation.js';
+import cmsController from '../cms/cms.controller.js';
+import {
+  createFaqSchema,
+  createStaticContentSchema,
+  updateFaqSchema,
+  updateStaticContentSchema,
+} from '../cms/cms.validation.js';
 
 const router = express.Router();
 
@@ -100,6 +107,74 @@ router.delete(
   '/delete-category/:categoryId',
   auth(USER_ROLES.ADMIN, USER_ROLES.SUPER_ADMIN),
   categoryController.deleteCategory,
+);
+
+// ============================================
+// CMS MANAGEMENT ENDPOINTS (FAQ + STATIC PAGES)
+// ============================================
+
+router.post(
+  '/faq',
+  auth(USER_ROLES.ADMIN, USER_ROLES.SUPER_ADMIN),
+  validateRequest(createFaqSchema),
+  cmsController.createFaq,
+);
+
+router.get(
+  '/faq',
+  auth(USER_ROLES.ADMIN, USER_ROLES.SUPER_ADMIN),
+  cmsController.getAllFaqs,
+);
+
+router.get(
+  '/faq/:faqId',
+  auth(USER_ROLES.ADMIN, USER_ROLES.SUPER_ADMIN),
+  cmsController.getFaqById,
+);
+
+router.patch(
+  '/faq/:faqId',
+  auth(USER_ROLES.ADMIN, USER_ROLES.SUPER_ADMIN),
+  validateRequest(updateFaqSchema),
+  cmsController.updateFaq,
+);
+
+router.delete(
+  '/faq/:faqId',
+  auth(USER_ROLES.ADMIN, USER_ROLES.SUPER_ADMIN),
+  cmsController.deleteFaq,
+);
+
+router.post(
+  '/static-content',
+  auth(USER_ROLES.ADMIN, USER_ROLES.SUPER_ADMIN),
+  validateRequest(createStaticContentSchema),
+  cmsController.createStaticContent,
+);
+
+router.get(
+  '/static-content',
+  auth(USER_ROLES.ADMIN, USER_ROLES.SUPER_ADMIN),
+  cmsController.getAllStaticContents,
+);
+
+router.get(
+  '/static-content/:key',
+  auth(USER_ROLES.ADMIN, USER_ROLES.SUPER_ADMIN),
+  cmsController.getStaticContentByKey,
+);
+
+router.put(
+  '/static-content/:key',
+  auth(USER_ROLES.ADMIN, USER_ROLES.SUPER_ADMIN),
+  validateRequest(updateStaticContentSchema),
+  cmsController.updateStaticContentByKey,
+);
+
+router.delete(
+  '/static-content/:key',
+  auth(USER_ROLES.ADMIN, USER_ROLES.SUPER_ADMIN),
+  cmsController.deleteStaticContentByKey,
 );
 
 // ============================================
