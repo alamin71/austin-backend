@@ -51,13 +51,13 @@ class CmsController {
      });
 
      deleteFaq = catchAsync(async (req: Request, res: Response) => {
-          await CmsService.deleteFaq(req.params.faqId);
+          const faq = await CmsService.deleteFaq(req.params.faqId);
 
           sendResponse(res, {
                statusCode: StatusCodes.OK,
                success: true,
                message: 'FAQ deleted successfully',
-               data: null,
+               data: faq,
           });
      });
 
@@ -106,13 +106,13 @@ class CmsController {
      });
 
      deleteStaticContentByKey = catchAsync(async (req: Request, res: Response) => {
-          await CmsService.deleteStaticContentByKey(req.params.key as TStaticContentKey);
+          const content = await CmsService.deleteStaticContentByKey(req.params.key as TStaticContentKey);
 
           sendResponse(res, {
                statusCode: StatusCodes.OK,
                success: true,
                message: 'Static content deleted successfully',
-               data: null,
+               data: content,
           });
      });
 }
