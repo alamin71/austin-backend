@@ -15,8 +15,12 @@ export type IPrivacySettings = {
 };
 
 export type IActiveSession = {
-     deviceType: string;
-     deviceName: string;
+     deviceType: string; // 'Mobile' | 'Desktop' | 'Tablet' | 'Unknown'
+     deviceName: string; // 'iPhone 15 Pro', 'Samsung Galaxy S24', 'Chrome on Windows', etc.
+     platform: string; // 'iOS' | 'Android' | 'Web' | 'Unknown'
+     browser?: string; // 'Chrome', 'Safari', 'Firefox', etc. (for web)
+     os?: string; // 'iOS 17.2', 'Android 14', 'Windows 11', etc.
+     appVersion?: string; // App version if from mobile app
      lastActive: Date;
      loginTime: Date;
      ip?: string;

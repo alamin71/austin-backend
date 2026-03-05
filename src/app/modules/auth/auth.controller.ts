@@ -54,7 +54,11 @@ const verifyResetOtp = catchAsync(async (req, res) => {
 });
 
 const loginUser = catchAsync(async (req, res) => {
-     const result = await AuthService.loginUserFromDB(req.body);
+     const userAgent = req.headers['user-agent'] || '';
+     const ip = (req.headers['x-forwarded-for'] as string)?.split(',')[0] || req.ip || req.socket.remoteAddress;
+     const appVersion = req.headers['x-app-version'] as string | undefined;
+
+     const result = await AuthService.loginUserFromDB(req.body, userAgent, ip, appVersion);
      const cookieOptions: any = { secure: false, httpOnly: true, maxAge: 31536000000 };
      if (config.node_env === 'production') cookieOptions.sameSite = 'none';
 
@@ -90,7 +94,11 @@ const loginUser = catchAsync(async (req, res) => {
 });
 
 const verifyLoginTwoFactorOtp = catchAsync(async (req, res) => {
-     const result = await AuthService.verifyLoginTwoFactorOtpToDB(req.body);
+     const userAgent = req.headers['user-agent'] || '';
+     const ip = (req.headers['x-forwarded-for'] as string)?.split(',')[0] || req.ip || req.socket.remoteAddress;
+     const appVersion = req.headers['x-app-version'] as string | undefined;
+
+     const result = await AuthService.verifyLoginTwoFactorOtpToDB(req.body, userAgent, ip, appVersion);
 
      sendResponse(res, {
           success: true,

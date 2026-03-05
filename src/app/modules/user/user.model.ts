@@ -174,8 +174,12 @@ const userSchema = new Schema<IUser, UserModel>(
                     twoFactorSecret: { type: String, default: null, select: false },
                     activeSessions: [
                          {
-                              deviceType: { type: String, default: 'Browser' },
+                              deviceType: { type: String, default: 'Unknown' },
                               deviceName: { type: String, default: 'Unknown' },
+                              platform: { type: String, default: 'Unknown' },
+                              browser: { type: String, default: null },
+                              os: { type: String, default: null },
+                              appVersion: { type: String, default: null },
                               lastActive: { type: Date, default: Date.now },
                               loginTime: { type: Date, default: Date.now },
                               ip: { type: String, default: null },

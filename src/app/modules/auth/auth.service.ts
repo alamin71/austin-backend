@@ -13,6 +13,8 @@ import { verifyToken } from '../../../utils/verifyToken.js';
 import { createToken } from '../../../utils/createToken.js';
 import { uploadFileToS3 } from '../../../helpers/s3Helper.js';
 import { USER_ROLES } from '../../../enums/user.js';
+import { detectDevice } from '../../../helpers/deviceDetector.js';
+import { v4 as uuidv4 } from 'uuid';
 
 interface IRegisterData {
      name: string;
@@ -93,7 +95,12 @@ const registerUserToDB = async (payload: IRegisterData, file?: any) => {
      }
 };
 
-const loginUserFromDB = async (payload: ILoginData) => {
+const loginUserFromDB = async (
+     payload: ILoginData,
+     userAgent?: string,
+     ip?: string,
+     appVersion?: string,
+) => {
      const { email, password } = payload;
      if (!password) throw new AppError(StatusCodes.BAD_REQUEST, 'Password is required!');
 
@@ -153,11 +160,27 @@ const loginUserFromDB = async (payload: ILoginData) => {
      const accessToken = jwtHelper.createToken(jwtData, config.jwt.jwt_secret as Secret, config.jwt.jwt_expire_in as string);
      const refreshToken = jwtHelper.createToken(jwtData, config.jwt.jwt_refresh_secret as string, config.jwt.jwt_refresh_expire_in as string);
 
-     if (shouldReactivate) {
-          await User.findByIdAndUpdate(isExistUser._id, {
-               $set: { status: 'active' },
-          });
-     }
+     // Detect device and create session
+     const deviceInfo = detectDevice(userAgent || '', appVersion);
+     const sessionId = uuidv4();
+     const newSession = {
+          deviceType: deviceInfo.deviceType,
+          deviceName: deviceInfo.deviceName,
+          platform: deviceInfo.platform,
+          browser: deviceInfo.browser,
+          os: deviceInfo.os,
+          appVersion: deviceInfo.appVersion,
+          lastActive: new Date(),
+          loginTime: new Date(),
+          ip: ip || null,
+          sessionId,
+     };
+
+     // Track session and reactivate if needed
+     await User.findByIdAndUpdate(isExistUser._id, {
+          $set: shouldReactivate ? { status: 'active' } : {},
+          $push: { 'securitySettings.activeSessions': newSession },
+     });
 
      return {
           requiresTwoFactor: false,
@@ -169,7 +192,12 @@ const loginUserFromDB = async (payload: ILoginData) => {
      };
 };
 
-const verifyLoginTwoFactorOtpToDB = async (payload: { twoFactorToken: string; oneTimeCode: number }) => {
+const verifyLoginTwoFactorOtpToDB = async (
+     payload: { twoFactorToken: string; oneTimeCode: number },
+     userAgent?: string,
+     ip?: string,
+     appVersion?: string,
+) => {
      const { twoFactorToken, oneTimeCode } = payload;
 
      if (!twoFactorToken) {
@@ -204,6 +232,22 @@ const verifyLoginTwoFactorOtpToDB = async (payload: { twoFactorToken: string; on
           throw new AppError(StatusCodes.BAD_REQUEST, 'OTP expired');
      }
 
+     // Detect device and create session
+     const deviceInfo = detectDevice(userAgent || '', appVersion);
+     const sessionId = uuidv4();
+     const newSession = {
+          deviceType: deviceInfo.deviceType,
+          deviceName: deviceInfo.deviceName,
+          platform: deviceInfo.platform,
+          browser: deviceInfo.browser,
+          os: deviceInfo.os,
+          appVersion: deviceInfo.appVersion,
+          lastActive: new Date(),
+          loginTime: new Date(),
+          ip: ip || null,
+          sessionId,
+     };
+
      await User.findByIdAndUpdate(user._id, {
           $set: {
                status: 'active',
@@ -212,6 +256,7 @@ const verifyLoginTwoFactorOtpToDB = async (payload: { twoFactorToken: string; on
                     expireAt: null,
                },
           },
+          $push: { 'securitySettings.activeSessions': newSession },
      });
 
      const jwtData = {
