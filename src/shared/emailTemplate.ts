@@ -16,7 +16,7 @@ const createAccount = (values: ICreateAccount) => {
     <div style="width: 100%; max-width: 600px; margin: 40px auto; padding: 0;">
         <!-- Header with gradient -->
         <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px 20px; text-align: center; border-radius: 12px 12px 0 0;">
-            <img src="https://i.postimg.cc/DzG9Y8qY/vidzo-logo.png" alt="VidZo Streaming Logo" style="width: 120px; height: auto; margin-bottom: 15px;" />
+            <img src="https://austin-mahoney-buckets.s3.us-east-1.amazonaws.com/vidzo-logo.png" alt="VidZo Streaming Logo" style="width: 120px; height: auto; margin-bottom: 15px;" />
             <h1 style="color: #fff; margin: 0; font-size: 28px; font-weight: 600;">VidZo Streaming</h1>
             <p style="color: rgba(255,255,255,0.9); margin: 5px 0 0 0; font-size: 14px;">Live Streaming Platform</p>
         </div>
@@ -91,7 +91,7 @@ const contact = (values: IContact) => {
           subject: 'We’ve Received Your Message – Thank You!',
           html: `<body style="font-family: Arial, sans-serif; background-color: #f9f9f9; margin: 50px; padding: 20px; color: #555;">      
       <div style="width: 100%; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #fff; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1);">
-          <img src="https://i.postimg.cc/DzG9Y8qY/vidzo-logo.png" alt="VidZo Streaming Logo" style="display: block; margin: 0 auto 20px; width:150px" />
+          <img src="https://austin-mahoney-buckets.s3.us-east-1.amazonaws.com/vidzo-logo.png" alt="VidZo Streaming Logo" style="display: block; margin: 0 auto 20px; width:150px" />
           <h2 style="color: #277E16; font-size: 24px; margin-bottom: 20px; text-align: center;">Thank You for Contacting Us, ${values.name}!</h2>
           
           <p style="color: #555; font-size: 16px; line-height: 1.5; text-align: center;">
@@ -137,7 +137,7 @@ const resetPassword = (values: IResetPassword) => {
     <div style="width: 100%; max-width: 600px; margin: 40px auto; padding: 0;">
         <!-- Header with gradient -->
         <div style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); padding: 30px 20px; text-align: center; border-radius: 12px 12px 0 0;">
-            <img src="https://i.postimg.cc/DzG9Y8qY/vidzo-logo.png" alt="VidZo Streaming Logo" style="width: 120px; height: auto; margin-bottom: 15px;" />
+            <img src="https://austin-mahoney-buckets.s3.us-east-1.amazonaws.com/vidzo-logo.png" alt="VidZo Streaming Logo" style="width: 120px; height: auto; margin-bottom: 15px;" />
             <h1 style="color: #fff; margin: 0; font-size: 28px; font-weight: 600;">VidZo Streaming</h1>
             <p style="color: rgba(255,255,255,0.9); margin: 5px 0 0 0; font-size: 14px;">Password Reset Request</p>
         </div>
@@ -223,7 +223,7 @@ const resetPasswordByUrl = (values: IResetPasswordByEmail) => {
           subject: 'Reset Your Password',
           html: `<body style="font-family: Arial, sans-serif; background-color: #f9f9f9; margin: 50px; padding: 20px; color: #555;">
       <div style="width: 100%; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #fff; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1);">
-        <img src="https://i.postimg.cc/DzG9Y8qY/vidzo-logo.png" alt="VidZo Streaming Logo" style="display: block; margin: 0 auto 20px; width:150px" />
+        <img src="https://austin-mahoney-buckets.s3.us-east-1.amazonaws.com/vidzo-logo.png" alt="VidZo Streaming Logo" style="display: block; margin: 0 auto 20px; width:150px" />
         <div style="text-align: center;">
           <h2 style="color: #333;">Reset Your Password</h2>
           <p style="color: #555; font-size: 16px; line-height: 1.5;">We received a request to reset your password. Click the button below to reset it:</p>
@@ -243,7 +243,7 @@ const contactFormTemplate = (values: IHelpContact) => {
           subject: 'Thank you for reaching out to us',
           html: `<body style="font-family: Arial, sans-serif; background-color: #f9f9f9; margin: 50px; padding: 20px; color: #555;">
     <div style="width: 100%; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #fff; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1);">
-        <img src="https://i.postimg.cc/DzG9Y8qY/vidzo-logo.png" alt="VidZo Streaming Logo" style="display: block; margin: 0 auto 20px; width:150px" />
+        <img src="https://austin-mahoney-buckets.s3.us-east-1.amazonaws.com/vidzo-logo.png" alt="VidZo Streaming Logo" style="display: block; margin: 0 auto 20px; width:150px" />
         <div style="text-align: center;">
             <p style="color: #555; font-size: 16px; line-height: 1.5; margin-bottom: 20px;">Hello ${values.name},</p>
             <p style="color: #555; font-size: 16px; line-height: 1.5; margin-bottom: 20px;">Thank you for reaching out to us. We have received your message:</p>
@@ -277,7 +277,7 @@ const twoFactorLogin = (values: ITwoFactorLogin) => {
     <div style="width: 100%; max-width: 600px; margin: 40px auto; padding: 0;">
         <!-- Header with gradient -->
         <div style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); padding: 30px 20px; text-align: center; border-radius: 12px 12px 0 0;">
-            <img src="https://i.postimg.cc/DzG9Y8qY/vidzo-logo.png" alt="VidZo Streaming Logo" style="width: 120px; height: auto; margin-bottom: 15px;" />
+            <img src="https://austin-mahoney-buckets.s3.us-east-1.amazonaws.com/vidzo-logo.png" alt="VidZo Streaming Logo" style="width: 120px; height: auto; margin-bottom: 15px;" />
             <h1 style="color: #fff; margin: 0; font-size: 28px; font-weight: 600;">VidZo Streaming</h1>
             <p style="color: rgba(255,255,255,0.9); margin: 5px 0 0 0; font-size: 14px;">Two-Factor Authentication</p>
         </div>
