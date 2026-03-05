@@ -1,14 +1,20 @@
 import { Router } from 'express';
+import multer from 'multer';
 import { USER_ROLES } from '../../../enums/user.js';
 import auth from '../../middleware/auth.js';
 import { MessageController } from './message.controller.js';
 
 const router = Router();
+const upload = multer({ 
+     storage: multer.memoryStorage(),
+     limits: { fileSize: 50 * 1024 * 1024 } // 50MB limit
+});
 
-// Send message
+// Send message (supports image, PDF, documents, videos, any file)
 router.post(
      '/send',
      auth(USER_ROLES.USER),
+     upload.single('media'),
      MessageController.sendMessage,
 );
 

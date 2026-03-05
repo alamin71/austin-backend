@@ -3,11 +3,20 @@ import { StatusCodes } from 'http-status-codes';
 import catchAsync from '../../../shared/catchAsync.js';
 import sendResponse from '../../../shared/sendResponse.js';
 import { MessageService } from './message.service.js';
+import { uploadFileToS3 } from '../../../helpers/s3Helper.js';
 
 export const MessageController = {
      sendMessage: catchAsync(async (req: Request, res: Response) => {
-          const { receiverId, content, type, mediaUrl, replyToId } = req.body;
+          let { receiverId, content, type, mediaUrl, replyToId } = req.body;
           const senderId = (req.user as any).id;
+
+          // If file is uploaded (image, PDF, document, video, etc.), upload to S3
+          if (req.file) {
+               mediaUrl = await uploadFileToS3(req.file, 'messages');
+               if (!type || type === 'text') {
+                    type = 'media';
+               }
+          }
 
           const result = await MessageService.sendMessage(
                senderId,
