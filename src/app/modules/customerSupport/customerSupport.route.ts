@@ -7,7 +7,7 @@ import { CustomerSupportValidation } from './customerSupport.validation.js';
 
 const router = Router();
 
-// User routes
+// User routes only
 router.get(
      '/conversation',
      auth(USER_ROLES.USER),
@@ -16,35 +16,21 @@ router.get(
 
 router.post(
      '/:conversationId/message',
-     auth(USER_ROLES.USER, USER_ROLES.ADMIN, USER_ROLES.SUPER_ADMIN),
+     auth(USER_ROLES.USER),
      validateRequest(CustomerSupportValidation.sendMessageZodSchema),
      CustomerSupportController.sendMessage,
 );
 
 router.get(
      '/:conversationId/messages',
-     auth(USER_ROLES.USER, USER_ROLES.ADMIN, USER_ROLES.SUPER_ADMIN),
+     auth(USER_ROLES.USER),
      CustomerSupportController.getMessages,
 );
 
 router.patch(
      '/:conversationId/mark-read',
-     auth(USER_ROLES.USER, USER_ROLES.ADMIN, USER_ROLES.SUPER_ADMIN),
+     auth(USER_ROLES.USER),
      CustomerSupportController.markMessagesAsRead,
-);
-
-// Admin routes
-router.get(
-     '/',
-     auth(USER_ROLES.ADMIN, USER_ROLES.SUPER_ADMIN),
-     CustomerSupportController.getAllConversations,
-);
-
-router.patch(
-     '/:conversationId/status',
-     auth(USER_ROLES.ADMIN, USER_ROLES.SUPER_ADMIN),
-     validateRequest(CustomerSupportValidation.updateStatusZodSchema),
-     CustomerSupportController.updateConversationStatus,
 );
 
 export const CustomerSupportRouter = router;

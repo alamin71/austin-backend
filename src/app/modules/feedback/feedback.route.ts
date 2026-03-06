@@ -7,7 +7,7 @@ import { FeedbackValidation } from './feedback.validation.js';
 
 const router = Router();
 
-// User routes
+// User routes only
 router.post(
      '/',
      auth(USER_ROLES.USER),
@@ -15,24 +15,15 @@ router.post(
      FeedbackController.createFeedback,
 );
 
-router.get('/my-feedbacks', auth(USER_ROLES.USER), FeedbackController.getUserFeedbacks);
-
-// Admin routes
 router.get(
      '/',
-     auth(USER_ROLES.ADMIN, USER_ROLES.SUPER_ADMIN),
-     FeedbackController.getAllFeedbacks,
-);
-
-router.get(
-     '/:feedbackId',
-     auth(USER_ROLES.ADMIN, USER_ROLES.SUPER_ADMIN),
-     FeedbackController.getFeedbackById,
+     auth(USER_ROLES.USER),
+     FeedbackController.getUserFeedbacks,
 );
 
 router.delete(
      '/:feedbackId',
-     auth(USER_ROLES.USER, USER_ROLES.ADMIN, USER_ROLES.SUPER_ADMIN),
+     auth(USER_ROLES.USER),
      FeedbackController.deleteFeedback,
 );
 

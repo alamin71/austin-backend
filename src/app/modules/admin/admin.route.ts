@@ -211,4 +211,67 @@ router.get(
   AdminController.getStreamerWarnings,
 );
 
+// ============================================
+// FEEDBACK MANAGEMENT ENDPOINTS
+// ============================================
+
+import { FeedbackController } from '../feedback/feedback.controller.js';
+
+router.get(
+  '/feedback',
+  auth(USER_ROLES.ADMIN, USER_ROLES.SUPER_ADMIN),
+  FeedbackController.getAllFeedbacks,
+);
+
+router.get(
+  '/feedback/:feedbackId',
+  auth(USER_ROLES.ADMIN, USER_ROLES.SUPER_ADMIN),
+  FeedbackController.getFeedbackById,
+);
+
+router.delete(
+  '/feedback/:feedbackId',
+  auth(USER_ROLES.ADMIN, USER_ROLES.SUPER_ADMIN),
+  FeedbackController.deleteFeedback,
+);
+
+// ============================================
+// CUSTOMER SUPPORT MANAGEMENT ENDPOINTS
+// ============================================
+
+import { CustomerSupportController } from '../customerSupport/customerSupport.controller.js';
+import { CustomerSupportValidation } from '../customerSupport/customerSupport.validation.js';
+
+router.get(
+  '/support',
+  auth(USER_ROLES.ADMIN, USER_ROLES.SUPER_ADMIN),
+  CustomerSupportController.getAllConversations,
+);
+
+router.post(
+  '/support/:conversationId/message',
+  auth(USER_ROLES.ADMIN, USER_ROLES.SUPER_ADMIN),
+  validateRequest(CustomerSupportValidation.sendMessageZodSchema),
+  CustomerSupportController.sendMessage,
+);
+
+router.get(
+  '/support/:conversationId/messages',
+  auth(USER_ROLES.ADMIN, USER_ROLES.SUPER_ADMIN),
+  CustomerSupportController.getMessages,
+);
+
+router.patch(
+  '/support/:conversationId/mark-read',
+  auth(USER_ROLES.ADMIN, USER_ROLES.SUPER_ADMIN),
+  CustomerSupportController.markMessagesAsRead,
+);
+
+router.patch(
+  '/support/:conversationId/status',
+  auth(USER_ROLES.ADMIN, USER_ROLES.SUPER_ADMIN),
+  validateRequest(CustomerSupportValidation.updateStatusZodSchema),
+  CustomerSupportController.updateConversationStatus,
+);
+
 export const AdminRoutes = router;
