@@ -71,7 +71,7 @@ const deleteFeedback = async (feedbackId: string, userId: string, userRole: stri
      }
 
      // Only admin or the user who created it can delete
-     const isAdmin = ['admin', 'super_admin'].includes(userRole);
+     const isAdmin = ['ADMIN', 'SUPER_ADMIN'].includes(userRole);
      const isOwner = feedback.user.toString() === userId;
 
      if (!isAdmin && !isOwner) {

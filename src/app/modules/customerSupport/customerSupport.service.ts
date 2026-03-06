@@ -88,7 +88,7 @@ const getMessages = async (conversationId: string, userId: string, userRole: str
      }
 
      // Check permission
-     const isAdmin = ['admin', 'super_admin'].includes(userRole);
+     const isAdmin = ['ADMIN', 'SUPER_ADMIN'].includes(userRole);
      const isOwner = conversation.user.toString() === userId;
 
      if (!isAdmin && !isOwner) {

@@ -24,7 +24,7 @@ const sendMessage = catchAsync(async (req: Request, res: Response) => {
      const senderId = (req.user as any).id;
      const userRole = (req.user as any).role;
 
-     const senderRole = ['admin', 'super_admin'].includes(userRole) ? 'admin' : 'user';
+     const senderRole = ['ADMIN', 'SUPER_ADMIN'].includes(userRole) ? 'admin' : 'user';
 
      const result = await CustomerSupportService.sendMessage(
           conversationId,
@@ -62,7 +62,7 @@ const markMessagesAsRead = catchAsync(async (req: Request, res: Response) => {
      const { conversationId } = req.params;
      const userRole = (req.user as any).role;
 
-     const senderRole = ['admin', 'super_admin'].includes(userRole) ? 'admin' : 'user';
+     const senderRole = ['ADMIN', 'SUPER_ADMIN'].includes(userRole) ? 'admin' : 'user';
 
      const result = await CustomerSupportService.markMessagesAsRead(conversationId, senderRole);
 
