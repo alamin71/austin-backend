@@ -27,7 +27,19 @@ const corsOptions: cors.CorsOptions = {
      },
      credentials: true,
      methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-     allowedHeaders: ['Content-Type', 'Authorization'],
+     allowedHeaders: [
+          'Content-Type',
+          'Authorization',
+          'X-Requested-With',
+          'Accept',
+          'Origin',
+          'Access-Control-Request-Method',
+          'Access-Control-Request-Headers',
+     ],
+     exposedHeaders: ['Content-Length', 'Content-Type'],
+     maxAge: 86400, // 24 hours
+     preflightContinue: false,
+     optionsSuccessStatus: 204,
 };
 
 app.set('view engine', 'ejs');

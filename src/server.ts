@@ -51,9 +51,19 @@ export async function startServer() {
           socketServer = new SocketServer({
                cors: {
                     origin: socketAllowedOrigins,
-                    methods: ['GET', 'POST'],
+                    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
                     credentials: true,
+                    allowedHeaders: [
+                         'Content-Type',
+                         'Authorization',
+                         'X-Requested-With',
+                         'Accept',
+                         'Origin',
+                    ],
                },
+               maxHttpBufferSize: 1e8, // 100 MB for file uploads
+               pingTimeout: 60000,
+               pingInterval: 25000,
           });
 
           socketServer.listen(socketPort);
