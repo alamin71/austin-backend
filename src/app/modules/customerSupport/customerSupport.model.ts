@@ -55,6 +55,15 @@ const supportMessageSchema = new Schema<ISupportMessage>(
                required: true,
                trim: true,
           },
+          type: {
+               type: String,
+               enum: ['text', 'image', 'file'],
+               default: 'text',
+          },
+          mediaUrl: {
+               type: String,
+               default: null,
+          },
           isRead: {
                type: Boolean,
                default: false,

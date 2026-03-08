@@ -41,6 +41,8 @@ const sendMessage = async (
      senderId: string,
      message: string,
      senderRole: 'user' | 'admin',
+     type?: 'text' | 'image' | 'file',
+     mediaUrl?: string,
 ) => {
      const conversation = await CustomerSupport.findById(conversationId);
      if (!conversation) {
@@ -53,6 +55,8 @@ const sendMessage = async (
           sender: senderId,
           senderRole,
           message: message.trim(),
+          type: type || 'text',
+          mediaUrl: mediaUrl || null,
           isRead: false,
      });
 

@@ -46,6 +46,12 @@ const categoryUpload = multer({
      },
 });
 
+// Multer for support message uploads (images, PDFs, documents, etc.)
+const supportUpload = multer({ 
+     storage: multer.memoryStorage(),
+     limits: { fileSize: 50 * 1024 * 1024 } // 50MB limit
+});
+
 // ============================================
 // ADMIN AUTHENTICATION ENDPOINTS
 // ============================================
@@ -251,6 +257,7 @@ router.get(
 router.post(
   '/support/:conversationId/message',
   auth(USER_ROLES.ADMIN, USER_ROLES.SUPER_ADMIN),
+  supportUpload.single('media'),
   validateRequest(CustomerSupportValidation.sendMessageZodSchema),
   CustomerSupportController.sendMessage,
 );

@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { StatusCodes } from 'http-status-codes';
 import catchAsync from '../../../shared/catchAsync.js';
 import sendResponse from '../../../shared/sendResponse.js';
+import { uploadFileToS3 } from '../../../helpers/s3Helper.js';
 import { CustomerSupportService } from './customerSupport.service.js';
 
 // User: Get or create conversation
@@ -20,17 +21,32 @@ const getOrCreateConversation = catchAsync(async (req: Request, res: Response) =
 // User/Admin: Send message
 const sendMessage = catchAsync(async (req: Request, res: Response) => {
      const { conversationId } = req.params;
-     const { message } = req.body;
+     let { message, type, mediaUrl } = req.body;
      const senderId = (req.user as any).id;
      const userRole = (req.user as any).role;
 
      const senderRole = ['ADMIN', 'SUPER_ADMIN'].includes(userRole) ? 'admin' : 'user';
+
+     // If file is uploaded (image, PDF, document, etc.), upload to S3
+     if (req.file) {
+          mediaUrl = await uploadFileToS3(req.file, 'support-messages');
+          if (!type || type === 'text') {
+               type = 'file';
+          }
+     }
+
+     // Set default message if not provided
+     if (!message) {
+          message = type === 'image' ? 'Sent an image' : type === 'file' ? 'Sent a file' : '';
+     }
 
      const result = await CustomerSupportService.sendMessage(
           conversationId,
           senderId,
           message,
           senderRole,
+          type,
+          mediaUrl,
      );
 
      sendResponse(res, {

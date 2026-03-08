@@ -2,7 +2,9 @@ import { z } from 'zod';
 
 const sendMessageZodSchema = z.object({
      body: z.object({
-          message: z.string({ required_error: 'Message is required' }).min(1),
+          message: z.string().optional(),
+          type: z.enum(['text', 'image', 'file']).optional(),
+          mediaUrl: z.string().optional(),
      }),
 });
 

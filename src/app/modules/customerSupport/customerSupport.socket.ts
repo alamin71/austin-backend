@@ -45,7 +45,7 @@ class CustomerSupportSocketHandler {
                // Send support message
                socket.on('support_send_message', async (data) => {
                     try {
-                         const { conversationId, senderId, senderRole, message } = data;
+                         const { conversationId, senderId, senderRole, message, type, mediaUrl } = data;
 
                          // Save to database
                          const newMessage = await SupportMessage.create({
@@ -53,6 +53,8 @@ class CustomerSupportSocketHandler {
                               sender: senderId,
                               senderRole,
                               message: message.trim(),
+                              type: type || 'text',
+                              mediaUrl: mediaUrl || null,
                               isRead: false,
                          });
 
@@ -82,6 +84,8 @@ class CustomerSupportSocketHandler {
                               sender: populatedMessage?.sender,
                               senderRole,
                               message,
+                              type: type || 'text',
+                              mediaUrl: mediaUrl || null,
                               isRead: false,
                               createdAt: new Date(),
                          });

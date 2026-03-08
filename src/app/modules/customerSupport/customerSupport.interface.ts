@@ -6,6 +6,8 @@ export interface ISupportMessage {
      sender: Types.ObjectId;
      senderRole: 'user' | 'admin';
      message: string;
+     type?: 'text' | 'image' | 'file';
+     mediaUrl?: string;
      isRead: boolean;
      readAt?: Date;
      createdAt?: Date;
