@@ -10,6 +10,25 @@ import path from 'path';
 
 const __dirname = path.resolve();
 const app: Application = express();
+const allowedOrigins = config.allowed_origins;
+
+const corsOptions: cors.CorsOptions = {
+     origin: (origin, callback) => {
+          // Allow tools like Postman/curl and same-origin requests with no Origin header.
+          if (!origin) {
+               return callback(null, true);
+          }
+
+          if (allowedOrigins.includes('*') || allowedOrigins.includes(origin)) {
+               return callback(null, true);
+          }
+
+          return callback(new Error(`CORS blocked for origin: ${origin}`));
+     },
+     credentials: true,
+     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+     allowedHeaders: ['Content-Type', 'Authorization'],
+};
 
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
@@ -18,12 +37,8 @@ app.use(Morgan.successHandler);
 app.use(Morgan.errorHandler);
 
 //body parser
-app.use(
-     cors({
-          origin: config.allowed_origins || '*',
-          credentials: true,
-     }),
-);
+app.use(cors(corsOptions));
+app.options('*', cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 

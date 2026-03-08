@@ -33,6 +33,9 @@ export async function startServer() {
           const httpPort = Number(config.port);
           const socketPort = Number(config.socket_port);
           const ipAddress = config.ip_address as string;
+          const socketAllowedOrigins = config.allowed_origins.includes('*')
+               ? '*'
+               : config.allowed_origins;
 
           // Set timeouts
           httpServer.timeout = 120000;
@@ -47,7 +50,7 @@ export async function startServer() {
           // Set up Socket.io server
           socketServer = new SocketServer({
                cors: {
-                    origin: config.allowed_origins || '*',
+                    origin: socketAllowedOrigins,
                     methods: ['GET', 'POST'],
                     credentials: true,
                },

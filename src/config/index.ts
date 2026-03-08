@@ -2,11 +2,25 @@ import dotenv from 'dotenv';
 import path from 'path';
 dotenv.config({ path: path.join(process.cwd(), '.env') });
 
+const parsedAllowedOrigins = (process.env.ALLOWED_ORIGINS || '')
+     .split(',')
+     .map((origin) => origin.trim())
+     .filter(Boolean);
+
+const devDefaultOrigins = ['http://localhost:5173', 'http://127.0.0.1:5173'];
+
+const allowedOrigins =
+     parsedAllowedOrigins.length > 0
+          ? parsedAllowedOrigins
+          : process.env.NODE_ENV === 'production'
+            ? []
+            : devDefaultOrigins;
+
 export default {
      ip_address: process.env.IP_ADDRESS || '0.0.0.0',
      port: Number(process.env.PORT) || 5000,
      socket_port: Number(process.env.SOCKET_PORT) || 6002,
-     allowed_origins: process.env.ALLOWED_ORIGINS?.split(',') || '*',
+     allowed_origins: allowedOrigins,
      frontend_url: process.env.FONTEND_URL,
      backend_url: process.env.BACKEND_URL,
      reset_pass_expire_time: process.env.RESET_TOKEN_EXPIRE_TIME,
