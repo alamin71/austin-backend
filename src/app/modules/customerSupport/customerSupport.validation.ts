@@ -5,6 +5,7 @@ const sendMessageZodSchema = z.object({
           message: z.string().optional(),
           type: z.enum(['text', 'image', 'file']).optional(),
           mediaUrl: z.string().optional(),
+          replyToId: z.string().optional(),
      }),
 });
 

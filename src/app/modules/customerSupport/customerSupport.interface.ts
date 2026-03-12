@@ -8,6 +8,7 @@ export interface ISupportMessage {
      message: string;
      type?: 'text' | 'image' | 'file';
      mediaUrl?: string;
+     replyTo?: Types.ObjectId;
      isRead: boolean;
      readAt?: Date;
      createdAt?: Date;

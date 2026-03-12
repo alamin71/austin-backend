@@ -71,6 +71,26 @@ export default {
           stripe_webhook_url: process.env.STRIPE_WEBHOOK_URL,
           stripe_product_id: process.env.STRIPE_PRODUCT_ID,
      },
+     iap: {
+          apple_shared_secret: process.env.APPLE_SHARED_SECRET,
+          apple_bundle_id: process.env.APPLE_BUNDLE_ID,
+          apple_production_verify_url:
+               process.env.APPLE_PRODUCTION_VERIFY_URL || 'https://buy.itunes.apple.com/verifyReceipt',
+          apple_sandbox_verify_url:
+               process.env.APPLE_SANDBOX_VERIFY_URL || 'https://sandbox.itunes.apple.com/verifyReceipt',
+
+          google_package_name: process.env.GOOGLE_PLAY_PACKAGE_NAME,
+          google_service_account_email: process.env.GOOGLE_PLAY_SERVICE_ACCOUNT_EMAIL,
+          google_service_account_private_key: process.env.GOOGLE_PLAY_SERVICE_ACCOUNT_PRIVATE_KEY,
+
+          ios_supporter_product_id: process.env.IOS_SUPPORTER_PRODUCT_ID,
+          ios_premium_product_id: process.env.IOS_PREMIUM_PRODUCT_ID,
+          ios_exclusive_product_id: process.env.IOS_EXCLUSIVE_PRODUCT_ID,
+
+          android_supporter_product_id: process.env.ANDROID_SUPPORTER_PRODUCT_ID,
+          android_premium_product_id: process.env.ANDROID_PREMIUM_PRODUCT_ID,
+          android_exclusive_product_id: process.env.ANDROID_EXCLUSIVE_PRODUCT_ID,
+     },
      agora: {
           app_id: process.env.AGORA_APP_ID,
           app_certificate: process.env.AGORA_APP_CERTIFICATE,

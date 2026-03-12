@@ -64,6 +64,11 @@ const supportMessageSchema = new Schema<ISupportMessage>(
                type: String,
                default: null,
           },
+          replyTo: {
+               type: Schema.Types.ObjectId,
+               ref: 'SupportMessage',
+               default: null,
+          },
           isRead: {
                type: Boolean,
                default: false,

@@ -3,6 +3,14 @@ import AppError from '../../../errors/AppError.js';
 import { CustomerSupport, SupportMessage } from './customerSupport.model.js';
 import { User } from '../user/user.model.js';
 
+const supportMessagePopulate = [
+     { path: 'sender', select: 'name userName image' },
+     {
+          path: 'replyTo',
+          populate: { path: 'sender', select: 'name userName image' },
+     },
+];
+
 // User: Get or create conversation
 const getOrCreateConversation = async (userId: string) => {
      const user = await User.findById(userId);
@@ -43,10 +51,19 @@ const sendMessage = async (
      senderRole: 'user' | 'admin',
      type?: 'text' | 'image' | 'file',
      mediaUrl?: string,
+     replyToId?: string,
 ) => {
      const conversation = await CustomerSupport.findById(conversationId);
      if (!conversation) {
           throw new AppError(StatusCodes.NOT_FOUND, 'Conversation not found');
+     }
+
+     if (replyToId) {
+          const replyMessage = await SupportMessage.findById(replyToId);
+
+          if (!replyMessage || replyMessage.conversation.toString() !== conversationId) {
+               throw new AppError(StatusCodes.NOT_FOUND, 'Support message to reply to not found');
+          }
      }
 
      // Create message
@@ -57,6 +74,7 @@ const sendMessage = async (
           message: message.trim(),
           type: type || 'text',
           mediaUrl: mediaUrl || null,
+          replyTo: replyToId || null,
           isRead: false,
      });
 
@@ -77,8 +95,7 @@ const sendMessage = async (
      await CustomerSupport.findByIdAndUpdate(conversationId, updateData);
 
      const populatedMessage = await SupportMessage.findById(newMessage._id).populate(
-          'sender',
-          'name userName image',
+          supportMessagePopulate,
      );
 
      return populatedMessage;
@@ -100,7 +117,7 @@ const getMessages = async (conversationId: string, userId: string, userRole: str
      }
 
      const messages = await SupportMessage.find({ conversation: conversationId })
-          .populate('sender', 'name userName image')
+          .populate(supportMessagePopulate)
           .sort({ createdAt: 1 })
           .lean();
 

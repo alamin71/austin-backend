@@ -9,6 +9,7 @@ import { USER_ROLES } from '../../../enums/user.js';
 import config from '../../../config/index.js';
 import Stripe from 'stripe';
 import { uploadFileToS3 } from '../../../helpers/s3Helper.js';
+import { verifyIapSubscriptionReceipt } from '../../../helpers/iapVerificationHelper.js';
 
 let stripeClient: Stripe | null = null;
 const getStripeClient = () => {
@@ -25,6 +26,70 @@ const getStripeClient = () => {
 };
 
 class SubscriptionService {
+  private static readonly DEFAULT_TIERS: Array<Partial<ISubscriptionTier>> = [
+    {
+      name: 'Supporter',
+      slug: 'supporter',
+      price: 3.99,
+      billingPeriod: 'monthly',
+      adFree: true,
+      creatorOnlyPosts: true,
+      features: ['Ad-free experience', 'Access creator-only posts', 'Supporter badge'],
+      badge: {
+        icon: '',
+        displayName: 'Supporter',
+      },
+      isActive: true,
+    },
+    {
+      name: 'Premium',
+      slug: 'premium',
+      price: 7.99,
+      billingPeriod: 'monthly',
+      adFree: true,
+      creatorOnlyPosts: true,
+      chatBadge: true,
+      pulsePointsBonus: 25,
+      marketplaceDiscount: 5,
+      features: ['Everything in Supporter', 'Backstage clips access', 'Premium badge'],
+      badge: {
+        icon: '',
+        displayName: 'Premium',
+      },
+      isActive: true,
+    },
+    {
+      name: 'Exclusive',
+      slug: 'exclusive',
+      price: 14.99,
+      billingPeriod: 'monthly',
+      adFree: true,
+      creatorOnlyPosts: true,
+      chatBadge: true,
+      vipRoomAccess: true,
+      directQA: true,
+      earlyContentAccess: true,
+      pulsePointsBonus: 50,
+      marketplaceDiscount: 10,
+      features: ['Everything in Premium', 'VIP room access', 'Exclusive badge'],
+      badge: {
+        icon: '',
+        displayName: 'Exclusive',
+      },
+      isActive: true,
+    },
+  ];
+
+  private static async seedDefaultTiersIfMissing() {
+    const existingTierCount = await SubscriptionTier.countDocuments();
+    if (existingTierCount > 0) {
+      return;
+    }
+
+    await SubscriptionTier.insertMany(this.DEFAULT_TIERS);
+    logger.info('✓ Default subscription tiers seeded (Supporter/Premium/Exclusive)');
+  }
+
   private static async getPlatformAdminUserId() {
     const adminUser = await User.findOne({
       role: { $in: [USER_ROLES.SUPER_ADMIN, USER_ROLES.ADMIN] },
@@ -81,6 +146,8 @@ class SubscriptionService {
    */
   static async getAllSubscriptionTiers(includeInactive = false) {
     try {
+      await this.seedDefaultTiersIfMissing();
+
       const query = includeInactive ? {} : { isActive: true };
       const tiers = await SubscriptionTier.find(query).sort({ price: 1 });
       return tiers;
@@ -227,28 +294,23 @@ class SubscriptionService {
         throw new AppError(StatusCodes.NOT_FOUND, 'Subscription tier not found');
       }
 
-      // Verify receipt with Apple/Google
-      let isValid = false;
-      let transactionId = '';
+      const verification = await verifyIapSubscriptionReceipt({
+        platform,
+        receiptData,
+        tierSlug: (tier as any).slug,
+      });
 
-      if (platform === 'ios') {
-        // TODO: Verify with App Store Server API
-        // For now, we'll just validate the receipt format
-        isValid = !!(receiptData && receiptData.length > 0);
-        transactionId = `ios_${Date.now()}`;
-      } else if (platform === 'android') {
-        // TODO: Verify with Google Play Billing API
-        isValid = !!(receiptData && receiptData.length > 0);
-        transactionId = `android_${Date.now()}`;
-      }
+      const existingTransaction = await Subscription.findOne({
+        transactionId: verification.transactionId,
+      }).select('_id');
 
-      if (!isValid) {
-        throw new AppError(StatusCodes.BAD_REQUEST, 'Invalid IAP receipt');
+      if (existingTransaction) {
+        throw new AppError(StatusCodes.CONFLICT, 'This subscription transaction is already processed');
       }
 
       // Create subscription record
       const now = new Date();
-      const periodEnd = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+      const periodEnd = verification.expiresAt;
 
       const subscription = await Subscription.create({
         userId,
@@ -259,7 +321,7 @@ class SubscriptionService {
         currentPeriodEnd: periodEnd,
         autoRenew: true,
         paymentMethod: platform === 'ios' ? 'iap_ios' : 'iap_android',
-        transactionId,
+        transactionId: verification.transactionId,
         iapReceiptToken: receiptData,
       });
 

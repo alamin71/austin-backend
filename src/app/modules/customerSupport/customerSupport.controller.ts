@@ -21,7 +21,7 @@ const getOrCreateConversation = catchAsync(async (req: Request, res: Response) =
 // User/Admin: Send message
 const sendMessage = catchAsync(async (req: Request, res: Response) => {
      const { conversationId } = req.params;
-     let { message, type, mediaUrl } = req.body;
+     let { message, type, mediaUrl, replyToId } = req.body;
      const senderId = (req.user as any).id;
      const userRole = (req.user as any).role;
 
@@ -31,7 +31,7 @@ const sendMessage = catchAsync(async (req: Request, res: Response) => {
      if (req.file) {
           mediaUrl = await uploadFileToS3(req.file, 'support-messages');
           if (!type || type === 'text') {
-               type = 'file';
+               type = req.file.mimetype.startsWith('image/') ? 'image' : 'file';
           }
      }
 
@@ -47,6 +47,7 @@ const sendMessage = catchAsync(async (req: Request, res: Response) => {
           senderRole,
           type,
           mediaUrl,
+          replyToId,
      );
 
      sendResponse(res, {

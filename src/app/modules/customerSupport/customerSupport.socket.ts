@@ -45,7 +45,27 @@ class CustomerSupportSocketHandler {
                // Send support message
                socket.on('support_send_message', async (data) => {
                     try {
-                         const { conversationId, senderId, senderRole, message, type, mediaUrl } = data;
+                         const {
+                              conversationId,
+                              senderId,
+                              senderRole,
+                              message,
+                              type,
+                              mediaUrl,
+                              replyToId,
+                         } = data;
+
+                         if (replyToId) {
+                              const replyMessage = await SupportMessage.findById(replyToId);
+
+                              if (!replyMessage || replyMessage.conversation.toString() !== conversationId) {
+                                   socket.emit('support_error', {
+                                        message: 'Failed to send message',
+                                        error: 'Support message to reply to not found',
+                                   });
+                                   return;
+                              }
+                         }
 
                          // Save to database
                          const newMessage = await SupportMessage.create({
@@ -55,6 +75,7 @@ class CustomerSupportSocketHandler {
                               message: message.trim(),
                               type: type || 'text',
                               mediaUrl: mediaUrl || null,
+                              replyTo: replyToId || null,
                               isRead: false,
                          });
 
@@ -74,7 +95,13 @@ class CustomerSupportSocketHandler {
 
                          // Populate sender info
                          const populatedMessage = await SupportMessage.findById(newMessage._id)
-                              .populate('sender', 'name userName image')
+                              .populate([
+                                   { path: 'sender', select: 'name userName image' },
+                                   {
+                                        path: 'replyTo',
+                                        populate: { path: 'sender', select: 'name userName image' },
+                                   },
+                              ])
                               .lean();
 
                          // Broadcast message to all in conversation
@@ -86,6 +113,7 @@ class CustomerSupportSocketHandler {
                               message,
                               type: type || 'text',
                               mediaUrl: mediaUrl || null,
+                              replyTo: populatedMessage?.replyTo || null,
                               isRead: false,
                               createdAt: new Date(),
                          });
