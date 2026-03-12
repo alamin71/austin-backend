@@ -93,6 +93,11 @@ router.post(
      validateRequest(sendChatMessageSchema),
      streamController.sendChatMessage,
 );
+router.get(
+     '/:streamId/chat',
+     auth(USER_ROLES.USER),
+     (streamController as any).getChatMessages,
+);
 router.put(
      '/:streamId/settings',
      auth(USER_ROLES.USER),

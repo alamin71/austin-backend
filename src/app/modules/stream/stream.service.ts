@@ -537,6 +537,50 @@ class StreamService {
      }
 
      /**
+      * Get chat messages for a stream
+      */
+     static async getChatMessages(
+          streamId: string,
+          page: number = 1,
+          limit: number = 50,
+     ) {
+          try {
+               const stream = await Stream.findById(streamId).select('_id');
+
+               if (!stream) {
+                    throw new AppError(StatusCodes.NOT_FOUND, 'Stream not found');
+               }
+
+               const safePage = Math.max(page, 1);
+               const safeLimit = Math.min(Math.max(limit, 1), 100);
+               const skip = (safePage - 1) * safeLimit;
+
+               const [messages, total] = await Promise.all([
+                    Message.find({ stream: streamId })
+                         .populate('sender', 'name userName image')
+                         .sort({ createdAt: -1 })
+                         .skip(skip)
+                         .limit(safeLimit)
+                         .lean(),
+                    Message.countDocuments({ stream: streamId }),
+               ]);
+
+               return {
+                    data: messages.reverse(),
+                    pagination: {
+                         page: safePage,
+                         limit: safeLimit,
+                         total,
+                         pages: Math.ceil(total / safeLimit),
+                    },
+               };
+          } catch (error) {
+               errorLogger.error('Get chat messages error', error);
+               throw error;
+          }
+     }
+
+     /**
       * Get live streams
       */
      static async getLiveStreams(

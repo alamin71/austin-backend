@@ -207,6 +207,27 @@ class StreamController {
           });
      });
 
+     getChatMessages = catchAsync(async (req: Request, res: Response) => {
+          const { streamId } = req.params;
+          const page = parseInt(req.query.page as string) || 1;
+          const limit = parseInt(req.query.limit as string) || 50;
+
+          const result = await StreamService.getChatMessages(streamId, page, limit);
+
+          sendResponse(res, {
+               statusCode: StatusCodes.OK,
+               success: true,
+               message: 'Chat messages retrieved successfully',
+               data: result.data,
+               meta: {
+                    page: result.pagination.page,
+                    limit: result.pagination.limit,
+                    total: result.pagination.total,
+                    totalPage: result.pagination.pages,
+               },
+          });
+     });
+
      joinStream = catchAsync(async (req: Request, res: Response) => {
           const userId = (req.user as any)?._id || (req.user as any)?.id;
           const { streamId } = req.params;
