@@ -12,6 +12,7 @@ import { logger, errorLogger } from '../../../shared/logger.js';
 import { uploadFileToS3 } from '../../../helpers/s3Helper.js';
 import AgoraRecordingHelper from '../../../helpers/agoraRecordingHelper.js';
 import ChallengeService from '../challenge/challenge.service.js';
+import { getSocketInstance, isSocketInitialized } from '../../../helpers/socketInstance.js';
 
 class StreamService {
      /**
@@ -529,7 +530,25 @@ class StreamService {
                     errorLogger.error('Challenge progress update failed (daily_commentator)', challengeError);
                });
 
-               return await message.populate('sender', 'name image');
+               const populatedMessage = await message.populate('sender', 'name userName image');
+
+               if (isSocketInitialized()) {
+                    const io = getSocketInstance();
+                    io.to(`stream_${streamId}`).emit('stream:message', {
+                         _id: populatedMessage._id,
+                         stream: streamId,
+                         sender: populatedMessage.sender,
+                         content: populatedMessage.content,
+                         type: populatedMessage.type,
+                         messageData: populatedMessage.messageData,
+                         isModerated: populatedMessage.isModerated,
+                         isPinned: populatedMessage.isPinned,
+                         createdAt: populatedMessage.createdAt,
+                         updatedAt: populatedMessage.updatedAt,
+                    });
+               }
+
+               return populatedMessage;
           } catch (error) {
                errorLogger.error('Send chat message error', error);
                throw error;

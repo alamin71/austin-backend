@@ -90,21 +90,12 @@ class StreamSocketHandler {
                          try {
                               const { streamId, userId, content } = data;
 
-                              const message = await StreamService.sendChatMessage(
+                              await StreamService.sendChatMessage(
                                    streamId,
                                    userId,
                                    content,
                                    'text',
                               );
-
-                              // Broadcast message to all viewers
-                              io.to(`stream_${streamId}`).emit('stream:message', {
-                                   _id: message._id,
-                                   sender: message.sender,
-                                   content: message.content,
-                                   type: 'text',
-                                   createdAt: message.createdAt,
-                              });
 
                               logger.info(
                                    `Chat message sent in stream ${streamId} by user ${userId}`,
