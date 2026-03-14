@@ -15,6 +15,7 @@ import {
   updateFaqSchema,
   updateStaticContentSchema,
 } from '../cms/cms.validation.js';
+import challengeController from '../challenge/challenge.controller.js';
 
 const router = express.Router();
 
@@ -51,6 +52,9 @@ const supportUpload = multer({
      storage: multer.memoryStorage(),
      limits: { fileSize: 50 * 1024 * 1024 } // 50MB limit
 });
+
+// Multer parser for challenge form-data text fields
+const challengeUpload = multer();
 
 // ============================================
 // ADMIN AUTHENTICATION ENDPOINTS
@@ -203,6 +207,50 @@ router.get(
   '/top-performers',
   auth(USER_ROLES.ADMIN, USER_ROLES.SUPER_ADMIN),
   AdminController.getTopPerformers,
+);
+
+// ============================================
+// CHALLENGE MANAGEMENT ENDPOINTS (ADMIN)
+// ============================================
+
+router.get(
+  '/challenge-list',
+  auth(USER_ROLES.ADMIN, USER_ROLES.SUPER_ADMIN),
+  challengeController.getAdminChallenges,
+);
+
+router.get(
+  '/challenge/:challengeId',
+  auth(USER_ROLES.ADMIN, USER_ROLES.SUPER_ADMIN),
+  challengeController.getAdminChallengeById,
+);
+
+router.post(
+  '/challenge-create',
+  auth(USER_ROLES.ADMIN, USER_ROLES.SUPER_ADMIN),
+  challengeUpload.none(),
+  challengeController.createChallenge,
+);
+
+// Alias kept for requested spelling from frontend integration
+router.patch(
+  '/challenge-updaate/:challengeId',
+  auth(USER_ROLES.ADMIN, USER_ROLES.SUPER_ADMIN),
+  challengeUpload.none(),
+  challengeController.updateChallenge,
+);
+
+router.patch(
+  '/challenge-update/:challengeId',
+  auth(USER_ROLES.ADMIN, USER_ROLES.SUPER_ADMIN),
+  challengeUpload.none(),
+  challengeController.updateChallenge,
+);
+
+router.delete(
+  '/challenge-delete/:challengeId',
+  auth(USER_ROLES.ADMIN, USER_ROLES.SUPER_ADMIN),
+  challengeController.deleteChallenge,
 );
 
 router.post(
