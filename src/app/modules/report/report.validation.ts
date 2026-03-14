@@ -12,7 +12,8 @@ const REASONS = [
 
 const createReportSchema = z.object({
   body: z.object({
-    reason: z.enum(REASONS, { required_error: 'Reason is required' }),
+    // Accept either API enum key or UI label text. Service layer normalizes it.
+    reason: z.string({ required_error: 'Reason is required' }).min(1),
     details: z.string().max(1000).optional(),
   }),
 });

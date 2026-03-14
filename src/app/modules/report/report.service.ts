@@ -3,11 +3,48 @@ import AppError from '../../../errors/AppError.js';
 import { Report } from './report.model.js';
 import { ReportReason, ReportType } from './report.interface.js';
 
+const REPORT_REASON_LABEL_TO_KEY: Record<string, ReportReason> = {
+  inappropriate_or_offensive_content: 'inappropriate_content',
+  inappropriate_content: 'inappropriate_content',
+  harassment_or_hate_speech: 'harassment',
+  harassment: 'harassment',
+  nudity_or_sexual_content: 'nudity',
+  nudity: 'nudity',
+  violence_or_harmful_behavior: 'violence',
+  violence: 'violence',
+  spam_or_misleading_stream_title_content: 'spam',
+  spam_or_misleading_content: 'spam',
+  spam: 'spam',
+  impersonation_or_fake_identity: 'impersonation',
+  impersonation: 'impersonation',
+  illegal_or_restricted_activity_drugs_weapons_etc: 'illegal_activity',
+  illegal_or_restricted_activity: 'illegal_activity',
+  illegal_activity: 'illegal_activity',
+};
+
+const normalizeReasonInput = (reason: string): ReportReason => {
+  const normalized = reason
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '_')
+    .replace(/^_+|_+$/g, '');
+
+  const mapped = REPORT_REASON_LABEL_TO_KEY[normalized];
+  if (!mapped) {
+    throw new AppError(
+      StatusCodes.BAD_REQUEST,
+      'Invalid reason. Use a valid report reason option from the app.',
+    );
+  }
+
+  return mapped;
+};
+
 const createReport = async (
   reporterId: string,
   reportType: ReportType,
   targetId: string,
-  payload: { reason: ReportReason; details?: string },
+  payload: { reason: string; details?: string },
 ) => {
   // Prevent self-reporting a profile
   if (reportType === 'profile' && targetId === reporterId) {
@@ -24,11 +61,13 @@ const createReport = async (
     throw new AppError(StatusCodes.CONFLICT, 'You have already reported this');
   }
 
+  const normalizedReason = normalizeReasonInput(payload.reason);
+
   const report = await Report.create({
     reporter: reporterId,
     reportType,
     targetId,
-    reason: payload.reason,
+    reason: normalizedReason,
     details: payload.details,
   });
 
