@@ -65,6 +65,8 @@ const subscriptionTierSchema = new Schema<ISubscriptionTier>(
       enum: ['supporter', 'premium', 'exclusive'],
       required: true,
       unique: true,
+      lowercase: true,
+      trim: true,
     },
     price: {
       type: Number,
