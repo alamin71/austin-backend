@@ -9,6 +9,8 @@ export interface IChallenge extends Document {
   title: string;
   description: string;
   type: 'gift_giver' | 'chirp_times' | 'stream_binge' | 'daily_commentator' | 'custom';
+  challengeLevel: 'common' | 'rare' | 'epic' | 'legendary';
+  visibility: 'public' | 'private';
   
   // Requirements
   targetAmount: number; // e.g., 10 gifts, 2 hours watch, 10 streams, etc.
@@ -73,6 +75,16 @@ const challengeSchema = new Schema<IChallenge>(
       type: String,
       enum: ['gift_giver', 'chirp_times', 'stream_binge', 'daily_commentator', 'custom'],
       required: true,
+    },
+    challengeLevel: {
+      type: String,
+      enum: ['common', 'rare', 'epic', 'legendary'],
+      default: 'rare',
+    },
+    visibility: {
+      type: String,
+      enum: ['public', 'private'],
+      default: 'public',
     },
     targetAmount: {
       type: Number,

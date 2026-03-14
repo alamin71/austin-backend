@@ -6,6 +6,35 @@ import ChallengeService from './challenge.service.js';
 
 class ChallengeController {
   /**
+   * Admin: Get challenges list for dashboard table.
+   */
+  getAdminChallenges = catchAsync(async (req: Request, res: Response) => {
+    const result = await ChallengeService.getAdminChallenges(req.query as Record<string, string>);
+
+    sendResponse(res, {
+      success: true,
+      statusCode: StatusCodes.OK,
+      message: 'Admin challenges retrieved successfully',
+      data: result,
+    });
+  });
+
+  /**
+   * Admin: Get challenge detail.
+   */
+  getAdminChallengeById = catchAsync(async (req: Request, res: Response) => {
+    const { challengeId } = req.params;
+    const result = await ChallengeService.getAdminChallengeById(challengeId);
+
+    sendResponse(res, {
+      success: true,
+      statusCode: StatusCodes.OK,
+      message: 'Admin challenge detail retrieved successfully',
+      data: result,
+    });
+  });
+
+  /**
    * Get all active challenges
    */
   getChallenges = catchAsync(async (req: Request, res: Response) => {

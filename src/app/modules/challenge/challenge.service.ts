@@ -13,51 +13,18 @@ class ChallengeService {
     return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
   }
 
-  private async seedDefaultDailyChallengesIfMissing() {
-    const defaults = [
-      {
-        title: 'Gift Giver',
-        description: 'Send 10 virtual gifts to streamers today',
-        type: 'gift_giver' as const,
-        targetAmount: 10,
-        featherReward: 50,
-        progressUnit: 'count' as const,
-        isActive: true,
-      },
-      {
-        title: 'Chirp 5 times',
-        description: 'Leave 5 comments on any streams today',
-        type: 'chirp_times' as const,
-        targetAmount: 5,
-        featherReward: 10,
-        progressUnit: 'comments' as const,
-        isActive: true,
-      },
-      {
-        title: 'Stream Binge Watcher',
-        description: 'Watch streams for a total of 2 hours today',
-        type: 'stream_binge' as const,
-        targetAmount: 2,
-        featherReward: 30,
-        progressUnit: 'hours' as const,
-        isActive: true,
-      },
-      {
-        title: 'Daily Commentator',
-        description: 'Comment on 10 different streamers today',
-        type: 'daily_commentator' as const,
-        targetAmount: 10,
-        featherReward: 20,
-        progressUnit: 'streams' as const,
-        isActive: true,
-      },
-    ];
-
-    for (const item of defaults) {
-      const exists = await Challenge.findOne({ type: item.type, isActive: true });
-      if (!exists) {
-        await Challenge.create(item);
-      }
+  private getProgressUnitFromType(type: string) {
+    switch (type) {
+      case 'gift_giver':
+        return 'count';
+      case 'chirp_times':
+        return 'comments';
+      case 'stream_binge':
+        return 'hours';
+      case 'daily_commentator':
+        return 'streams';
+      default:
+        return 'count';
     }
   }
 
@@ -141,16 +108,136 @@ class ChallengeService {
    * Get all active challenges
    */
   async getChallenges() {
-    await this.seedDefaultDailyChallengesIfMissing();
     const challenges = await Challenge.find({ isActive: true }).sort({ createdAt: -1 });
     return challenges;
+  }
+
+  /**
+   * Admin: Get challenges list with dashboard metrics.
+   */
+  async getAdminChallenges(query: Record<string, string>) {
+    const page = Math.max(parseInt(query.page || '1', 10), 1);
+    const limit = Math.max(parseInt(query.limit || '20', 10), 1);
+    const skip = (page - 1) * limit;
+
+    const filter: Record<string, unknown> = {};
+    if (query.search) {
+      filter.title = { $regex: query.search, $options: 'i' };
+    }
+    if (query.status === 'active') {
+      filter.isActive = true;
+    }
+    if (query.status === 'inactive') {
+      filter.isActive = false;
+    }
+
+    const [challenges, total] = await Promise.all([
+      Challenge.find(filter).sort({ createdAt: -1 }).skip(skip).limit(limit).lean(),
+      Challenge.countDocuments(filter),
+    ]);
+
+    const challengeIds = challenges.map((c: any) => c._id);
+
+    const progressStats = await ChallengeProgress.aggregate([
+      { $match: { challengeId: { $in: challengeIds } } },
+      {
+        $group: {
+          _id: '$challengeId',
+          participantIds: { $addToSet: '$userId' },
+          completedCount: {
+            $sum: {
+              $cond: [{ $eq: ['$status', 'completed'] }, 1, 0],
+            },
+          },
+        },
+      },
+    ]);
+
+    const statMap = new Map<string, { participants: number; completedCount: number }>();
+    progressStats.forEach((stat: any) => {
+      statMap.set(String(stat._id), {
+        participants: stat.participantIds.length,
+        completedCount: stat.completedCount,
+      });
+    });
+
+    const rows = challenges.map((challenge: any, index: number) => {
+      const stat = statMap.get(String(challenge._id)) || { participants: 0, completedCount: 0 };
+      const completionPercentage =
+        stat.participants > 0
+          ? Number(((stat.completedCount / stat.participants) * 100).toFixed(2))
+          : 0;
+
+      return {
+        serial: skip + index + 1,
+        ...challenge,
+        participants: stat.participants,
+        completionPercentage,
+        status: challenge.isActive ? 'Active' : 'Inactive',
+      };
+    });
+
+    return {
+      challenges: rows,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
+  }
+
+  /**
+   * Admin: Get single challenge details with aggregate stats.
+   */
+  async getAdminChallengeById(challengeId: string) {
+    const challenge = await Challenge.findById(challengeId).lean();
+    if (!challenge) {
+      throw new AppError(StatusCodes.NOT_FOUND, 'Challenge not found');
+    }
+
+    const stats = await ChallengeProgress.aggregate([
+      { $match: { challengeId: challenge._id } },
+      {
+        $group: {
+          _id: '$challengeId',
+          participantIds: { $addToSet: '$userId' },
+          completedCount: { $sum: { $cond: [{ $eq: ['$status', 'completed'] }, 1, 0] } },
+          inProgressCount: { $sum: { $cond: [{ $eq: ['$status', 'in_progress'] }, 1, 0] } },
+          expiredCount: { $sum: { $cond: [{ $eq: ['$status', 'expired'] }, 1, 0] } },
+        },
+      },
+    ]);
+
+    const summary = stats[0] || {
+      participantIds: [],
+      completedCount: 0,
+      inProgressCount: 0,
+      expiredCount: 0,
+    };
+
+    const participants = summary.participantIds.length;
+    const completionPercentage =
+      participants > 0
+        ? Number(((summary.completedCount / participants) * 100).toFixed(2))
+        : 0;
+
+    return {
+      ...challenge,
+      participants,
+      completedCount: summary.completedCount,
+      inProgressCount: summary.inProgressCount,
+      expiredCount: summary.expiredCount,
+      completionPercentage,
+      status: challenge.isActive ? 'Active' : 'Inactive',
+    };
   }
 
   /**
    * Get user's challenge progress
    */
   async getUserProgress(userId: string) {
-    await this.seedDefaultDailyChallengesIfMissing();
     await this.expireOldProgress(userId);
 
     const todayStart = this.getTodayStartUTC();
@@ -228,7 +315,6 @@ class ChallengeService {
     challengeType: 'gift_giver' | 'chirp_times' | 'stream_binge' | 'daily_commentator' | 'custom',
     incrementBy: number = 1
   ) {
-    await this.seedDefaultDailyChallengesIfMissing();
     await this.expireOldProgress(userId);
 
     const challenges = await Challenge.find({ isActive: true, type: challengeType });
@@ -251,7 +337,6 @@ class ChallengeService {
    * Daily commentator requires comments on different streamers.
    */
   async updateDailyCommentatorProgress(userId: string, streamerId: string) {
-    await this.seedDefaultDailyChallengesIfMissing();
     await this.expireOldProgress(userId);
 
     const challenges = await Challenge.find({ isActive: true, type: 'daily_commentator' });
@@ -283,7 +368,6 @@ class ChallengeService {
    * Start watch session for stream binge challenge.
    */
   async startStreamWatchSession(userId: string, streamId: string) {
-    await this.seedDefaultDailyChallengesIfMissing();
     await this.expireOldProgress(userId);
 
     const challenges = await Challenge.find({ isActive: true, type: 'stream_binge' });
@@ -315,7 +399,6 @@ class ChallengeService {
    * Stop watch session and convert minutes to hour progress.
    */
   async endStreamWatchSession(userId: string, streamId: string) {
-    await this.seedDefaultDailyChallengesIfMissing();
     await this.expireOldProgress(userId);
 
     const challenges = await Challenge.find({ isActive: true, type: 'stream_binge' });
@@ -361,7 +444,15 @@ class ChallengeService {
    * Admin: Create a challenge
    */
   async createChallenge(data: any) {
-    const challenge = await Challenge.create(data);
+    const payload = {
+      ...data,
+      progressUnit: data.progressUnit || this.getProgressUnitFromType(data.type),
+      challengeLevel: data.challengeLevel || 'rare',
+      visibility: data.visibility || 'public',
+      isActive: typeof data.isActive === 'boolean' ? data.isActive : true,
+    };
+
+    const challenge = await Challenge.create(payload);
     return challenge;
   }
 

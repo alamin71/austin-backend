@@ -23,6 +23,20 @@ router.get(
 // Public: Get global rankings (leaderboard)
 router.get('/rankings', challengeController.getRankings);
 
+// Admin: List challenges for dashboard table
+router.get(
+  '/admin',
+  auth(USER_ROLES.ADMIN, USER_ROLES.SUPER_ADMIN),
+  challengeController.getAdminChallenges,
+);
+
+// Admin: Get single challenge details
+router.get(
+  '/admin/:challengeId',
+  auth(USER_ROLES.ADMIN, USER_ROLES.SUPER_ADMIN),
+  challengeController.getAdminChallengeById,
+);
+
 // Admin: Create a challenge
 router.post(
   '/admin',

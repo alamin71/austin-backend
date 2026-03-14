@@ -6,6 +6,8 @@ import { IUser } from '../user/user.interface.js';
 import { User } from '../user/user.model.js';
 import { Stream } from '../stream/stream.model.js';
 import { StreamWarning } from '../stream/streamWarning.model.js';
+import { Subscription } from '../subscription/subscription.model.js';
+import { GiftTransaction } from '../gift/gift.model.js';
 import config from '../../../config/index.js';
 import { emailHelper } from '../../../helpers/emailHelper.js';
 import { jwtHelper } from '../../../helpers/jwtHelper.js';
@@ -370,6 +372,123 @@ const getStreamerWarnings = async (streamerId: string) => {
      };
 };
 
+const getTopPerformers = async (query: Record<string, string>) => {
+     const page = Math.max(parseInt(query.page || '1', 10), 1);
+     const limit = Math.max(parseInt(query.limit || '10', 10), 1);
+     const skip = (page - 1) * limit;
+
+     const filter: Record<string, unknown> = {
+          status: { $in: ['live', 'ended'] },
+     };
+
+     if (query.streamerId) {
+          filter.streamer = query.streamerId;
+     }
+
+     if (query.fromDate || query.toDate) {
+          const createdAt: Record<string, Date> = {};
+          if (query.fromDate) {
+               createdAt.$gte = new Date(query.fromDate);
+          }
+          if (query.toDate) {
+               createdAt.$lte = new Date(query.toDate);
+          }
+          filter.createdAt = createdAt;
+     }
+
+     const [streams, total] = await Promise.all([
+          Stream.find(filter)
+               .populate('streamer', 'name userName image')
+               .populate('category', 'name title')
+               .populate('analytics')
+               .sort({ peakViewerCount: -1, likes: -1, createdAt: -1 })
+               .skip(skip)
+               .limit(limit),
+          Stream.countDocuments(filter),
+     ]);
+
+     const rows = await Promise.all(
+          streams.map(async (stream: any, index: number) => {
+               const [giftSummary, activeSubscribers] = await Promise.all([
+                    GiftTransaction.aggregate([
+                         {
+                              $match: {
+                                   stream: stream._id,
+                                   status: 'completed',
+                              },
+                         },
+                         {
+                              $group: {
+                                   _id: '$stream',
+                                   giftEarned: { $sum: '$totalAmount' },
+                              },
+                         },
+                    ]),
+                    Subscription.countDocuments({
+                         streamerId: stream.streamer?._id,
+                         status: 'active',
+                    }),
+               ]);
+
+               const analytics: any = stream.analytics || {};
+               const categoryName = stream.category?.name || stream.category?.title || 'N/A';
+               const giftEarned =
+                    typeof analytics.revenue === 'number' && analytics.revenue > 0
+                         ? analytics.revenue
+                         : giftSummary[0]?.giftEarned || 0;
+
+               return {
+                    rank: skip + index + 1,
+                    streamerId: stream.streamer?._id,
+                    streamerName: stream.streamer?.name || stream.streamer?.userName || 'Unknown',
+                    streamId: stream._id,
+                    streamTitle: stream.title,
+                    category: categoryName,
+                    peakLiveViewers: analytics.peakViewers || stream.peakViewerCount || 0,
+                    giftEarned,
+                    subscriberGained:
+                         typeof analytics.newSubscribers === 'number'
+                              ? analytics.newSubscribers
+                              : activeSubscribers,
+                    date: stream.endedAt || stream.createdAt,
+               };
+          }),
+     );
+
+     const summary = rows.reduce(
+          (acc, row) => {
+               acc.totalGiftEarned += row.giftEarned || 0;
+               acc.totalSubscribersGained += row.subscriberGained || 0;
+               acc.totalPeakLiveViewers += row.peakLiveViewers || 0;
+               return acc;
+          },
+          {
+               totalGiftEarned: 0,
+               totalSubscribersGained: 0,
+               totalPeakLiveViewers: 0,
+          },
+     );
+
+     return {
+          rows,
+          summary: {
+               totalStreamsAnalyzed: rows.length,
+               totalGiftEarned: summary.totalGiftEarned,
+               totalSubscribersGained: summary.totalSubscribersGained,
+               avgPeakLiveViewers:
+                    rows.length > 0
+                         ? Math.round(summary.totalPeakLiveViewers / rows.length)
+                         : 0,
+          },
+          pagination: {
+               page,
+               limit,
+               total,
+               totalPages: Math.ceil(total / limit),
+          },
+     };
+};
+
 export const AdminService = {
      createAdminToDB,
      deleteAdminFromDB,
@@ -387,4 +506,5 @@ export const AdminService = {
      warnStreamer,
      endStream,
      getStreamerWarnings,
+     getTopPerformers,
 };

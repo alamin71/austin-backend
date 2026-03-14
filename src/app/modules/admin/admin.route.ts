@@ -199,6 +199,12 @@ router.get(
   AdminController.getStreamMonitoring,
 );
 
+router.get(
+  '/top-performers',
+  auth(USER_ROLES.ADMIN, USER_ROLES.SUPER_ADMIN),
+  AdminController.getTopPerformers,
+);
+
 router.post(
   '/stream/:streamId/warn',
   auth(USER_ROLES.ADMIN, USER_ROLES.SUPER_ADMIN),

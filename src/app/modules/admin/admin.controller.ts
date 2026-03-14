@@ -218,6 +218,17 @@ const getStreamerWarnings = catchAsync(async (req: Request, res: Response) => {
      });
 });
 
+const getTopPerformers = catchAsync(async (req: Request, res: Response) => {
+     const result = await AdminService.getTopPerformers(req.query as Record<string, string>);
+
+     sendResponse(res, {
+          statusCode: StatusCodes.OK,
+          success: true,
+          message: 'Top performers retrieved successfully',
+          data: result,
+     });
+});
+
 export const AdminController = {
      deleteAdmin,
      createAdmin,
@@ -235,4 +246,5 @@ export const AdminController = {
      warnStreamer,
      endStream,
      getStreamerWarnings,
+     getTopPerformers,
 };
