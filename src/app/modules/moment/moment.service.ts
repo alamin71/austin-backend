@@ -98,7 +98,15 @@ const toggleLike = async (momentId: string, userId: string) => {
   moment.likesCount = moment.likes.length;
   await moment.save();
 
-  return { liked, likesCount: moment.likesCount };
+  const payload = { liked, likesCount: moment.likesCount };
+
+  // Real-time: broadcast updated like count to everyone watching this moment
+  const socketIo = (global as any).io;
+  if (socketIo) {
+    socketIo.emit(`moment::like::${momentId}`, payload);
+  }
+
+  return payload;
 };
 
 const addComment = async (momentId: string, authorId: string, text: string) => {
@@ -108,7 +116,18 @@ const addComment = async (momentId: string, authorId: string, text: string) => {
   const comment = await MomentComment.create({ moment: momentId, author: authorId, text });
   await Moment.findByIdAndUpdate(momentId, { $inc: { commentsCount: 1 } });
 
-  return MomentComment.findById(comment._id).populate('author', 'name userName image');
+  const populated = await MomentComment.findById(comment._id).populate(
+    'author',
+    'name userName image',
+  );
+
+  // Real-time: broadcast new comment to everyone watching this moment
+  const socketIo = (global as any).io;
+  if (socketIo) {
+    socketIo.emit(`moment::comment::${momentId}`, populated);
+  }
+
+  return populated;
 };
 
 const getComments = async (momentId: string, page = 1, limit = 20) => {
