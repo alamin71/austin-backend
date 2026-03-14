@@ -25,7 +25,7 @@ router.get('/tiers', subscriptionController.getAllSubscriptionTiers);
  * ==================== USER ROUTES (AUTHENTICATED) ====================
  */
 
-// Create subscription
+// Create subscription (web)
 router.post(
   '/subscribe',
   auth(USER_ROLES.USER),
@@ -41,7 +41,7 @@ router.post(
   subscriptionController.createIAPSubscription
 );
 
-// Confirm subscription (after payment)
+// Confirm subscription (after payment) (web)
 router.post(
   '/confirm',
   auth(USER_ROLES.USER),

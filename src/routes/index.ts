@@ -17,6 +17,9 @@ import { followRoutes } from '../app/modules/follow/follow.route.js';
 import { notificationRoutes } from '../app/modules/notification/notification.route.js';
 import { FeedbackRouter } from '../app/modules/feedback/feedback.route.js';
 import { CustomerSupportRouter } from '../app/modules/customerSupport/customerSupport.route.js';
+import { ReportRouter } from '../app/modules/report/report.route.js';
+import { MomentRouter } from '../app/modules/moment/moment.route.js';
+import { CommunityPulseRouter } from '../app/modules/communityPulse/communityPulse.route.js';
 
 const router = express.Router();
 const routes = [
@@ -91,6 +94,18 @@ const routes = [
      {
           path: '/test',
           route: TestRouter,
+     },
+     {
+          path: '/report',
+          route: ReportRouter,
+     },
+     {
+          path: '/moment',
+          route: MomentRouter,
+     },
+     {
+          path: '/community-pulse',
+          route: CommunityPulseRouter,
      },
 ];
 
