@@ -317,6 +317,50 @@ class SubscriptionService {
     badgeIconFile?: Express.Multer.File
   ) {
     try {
+      const raw = updateData as unknown as Record<string, unknown>;
+
+      // Normalize slug to lowercase if provided
+      if (raw.slug && typeof raw.slug === 'string') {
+        (updateData as any).slug = raw.slug.trim().toLowerCase();
+      }
+
+      // Parse badge[displayName] from form-data flat key
+      const badgeDisplayName =
+        (raw['badge[displayName]'] as string | undefined) ||
+        (raw.badgeDisplayName as string | undefined);
+
+      if (badgeDisplayName) {
+        if (!updateData.badge) updateData.badge = { icon: '', displayName: '' };
+        updateData.badge.displayName = badgeDisplayName;
+        delete (updateData as any)['badge[displayName]'];
+        delete (updateData as any).badgeDisplayName;
+      }
+
+      // Parse features[index] keys from form-data
+      const indexedFeatures = Object.entries(raw)
+        .filter(([key]) => /^features\[\d+\]$/.test(key))
+        .sort((a, b) => {
+          const ai = Number(a[0].match(/\d+/)?.[0] || 0);
+          const bi = Number(b[0].match(/\d+/)?.[0] || 0);
+          return ai - bi;
+        })
+        .map(([, v]) => String(v));
+
+      if (indexedFeatures.length > 0) {
+        (updateData as any).features = indexedFeatures;
+        Object.keys(raw)
+          .filter((key) => /^features\[\d+\]$/.test(key))
+          .forEach((key) => delete (updateData as any)[key]);
+      }
+
+      // Parse string booleans / numbers
+      if (typeof raw.isActive === 'string') {
+        (updateData as any).isActive = raw.isActive.trim().toLowerCase() === 'true';
+      }
+      if (typeof raw.price === 'string') {
+        (updateData as any).price = Number(raw.price);
+      }
+
       // Upload new badge icon to S3 if provided
       if (badgeIconFile) {
         const badgeIconUrl = await uploadFileToS3(badgeIconFile, 'subscription-badges');
