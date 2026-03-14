@@ -2,8 +2,10 @@ import express from 'express';
 import challengeController from './challenge.controller.js';
 import auth from '../../middleware/auth.js';
 import { USER_ROLES } from '../../../enums/user.js';
+import multer from 'multer';
 
 const router = express.Router();
+const upload = multer();
 
 /**
  * Challenge Routes
@@ -41,6 +43,7 @@ router.get(
 router.post(
   '/admin',
   auth(USER_ROLES.ADMIN, USER_ROLES.SUPER_ADMIN),
+  upload.none(),
   challengeController.createChallenge
 );
 
@@ -48,6 +51,7 @@ router.post(
 router.patch(
   '/admin/:challengeId',
   auth(USER_ROLES.ADMIN, USER_ROLES.SUPER_ADMIN),
+  upload.none(),
   challengeController.updateChallenge
 );
 

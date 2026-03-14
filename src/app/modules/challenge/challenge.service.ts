@@ -8,6 +8,25 @@ import { Wallet } from '../wallet/wallet.model.js';
  * Based on Figma design (Explore > Challenges)
  */
 class ChallengeService {
+  private parseBoolean(value: unknown, fallback: boolean) {
+    if (typeof value === 'boolean') return value;
+    if (typeof value === 'string') {
+      const v = value.trim().toLowerCase();
+      if (v === 'true') return true;
+      if (v === 'false') return false;
+    }
+    return fallback;
+  }
+
+  private parseNumber(value: unknown, fallback?: number) {
+    if (typeof value === 'number' && Number.isFinite(value)) return value;
+    if (typeof value === 'string') {
+      const parsed = Number(value.trim());
+      if (Number.isFinite(parsed)) return parsed;
+    }
+    return fallback;
+  }
+
   private normalizeChallengeTitle(inputTitle: string) {
     const title = String(inputTitle || '').trim();
 
@@ -534,15 +553,28 @@ class ChallengeService {
   async createChallenge(data: any) {
     const normalizedTitle = this.normalizeChallengeTitle(data.title);
     const normalizedType = this.normalizeChallengeType(data.type);
+    const targetAmount = this.parseNumber(data.targetAmount);
+    const featherReward = this.parseNumber(data.featherReward);
+
+    if (!targetAmount || targetAmount < 1) {
+      throw new AppError(StatusCodes.BAD_REQUEST, 'targetAmount must be a positive number');
+    }
+
+    if (!featherReward || featherReward < 1) {
+      throw new AppError(StatusCodes.BAD_REQUEST, 'featherReward must be a positive number');
+    }
 
     const payload = {
       ...data,
       title: normalizedTitle,
       type: normalizedType,
+      targetAmount,
+      featherReward,
+      requiredDays: this.parseNumber(data.requiredDays),
       progressUnit: data.progressUnit || this.inferProgressUnit(normalizedType, normalizedTitle),
       challengeLevel: data.challengeLevel || 'rare',
       visibility: data.visibility || 'public',
-      isActive: typeof data.isActive === 'boolean' ? data.isActive : true,
+      isActive: this.parseBoolean(data.isActive, true),
     };
 
     const challenge = await Challenge.create(payload);
@@ -577,6 +609,30 @@ class ChallengeService {
         (normalizedType || existing.type) as 'send_gift' | 'feather_gift',
         normalizedTitle || existing.title,
       );
+    }
+
+    if (typeof payload.targetAmount !== 'undefined') {
+      const parsedTarget = this.parseNumber(payload.targetAmount);
+      if (!parsedTarget || parsedTarget < 1) {
+        throw new AppError(StatusCodes.BAD_REQUEST, 'targetAmount must be a positive number');
+      }
+      payload.targetAmount = parsedTarget;
+    }
+
+    if (typeof payload.featherReward !== 'undefined') {
+      const parsedReward = this.parseNumber(payload.featherReward);
+      if (!parsedReward || parsedReward < 1) {
+        throw new AppError(StatusCodes.BAD_REQUEST, 'featherReward must be a positive number');
+      }
+      payload.featherReward = parsedReward;
+    }
+
+    if (typeof payload.requiredDays !== 'undefined') {
+      payload.requiredDays = this.parseNumber(payload.requiredDays);
+    }
+
+    if (typeof payload.isActive !== 'undefined') {
+      payload.isActive = this.parseBoolean(payload.isActive, true);
     }
 
     const challenge = await Challenge.findByIdAndUpdate(challengeId, payload, { new: true });
