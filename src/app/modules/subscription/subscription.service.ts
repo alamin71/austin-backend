@@ -34,7 +34,14 @@ class SubscriptionService {
       billingPeriod: 'monthly',
       adFree: true,
       creatorOnlyPosts: true,
-      features: ['Ad-free experience', 'Access creator-only posts', 'Supporter badge'],
+      pulsePointsBonus: 0,
+      features: [
+        'Ad-free experience',
+        'Earn Pulse Points',
+        'Access creator-only posts',
+        'Participate in polls',
+        'Supporter badge',
+      ],
       badge: {
         icon: '',
         displayName: 'Supporter',
@@ -51,7 +58,13 @@ class SubscriptionService {
       chatBadge: true,
       pulsePointsBonus: 25,
       marketplaceDiscount: 5,
-      features: ['Everything in Supporter', 'Backstage clips access', 'Premium badge'],
+      features: [
+        'Everything in Basic',
+        'Backstage clips access',
+        '+25% Pulse Points bonus',
+        '5% marketplace discount',
+        'Premium badge',
+      ],
       badge: {
         icon: '',
         displayName: 'Premium',
@@ -71,10 +84,18 @@ class SubscriptionService {
       earlyContentAccess: true,
       pulsePointsBonus: 50,
       marketplaceDiscount: 10,
-      features: ['Everything in Premium', 'VIP room access', 'Exclusive badge'],
+      features: [
+        'Everything in Premium',
+        'VIP room access',
+        'Direct Q&A with creators',
+        'Early access to content',
+        '10% marketplace discount',
+        '+50% Pulse Points bonus',
+        'Elite badge',
+      ],
       badge: {
         icon: '',
-        displayName: 'Exclusive',
+        displayName: 'Elite',
       },
       isActive: true,
     },
@@ -109,6 +130,61 @@ class SubscriptionService {
    * ==================== ADMIN: Subscription Tier Management ====================
    */
 
+  private static normalizeTierSlug(input?: string) {
+    if (!input) return undefined;
+    const normalized = input.trim().toLowerCase();
+
+    if (normalized === 'supporter' || normalized === 'premium' || normalized === 'exclusive') {
+      return normalized as 'supporter' | 'premium' | 'exclusive';
+    }
+
+    return undefined;
+  }
+
+  private static parseBooleanLike(value: unknown, fallback: boolean) {
+    if (typeof value === 'boolean') return value;
+    if (typeof value === 'string') {
+      const normalized = value.trim().toLowerCase();
+      if (normalized === 'true') return true;
+      if (normalized === 'false') return false;
+    }
+    return fallback;
+  }
+
+  private static parseNumberLike(value: unknown, fallback: number) {
+    if (typeof value === 'number' && !Number.isNaN(value)) return value;
+    if (typeof value === 'string') {
+      const parsed = Number(value);
+      if (!Number.isNaN(parsed)) return parsed;
+    }
+    return fallback;
+  }
+
+  private static extractFeaturesFromForm(rawTierData: Record<string, unknown>) {
+    if (Array.isArray(rawTierData.features)) {
+      return rawTierData.features.map((item) => String(item));
+    }
+
+    const indexedFeatureEntries = Object.entries(rawTierData)
+      .filter(([key, value]) => /^features\[\d+\]$/.test(key) && typeof value === 'string')
+      .sort((a, b) => {
+        const aIndex = Number(a[0].match(/\d+/)?.[0] || 0);
+        const bIndex = Number(b[0].match(/\d+/)?.[0] || 0);
+        return aIndex - bIndex;
+      })
+      .map((entry) => entry[1] as string);
+
+    if (indexedFeatureEntries.length > 0) {
+      return indexedFeatureEntries;
+    }
+
+    if (typeof rawTierData.features === 'string') {
+      return [rawTierData.features];
+    }
+
+    return undefined;
+  }
+
   /**
    * Create new subscription tier (Admin only)
    */
@@ -117,22 +193,97 @@ class SubscriptionService {
     badgeIconFile?: Express.Multer.File
   ) {
     try {
+      const rawTierData = tierData as unknown as Record<string, unknown>;
+      const derivedSlug = this.normalizeTierSlug(
+        (rawTierData.slug as string) || (rawTierData.name as string)
+      );
+
+      if (!derivedSlug) {
+        throw new AppError(
+          StatusCodes.BAD_REQUEST,
+          'Tier slug/name must be exactly supporter, premium, or exclusive'
+        );
+      }
+
+      const preset = this.DEFAULT_TIERS.find((tier) => tier.slug === derivedSlug) || {};
+      const formFeatures = this.extractFeaturesFromForm(rawTierData);
+
+      const badgeDisplayName =
+        (rawTierData['badge[displayName]'] as string) ||
+        (rawTierData.badgeDisplayName as string) ||
+        ((rawTierData.badge as Record<string, unknown> | undefined)?.displayName as string);
+
+      const badgeIcon =
+        (rawTierData['badge[icon]'] as string) ||
+        (rawTierData.badgeIcon as string) ||
+        ((rawTierData.badge as Record<string, unknown> | undefined)?.icon as string);
+
+      const preparedTierData: Partial<ISubscriptionTier> = {
+        ...preset,
+        ...tierData,
+        name: (rawTierData.name as string) || (preset.name as string),
+        slug: derivedSlug,
+        price: this.parseNumberLike(rawTierData.price, Number((preset as any).price || 0)),
+        billingPeriod:
+          (rawTierData.billingPeriod as 'monthly' | 'yearly') ||
+          ((preset as any).billingPeriod as 'monthly' | 'yearly') ||
+          'monthly',
+        adFree: this.parseBooleanLike(rawTierData.adFree, Boolean((preset as any).adFree)),
+        chatBadge: this.parseBooleanLike(rawTierData.chatBadge, Boolean((preset as any).chatBadge)),
+        creatorOnlyPosts: this.parseBooleanLike(
+          rawTierData.creatorOnlyPosts,
+          Boolean((preset as any).creatorOnlyPosts)
+        ),
+        earlyStreamAccess: this.parseBooleanLike(
+          rawTierData.earlyStreamAccess,
+          Boolean((preset as any).earlyStreamAccess)
+        ),
+        vipRoomAccess: this.parseBooleanLike(
+          rawTierData.vipRoomAccess,
+          Boolean((preset as any).vipRoomAccess)
+        ),
+        directQA: this.parseBooleanLike(rawTierData.directQA, Boolean((preset as any).directQA)),
+        earlyContentAccess: this.parseBooleanLike(
+          rawTierData.earlyContentAccess,
+          Boolean((preset as any).earlyContentAccess)
+        ),
+        pulsePointsBonus: this.parseNumberLike(
+          rawTierData.pulsePointsBonus,
+          Number((preset as any).pulsePointsBonus || 0)
+        ),
+        marketplaceDiscount: this.parseNumberLike(
+          rawTierData.marketplaceDiscount,
+          Number((preset as any).marketplaceDiscount || 0)
+        ),
+        isActive: this.parseBooleanLike(rawTierData.isActive, Boolean((preset as any).isActive ?? true)),
+        features: formFeatures || (preset.features as string[]) || [],
+        badge: {
+          ...(preset.badge || { icon: '', displayName: '' }),
+          displayName: badgeDisplayName || (preset.badge as any)?.displayName || '',
+          icon: badgeIcon || (preset.badge as any)?.icon || '',
+        },
+      };
+
+      if (!preparedTierData.name || preparedTierData.price === undefined || preparedTierData.price <= 0) {
+        throw new AppError(StatusCodes.BAD_REQUEST, 'Tier name and valid price are required');
+      }
+
       // Check if tier already exists
-      const existingTier = await SubscriptionTier.findOne({ slug: tierData.slug });
+      const existingTier = await SubscriptionTier.findOne({ slug: preparedTierData.slug });
       if (existingTier) {
-        throw new AppError(StatusCodes.CONFLICT, `Tier '${tierData.slug}' already exists`);
+        throw new AppError(StatusCodes.CONFLICT, `Tier '${preparedTierData.slug}' already exists`);
       }
 
       // Upload badge icon to S3 if provided
       if (badgeIconFile) {
         const badgeIconUrl = await uploadFileToS3(badgeIconFile, 'subscription-badges');
-        if (!tierData.badge) {
-          tierData.badge = { icon: '', displayName: '' };
+        if (!preparedTierData.badge) {
+          preparedTierData.badge = { icon: '', displayName: '' };
         }
-        tierData.badge.icon = badgeIconUrl;
+        preparedTierData.badge.icon = badgeIconUrl;
       }
 
-      const tier = await SubscriptionTier.create(tierData);
+      const tier = await SubscriptionTier.create(preparedTierData);
       logger.info(`✓ Subscription tier created: ${tier.name} (${tier.slug})`);
       return tier;
     } catch (error) {

@@ -4,7 +4,7 @@ export const subscriptionValidation = {
   createTierSchema: z.object({
     body: z.object({
       name: z.string().min(1, 'Tier name is required'),
-      slug: z.enum(['basic', 'standard', 'premium']),
+      slug: z.enum(['supporter', 'premium', 'exclusive']),
       price: z.number().positive('Price must be positive'),
       billingPeriod: z.enum(['monthly', 'yearly']).default('monthly'),
       features: z.array(z.string()),
