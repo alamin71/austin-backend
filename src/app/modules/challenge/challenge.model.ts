@@ -8,7 +8,7 @@ import mongoose, { Schema, Document } from 'mongoose';
 export interface IChallenge extends Document {
   title: string;
   description: string;
-  type: 'gift_giver' | 'chirp_times' | 'stream_binge' | 'daily_commentator' | 'custom';
+  type: 'send_gift' | 'feather_gift';
   challengeLevel: 'common' | 'rare' | 'epic' | 'legendary';
   visibility: 'public' | 'private';
   
@@ -64,7 +64,8 @@ const challengeSchema = new Schema<IChallenge>(
       type: String,
       required: true,
       trim: true,
-      // e.g., "Gift Giver", "Chirp 5 times", "Stream Binge Watcher"
+      minlength: 2,
+      maxlength: 100,
     },
     description: {
       type: String,
@@ -73,7 +74,7 @@ const challengeSchema = new Schema<IChallenge>(
     },
     type: {
       type: String,
-      enum: ['gift_giver', 'chirp_times', 'stream_binge', 'daily_commentator', 'custom'],
+      enum: ['send_gift', 'feather_gift'],
       required: true,
     },
     challengeLevel: {

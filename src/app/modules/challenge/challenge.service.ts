@@ -8,24 +8,99 @@ import { Wallet } from '../wallet/wallet.model.js';
  * Based on Figma design (Explore > Challenges)
  */
 class ChallengeService {
+  private normalizeChallengeTitle(inputTitle: string) {
+    const title = String(inputTitle || '').trim();
+
+    if (!title) {
+      throw new AppError(StatusCodes.BAD_REQUEST, 'Challenge title is required');
+    }
+
+    return title;
+  }
+
+  private normalizeChallengeType(inputType: string) {
+    const normalized = String(inputType || '')
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '_')
+      .replace(/^_+|_+$/g, '');
+
+    const map: Record<string, 'send_gift' | 'feather_gift'> = {
+      send_gift: 'send_gift',
+      gift_giver: 'send_gift',
+      gift: 'send_gift',
+      feather_gift: 'feather_gift',
+      chirp_times: 'feather_gift',
+      stream_binge: 'feather_gift',
+      daily_commentator: 'feather_gift',
+      comment: 'feather_gift',
+      watch_stream: 'feather_gift',
+    };
+
+    const type = map[normalized];
+    if (!type) {
+      throw new AppError(
+        StatusCodes.BAD_REQUEST,
+        'Invalid challenge type. Use send_gift or feather_gift',
+      );
+    }
+
+    return type;
+  }
+
   private getTodayStartUTC() {
     const now = new Date();
     return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
   }
 
-  private getProgressUnitFromType(type: string) {
-    switch (type) {
-      case 'gift_giver':
-        return 'count';
-      case 'chirp_times':
-        return 'comments';
-      case 'stream_binge':
-        return 'hours';
-      case 'daily_commentator':
-        return 'streams';
-      default:
-        return 'count';
+  private inferProgressUnit(type: 'send_gift' | 'feather_gift', title: string) {
+    const normalized = String(title || '')
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '_');
+
+    if (type === 'send_gift') {
+      return 'count';
     }
+
+    if (normalized.includes('daily_commentator') || normalized.includes('daily_commentor')) {
+      return 'streams';
+    }
+    if (normalized.includes('stream_binge') || normalized.includes('watch') || normalized.includes('hour')) {
+      return 'hours';
+    }
+    if (normalized.includes('chirp') || normalized.includes('comment')) {
+      return 'comments';
+    }
+
+    // Default feather challenge unit
+    return 'comments';
+  }
+
+  private getProgressFilterByEvent(eventType: string) {
+    const normalized = String(eventType || '')
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '_')
+      .replace(/^_+|_+$/g, '');
+
+    if (['gift_giver', 'send_gift', 'gift'].includes(normalized)) {
+      return { type: 'send_gift', progressUnit: 'count' };
+    }
+
+    if (['chirp_times', 'comment', 'comments'].includes(normalized)) {
+      return { type: 'feather_gift', progressUnit: 'comments' };
+    }
+
+    if (['stream_binge', 'watch_stream', 'watch_streams'].includes(normalized)) {
+      return { type: 'feather_gift', progressUnit: 'hours' };
+    }
+
+    if (['daily_commentator', 'different_streamer_comment', 'different_streamers_comment'].includes(normalized)) {
+      return { type: 'feather_gift', progressUnit: 'streams' };
+    }
+
+    return { type: this.normalizeChallengeType(normalized) };
   }
 
   private async expireOldProgress(userId?: string) {
@@ -312,12 +387,13 @@ class ChallengeService {
    */
   async updateProgress(
     userId: string,
-    challengeType: 'gift_giver' | 'chirp_times' | 'stream_binge' | 'daily_commentator' | 'custom',
+    challengeType: string,
     incrementBy: number = 1
   ) {
     await this.expireOldProgress(userId);
 
-    const challenges = await Challenge.find({ isActive: true, type: challengeType });
+    const filter = this.getProgressFilterByEvent(challengeType);
+    const challenges = await Challenge.find({ isActive: true, ...filter });
 
     for (const challenge of challenges) {
       const progress = await this.getOrCreateTodayProgress(userId, String((challenge as any)._id));
@@ -339,7 +415,11 @@ class ChallengeService {
   async updateDailyCommentatorProgress(userId: string, streamerId: string) {
     await this.expireOldProgress(userId);
 
-    const challenges = await Challenge.find({ isActive: true, type: 'daily_commentator' });
+    const challenges = await Challenge.find({
+      isActive: true,
+      type: 'feather_gift',
+      progressUnit: 'streams',
+    });
 
     for (const challenge of challenges) {
       const progress = await this.getOrCreateTodayProgress(userId, String((challenge as any)._id));
@@ -370,7 +450,11 @@ class ChallengeService {
   async startStreamWatchSession(userId: string, streamId: string) {
     await this.expireOldProgress(userId);
 
-    const challenges = await Challenge.find({ isActive: true, type: 'stream_binge' });
+    const challenges = await Challenge.find({
+      isActive: true,
+      type: 'feather_gift',
+      progressUnit: 'hours',
+    });
 
     for (const challenge of challenges) {
       const progress = await this.getOrCreateTodayProgress(userId, String((challenge as any)._id));
@@ -401,7 +485,11 @@ class ChallengeService {
   async endStreamWatchSession(userId: string, streamId: string) {
     await this.expireOldProgress(userId);
 
-    const challenges = await Challenge.find({ isActive: true, type: 'stream_binge' });
+    const challenges = await Challenge.find({
+      isActive: true,
+      type: 'feather_gift',
+      progressUnit: 'hours',
+    });
 
     for (const challenge of challenges) {
       const progress = await this.getOrCreateTodayProgress(userId, String((challenge as any)._id));
@@ -444,9 +532,14 @@ class ChallengeService {
    * Admin: Create a challenge
    */
   async createChallenge(data: any) {
+    const normalizedTitle = this.normalizeChallengeTitle(data.title);
+    const normalizedType = this.normalizeChallengeType(data.type);
+
     const payload = {
       ...data,
-      progressUnit: data.progressUnit || this.getProgressUnitFromType(data.type),
+      title: normalizedTitle,
+      type: normalizedType,
+      progressUnit: data.progressUnit || this.inferProgressUnit(normalizedType, normalizedTitle),
       challengeLevel: data.challengeLevel || 'rare',
       visibility: data.visibility || 'public',
       isActive: typeof data.isActive === 'boolean' ? data.isActive : true,
@@ -460,7 +553,33 @@ class ChallengeService {
    * Admin: Update a challenge
    */
   async updateChallenge(challengeId: string, data: any) {
-    const challenge = await Challenge.findByIdAndUpdate(challengeId, data, { new: true });
+    const payload = { ...data };
+    let normalizedTitle: string | undefined;
+    let normalizedType: 'send_gift' | 'feather_gift' | undefined;
+
+    if (payload.title) {
+      normalizedTitle = this.normalizeChallengeTitle(payload.title);
+      payload.title = normalizedTitle;
+    }
+
+    if (payload.type) {
+      normalizedType = this.normalizeChallengeType(payload.type);
+      payload.type = normalizedType;
+    }
+
+    if (!payload.progressUnit && (normalizedTitle || normalizedType)) {
+      const existing = await Challenge.findById(challengeId).lean();
+      if (!existing) {
+        throw new AppError(StatusCodes.NOT_FOUND, 'Challenge not found');
+      }
+
+      payload.progressUnit = this.inferProgressUnit(
+        (normalizedType || existing.type) as 'send_gift' | 'feather_gift',
+        normalizedTitle || existing.title,
+      );
+    }
+
+    const challenge = await Challenge.findByIdAndUpdate(challengeId, payload, { new: true });
     if (!challenge) {
       throw new AppError(StatusCodes.NOT_FOUND, 'Challenge not found');
     }
