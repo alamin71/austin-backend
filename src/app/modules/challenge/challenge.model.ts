@@ -33,10 +33,16 @@ export interface IChallenge extends Document {
 export interface IChallengeProgress extends Document {
   userId: mongoose.Types.ObjectId;
   challengeId: mongoose.Types.ObjectId;
+  challengeDate: Date;
   currentProgress: number; // e.g., 5/10 gifts sent
   status: 'in_progress' | 'completed' | 'expired';
   completedAt?: Date;
   feathersEarned: number;
+  metadata?: {
+    uniqueStreamerIds?: string[];
+    activeStreamSessions?: Record<string, string>;
+    watchedMinutes?: number;
+  };
   createdAt: Date;
   updatedAt: Date;
 }
@@ -122,6 +128,11 @@ const challengeProgressSchema = new Schema<IChallengeProgress>(
       required: true,
       index: true,
     },
+    challengeDate: {
+      type: Date,
+      required: true,
+      index: true,
+    },
     currentProgress: {
       type: Number,
       default: 0,
@@ -137,6 +148,10 @@ const challengeProgressSchema = new Schema<IChallengeProgress>(
     feathersEarned: {
       type: Number,
       default: 0,
+    },
+    metadata: {
+      type: mongoose.Schema.Types.Mixed,
+      default: {},
     },
   },
   {
@@ -180,6 +195,7 @@ const challengeRankingSchema = new Schema<IChallengeRanking>(
 
 // Indexes for performance
 challengeSchema.index({ isActive: 1, type: 1 });
+challengeProgressSchema.index({ userId: 1, challengeId: 1, challengeDate: 1 });
 challengeProgressSchema.index({ userId: 1, status: 1 });
 challengeProgressSchema.index({ challengeId: 1, status: 1 });
 challengeRankingSchema.index({ totalFeathersEarned: -1 }); // For leaderboard sorting

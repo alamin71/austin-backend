@@ -2,17 +2,146 @@ import AppError from '../../../errors/AppError.js';
 import { StatusCodes } from 'http-status-codes';
 import { Challenge, ChallengeProgress, ChallengeRanking } from './challenge.model.js';
 import { Wallet } from '../wallet/wallet.model.js';
-import mongoose from 'mongoose';
 
 /**
  * Challenge Service - Handle challenge logic
  * Based on Figma design (Explore > Challenges)
  */
 class ChallengeService {
+  private getTodayStartUTC() {
+    const now = new Date();
+    return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+  }
+
+  private async seedDefaultDailyChallengesIfMissing() {
+    const defaults = [
+      {
+        title: 'Gift Giver',
+        description: 'Send 10 virtual gifts to streamers today',
+        type: 'gift_giver' as const,
+        targetAmount: 10,
+        featherReward: 50,
+        progressUnit: 'count' as const,
+        isActive: true,
+      },
+      {
+        title: 'Chirp 5 times',
+        description: 'Leave 5 comments on any streams today',
+        type: 'chirp_times' as const,
+        targetAmount: 5,
+        featherReward: 10,
+        progressUnit: 'comments' as const,
+        isActive: true,
+      },
+      {
+        title: 'Stream Binge Watcher',
+        description: 'Watch streams for a total of 2 hours today',
+        type: 'stream_binge' as const,
+        targetAmount: 2,
+        featherReward: 30,
+        progressUnit: 'hours' as const,
+        isActive: true,
+      },
+      {
+        title: 'Daily Commentator',
+        description: 'Comment on 10 different streamers today',
+        type: 'daily_commentator' as const,
+        targetAmount: 10,
+        featherReward: 20,
+        progressUnit: 'streams' as const,
+        isActive: true,
+      },
+    ];
+
+    for (const item of defaults) {
+      const exists = await Challenge.findOne({ type: item.type, isActive: true });
+      if (!exists) {
+        await Challenge.create(item);
+      }
+    }
+  }
+
+  private async expireOldProgress(userId?: string) {
+    const todayStart = this.getTodayStartUTC();
+    const filter: Record<string, unknown> = {
+      challengeDate: { $lt: todayStart },
+      status: 'in_progress',
+    };
+
+    if (userId) filter.userId = userId;
+
+    await ChallengeProgress.updateMany(filter, { $set: { status: 'expired' } });
+  }
+
+  private async getOrCreateTodayProgress(
+    userId: string,
+    challengeId: string,
+  ) {
+    const todayStart = this.getTodayStartUTC();
+
+    let progress = await ChallengeProgress.findOne({
+      userId,
+      challengeId,
+      challengeDate: todayStart,
+    });
+
+    if (!progress) {
+      progress = await ChallengeProgress.create({
+        userId,
+        challengeId,
+        challengeDate: todayStart,
+        currentProgress: 0,
+        status: 'in_progress',
+        feathersEarned: 0,
+        metadata: {},
+      });
+    }
+
+    return progress;
+  }
+
+  private async applyCompletionAndRewards(
+    progress: any,
+    challenge: any,
+    userId: string,
+  ) {
+    if (progress.currentProgress < challenge.targetAmount || progress.status !== 'in_progress') {
+      return;
+    }
+
+    progress.status = 'completed';
+    progress.completedAt = new Date();
+    progress.feathersEarned = challenge.featherReward;
+
+    await Wallet.findOneAndUpdate(
+      { userId },
+      {
+        $inc: {
+          balance: challenge.featherReward,
+          totalEarned: challenge.featherReward,
+        },
+      },
+      { upsert: true },
+    );
+
+    await ChallengeRanking.findOneAndUpdate(
+      { userId },
+      {
+        $inc: {
+          totalFeathersEarned: challenge.featherReward,
+          challengesCompleted: 1,
+        },
+        $set: { lastUpdated: new Date() },
+      },
+      { upsert: true },
+    );
+  }
+
   /**
    * Get all active challenges
    */
   async getChallenges() {
+    await this.seedDefaultDailyChallengesIfMissing();
     const challenges = await Challenge.find({ isActive: true }).sort({ createdAt: -1 });
     return challenges;
   }
@@ -21,15 +150,48 @@ class ChallengeService {
    * Get user's challenge progress
    */
   async getUserProgress(userId: string) {
-    const progress = await ChallengeProgress.find({ userId })
+    await this.seedDefaultDailyChallengesIfMissing();
+    await this.expireOldProgress(userId);
+
+    const todayStart = this.getTodayStartUTC();
+    const challenges = await Challenge.find({ isActive: true }).sort({ createdAt: -1 });
+
+    const progress = await ChallengeProgress.find({ userId, challengeDate: todayStart })
       .populate('challengeId')
       .sort({ createdAt: -1 });
+
+    const progressByChallengeId = new Map(
+      progress.map((p: any) => [p.challengeId?._id?.toString() || p.challengeId.toString(), p]),
+    );
+
+    const items = challenges.map((challenge: any) => {
+      const p = progressByChallengeId.get(challenge._id.toString());
+      return {
+        challenge,
+        progress: p?.currentProgress || 0,
+        target: challenge.targetAmount,
+        status: p?.status || 'in_progress',
+        feathersEarned: p?.feathersEarned || 0,
+        completedAt: p?.completedAt || null,
+      };
+    });
 
     // Get user's ranking
     const ranking = await ChallengeRanking.findOne({ userId });
 
+    const totalEarnedToday = progress
+      .filter((p: any) => p.status === 'completed')
+      .reduce((sum: number, p: any) => sum + (p.feathersEarned || 0), 0);
+
+    const completedToday = progress.filter((p: any) => p.status === 'completed').length;
+
     return {
-      progress,
+      date: todayStart,
+      progress: items,
+      totals: {
+        completedToday,
+        totalEarnedToday,
+      },
       ranking: ranking || {
         totalFeathersEarned: 0,
         challengesCompleted: 0,
@@ -47,7 +209,15 @@ class ChallengeService {
       .sort({ totalFeathersEarned: -1 })
       .limit(limit);
 
-    return rankings;
+    const withRank = rankings.map((item: any, index: number) => ({
+      ...item.toObject(),
+      rank: index + 1,
+    }));
+
+    return {
+      topThree: withRank.slice(0, 3),
+      leaderboard: withRank,
+    };
   }
 
   /**
@@ -58,79 +228,133 @@ class ChallengeService {
     challengeType: 'gift_giver' | 'chirp_times' | 'stream_binge' | 'daily_commentator' | 'custom',
     incrementBy: number = 1
   ) {
-    const session = await mongoose.startSession();
-    session.startTransaction();
+    await this.seedDefaultDailyChallengesIfMissing();
+    await this.expireOldProgress(userId);
 
-    try {
-      // Find active challenges of this type
-      const challenges = await Challenge.find({ isActive: true, type: challengeType });
+    const challenges = await Challenge.find({ isActive: true, type: challengeType });
 
-      for (const challenge of challenges) {
-        // Find or create progress
-        let progress = await ChallengeProgress.findOne({
-          userId,
-          challengeId: challenge._id,
-          status: 'in_progress',
-        });
-
-        if (!progress) {
-          const newProgress = await ChallengeProgress.create([
-            {
-              userId,
-              challengeId: challenge._id,
-              currentProgress: 0,
-              status: 'in_progress',
-            },
-          ], { session });
-          progress = newProgress[0];
-        }
-
-        // Update progress
-        progress.currentProgress += incrementBy;
-
-        // Check if completed
-        if (progress.currentProgress >= challenge.targetAmount && progress.status === 'in_progress') {
-          progress.status = 'completed';
-          progress.completedAt = new Date();
-          progress.feathersEarned = challenge.featherReward;
-
-          // Award feathers to wallet
-          await Wallet.findOneAndUpdate(
-            { userId },
-            {
-              $inc: {
-                balance: challenge.featherReward,
-                totalEarned: challenge.featherReward,
-              },
-            },
-            { upsert: true, session }
-          );
-
-          // Update user ranking
-          await ChallengeRanking.findOneAndUpdate(
-            { userId },
-            {
-              $inc: {
-                totalFeathersEarned: challenge.featherReward,
-                challengesCompleted: 1,
-              },
-              lastUpdated: new Date(),
-            },
-            { upsert: true, session }
-          );
-        }
-
-        await progress.save({ session });
+    for (const challenge of challenges) {
+      const progress = await this.getOrCreateTodayProgress(userId, String((challenge as any)._id));
+      if (progress.status === 'completed') {
+        continue;
       }
 
-      await session.commitTransaction();
-      return { success: true };
-    } catch (error) {
-      await session.abortTransaction();
-      throw error;
-    } finally {
-      session.endSession();
+      progress.currentProgress += incrementBy;
+      await this.applyCompletionAndRewards(progress, challenge, userId);
+      await progress.save();
     }
+
+    return { success: true };
+  }
+
+  /**
+   * Daily commentator requires comments on different streamers.
+   */
+  async updateDailyCommentatorProgress(userId: string, streamerId: string) {
+    await this.seedDefaultDailyChallengesIfMissing();
+    await this.expireOldProgress(userId);
+
+    const challenges = await Challenge.find({ isActive: true, type: 'daily_commentator' });
+
+    for (const challenge of challenges) {
+      const progress = await this.getOrCreateTodayProgress(userId, String((challenge as any)._id));
+      if (progress.status === 'completed') {
+        continue;
+      }
+
+      const metadata = progress.metadata || {};
+      const uniqueStreamerIds = new Set<string>(metadata.uniqueStreamerIds || []);
+      uniqueStreamerIds.add(streamerId);
+
+      progress.metadata = {
+        ...metadata,
+        uniqueStreamerIds: Array.from(uniqueStreamerIds),
+      };
+      progress.currentProgress = uniqueStreamerIds.size;
+
+      await this.applyCompletionAndRewards(progress, challenge, userId);
+      await progress.save();
+    }
+
+    return { success: true };
+  }
+
+  /**
+   * Start watch session for stream binge challenge.
+   */
+  async startStreamWatchSession(userId: string, streamId: string) {
+    await this.seedDefaultDailyChallengesIfMissing();
+    await this.expireOldProgress(userId);
+
+    const challenges = await Challenge.find({ isActive: true, type: 'stream_binge' });
+
+    for (const challenge of challenges) {
+      const progress = await this.getOrCreateTodayProgress(userId, String((challenge as any)._id));
+      if (progress.status === 'completed') {
+        continue;
+      }
+
+      const metadata = progress.metadata || {};
+      const sessions = metadata.activeStreamSessions || {};
+      if (!sessions[streamId]) {
+        sessions[streamId] = new Date().toISOString();
+      }
+
+      progress.metadata = {
+        ...metadata,
+        activeStreamSessions: sessions,
+      };
+
+      await progress.save();
+    }
+
+    return { success: true };
+  }
+
+  /**
+   * Stop watch session and convert minutes to hour progress.
+   */
+  async endStreamWatchSession(userId: string, streamId: string) {
+    await this.seedDefaultDailyChallengesIfMissing();
+    await this.expireOldProgress(userId);
+
+    const challenges = await Challenge.find({ isActive: true, type: 'stream_binge' });
+
+    for (const challenge of challenges) {
+      const progress = await this.getOrCreateTodayProgress(userId, String((challenge as any)._id));
+      if (progress.status === 'completed') {
+        continue;
+      }
+
+      const metadata = progress.metadata || {};
+      const sessions: Record<string, string> = metadata.activeStreamSessions || {};
+      const startedAt = sessions[streamId];
+
+      if (!startedAt) {
+        continue;
+      }
+
+      const now = Date.now();
+      const startMs = new Date(startedAt).getTime();
+      const minutes = Math.max(0, Math.floor((now - startMs) / 60000));
+
+      delete sessions[streamId];
+
+      const watchedMinutes = (metadata.watchedMinutes || 0) + minutes;
+      const watchedHours = Number((watchedMinutes / 60).toFixed(2));
+
+      progress.metadata = {
+        ...metadata,
+        activeStreamSessions: sessions,
+        watchedMinutes,
+      };
+      progress.currentProgress = watchedHours;
+
+      await this.applyCompletionAndRewards(progress, challenge, userId);
+      await progress.save();
+    }
+
+    return { success: true };
   }
 
   /**

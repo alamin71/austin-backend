@@ -526,7 +526,7 @@ class StreamService {
                     errorLogger.error('Challenge progress update failed (chirp_times)', challengeError);
                });
 
-               ChallengeService.updateProgress(userId, 'daily_commentator', 1).catch((challengeError) => {
+               ChallengeService.updateDailyCommentatorProgress(userId, stream.streamer.toString()).catch((challengeError) => {
                     errorLogger.error('Challenge progress update failed (daily_commentator)', challengeError);
                });
 
@@ -950,9 +950,9 @@ class StreamService {
                // Add viewer
                const updatedStream = await this.addViewer(streamId, userId);
 
-               // Update challenge progress (non-blocking)
-               ChallengeService.updateProgress(userId, 'stream_binge', 1).catch((challengeError) => {
-                    errorLogger.error('Challenge progress update failed (stream_binge)', challengeError);
+               // Start challenge watch session for daily stream binge.
+               ChallengeService.startStreamWatchSession(userId, streamId).catch((challengeError) => {
+                    errorLogger.error('Challenge watch session start failed (stream_binge)', challengeError);
                });
 
                // Generate viewer token
@@ -978,7 +978,14 @@ class StreamService {
       */
      static async leaveStream(streamId: string, userId: string) {
           try {
-               return await this.removeViewer(streamId, userId);
+               const result = await this.removeViewer(streamId, userId);
+
+               // End challenge watch session and convert watched time into progress.
+               ChallengeService.endStreamWatchSession(userId, streamId).catch((challengeError) => {
+                    errorLogger.error('Challenge watch session end failed (stream_binge)', challengeError);
+               });
+
+               return result;
           } catch (error) {
                errorLogger.error('Leave stream error', error);
                throw error;
