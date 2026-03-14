@@ -365,6 +365,28 @@ class ChallengeService {
       .reduce((sum: number, p: any) => sum + (p.feathersEarned || 0), 0);
 
     const completedToday = progress.filter((p: any) => p.status === 'completed').length;
+    const inProgressToday = Math.max(challenges.length - completedToday, 0);
+
+    const uiChallenges = items.map((item: any) => {
+      const current = Number(item.progress || 0);
+      const target = Number(item.target || 0);
+      const percentage = target > 0 ? Math.min(100, Number(((current / target) * 100).toFixed(2))) : 0;
+      const isHourBased = item.challenge?.progressUnit === 'hours';
+
+      return {
+        id: item.challenge?._id,
+        title: item.challenge?.title,
+        description: item.challenge?.description,
+        rewardFeathers: item.challenge?.featherReward || 0,
+        progressCurrent: current,
+        progressTarget: target,
+        progressText: isHourBased
+          ? `${percentage}%`
+          : `${Math.floor(current)}/${Math.floor(target)}`,
+        progressPercentage: percentage,
+        status: item.status,
+      };
+    });
 
     return {
       date: todayStart,
@@ -377,6 +399,15 @@ class ChallengeService {
         totalFeathersEarned: 0,
         challengesCompleted: 0,
         rank: 0,
+      },
+      ui: {
+        overview: {
+          completed: completedToday,
+          inProgress: inProgressToday,
+          earnedToday: totalEarnedToday,
+          totalEarned: ranking?.totalFeathersEarned || 0,
+        },
+        challenges: uiChallenges,
       },
     };
   }
@@ -395,9 +426,25 @@ class ChallengeService {
       rank: index + 1,
     }));
 
+    const toUiRow = (row: any) => ({
+      rank: row.rank,
+      userId: row.userId?._id || row.userId,
+      name: row.userId?.name || row.userId?.userName || 'Unknown',
+      avatar: row.userId?.image || '',
+      feathers: row.totalFeathersEarned || 0,
+      country: '',
+    });
+
+    const uiTopThree = withRank.slice(0, 3).map(toUiRow);
+    const uiLeaderboard = withRank.map(toUiRow);
+
     return {
       topThree: withRank.slice(0, 3),
       leaderboard: withRank,
+      ui: {
+        topThree: uiTopThree,
+        leaderboard: uiLeaderboard,
+      },
     };
   }
 

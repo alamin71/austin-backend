@@ -232,9 +232,8 @@ router.post(
   challengeController.createChallenge,
 );
 
-// Alias kept for requested spelling from frontend integration
 router.patch(
-  '/challenge-updaate/:challengeId',
+  '/challenge-update/:challengeId',
   auth(USER_ROLES.ADMIN, USER_ROLES.SUPER_ADMIN),
   challengeUpload.none(),
   challengeController.updateChallenge,
