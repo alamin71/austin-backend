@@ -120,7 +120,10 @@ class StreamSocketHandler {
                               }
 
                               // sender-কে always acknowledge, duplicate হলে flag থাকবে.
-                              socket.emit('stream:message:sent', payload);
+                              socket.emit('stream:message:sent', {
+                                   ...payload,
+                                   isNew,
+                              });
 
                               logger.info(
                                    `Chat message sent in stream ${streamId} by user ${userId}`,

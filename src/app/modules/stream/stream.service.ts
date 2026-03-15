@@ -12,6 +12,7 @@ import { logger, errorLogger } from '../../../shared/logger.js';
 import { uploadFileToS3 } from '../../../helpers/s3Helper.js';
 import AgoraRecordingHelper from '../../../helpers/agoraRecordingHelper.js';
 import ChallengeService from '../challenge/challenge.service.js';
+import { createHash } from 'crypto';
 
 
 class StreamService {
@@ -503,25 +504,32 @@ class StreamService {
                     );
                }
 
+               const normalizedContent = content.trim();
+               const bucket = Math.floor(Date.now() / 2000);
+               const fallbackMessageKey = createHash('sha1')
+                    .update(`${streamId}:${userId}:${type}:${normalizedContent}:${bucket}`)
+                    .digest('hex');
+               const messageKey = clientMessageId || fallbackMessageKey;
+
                const duplicateBaseQuery: any = {
                     stream: streamId,
                     sender: userId,
-                    content,
+                    content: normalizedContent,
                     type,
                };
 
                let existingMessage: any = null;
 
-               if (clientMessageId) {
-                    existingMessage = await Message.findOne({
-                         ...duplicateBaseQuery,
-                         clientMessageId,
-                    })
-                         .populate('sender', 'name userName image')
-                         .sort({ createdAt: -1 });
-               } else {
-                    // Fallback dedupe window for clients that send both REST + socket.
-                    const recentWindow = new Date(Date.now() - 1500);
+               existingMessage = await Message.findOne({
+                    ...duplicateBaseQuery,
+                    clientMessageId: messageKey,
+               })
+                    .populate('sender', 'name userName image')
+                    .sort({ createdAt: -1 });
+
+               if (!existingMessage) {
+                    // Compatibility fallback for old documents (without message key).
+                    const recentWindow = new Date(Date.now() - 2000);
                     existingMessage = await Message.findOne({
                          ...duplicateBaseQuery,
                          createdAt: { $gte: recentWindow },
@@ -540,12 +548,31 @@ class StreamService {
                const message = new Message({
                     stream: streamId,
                     sender: userId,
-                    content,
+                    content: normalizedContent,
                     type,
-                    clientMessageId,
+                    clientMessageId: messageKey,
                });
 
-               await message.save();
+               try {
+                    await message.save();
+               } catch (saveError: any) {
+                    // Race condition guard: two concurrent requests with same key.
+                    if (saveError?.code === 11000) {
+                         const duplicate = await Message.findOne({
+                              ...duplicateBaseQuery,
+                              clientMessageId: messageKey,
+                         }).populate('sender', 'name userName image');
+
+                         if (duplicate) {
+                              return {
+                                   message: duplicate,
+                                   isNew: false,
+                              };
+                         }
+                    }
+
+                    throw saveError;
+               }
                stream.chat.push(message._id);
                await stream.save();
 
