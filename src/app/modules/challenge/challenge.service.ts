@@ -259,14 +259,22 @@ class ChallengeService {
       const stat = statMap.get(String(challenge._id)) || { participants: 0, completedCount: 0 };
       const completionPercentage =
         stat.participants > 0
-          ? Number(((stat.completedCount / stat.participants) * 100).toFixed(2))
+          ? Math.round((stat.completedCount / stat.participants) * 100)
           : 0;
 
+      const serialNum = skip + index + 1;
+
       return {
-        serial: skip + index + 1,
-        ...challenge,
+        id: String(serialNum).padStart(2, '0'),
+        _id: challenge._id,
+        title: challenge.title,
+        reward: `${challenge.featherReward} Feather`,
+        challengeLevel:
+          challenge.challengeLevel
+            ? challenge.challengeLevel.charAt(0).toUpperCase() + challenge.challengeLevel.slice(1)
+            : 'Common',
         participants: stat.participants,
-        completionPercentage,
+        completionPercentage: `${completionPercentage}%`,
         status: challenge.isActive ? 'Active' : 'Inactive',
       };
     });
