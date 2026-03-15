@@ -505,36 +505,48 @@ class StreamService {
 
                const normalizedContent = content.trim();
 
-               // clientMessageId required for strict idempotency
-               if (!clientMessageId) {
-                    throw new AppError(
-                         StatusCodes.BAD_REQUEST,
-                         'clientMessageId is required',
-                    );
-               }
+               const msgKey = clientMessageId || `${userId}_${streamId}_${Date.now()}`;
 
-               // Atomic upsert: prevents duplicate documents under concurrent requests.
-               const result = await (Message as any)
-                    .findOneAndUpdate(
-                    { clientMessageId },
-                    {
-                         $setOnInsert: {
-                              stream: streamId,
-                              sender: userId,
-                              content: normalizedContent,
-                              type,
-                              clientMessageId,
-                              isModerated: false,
-                              isPinned: false,
-                         },
-                    },
-                    {
-                         upsert: true,
-                         new: true,
-                         rawResult: true,
-                    },
-                    )
-                    .populate('sender', 'name userName image');
+               let result: any;
+               try {
+                    // Atomic upsert: prevents duplicate documents under concurrent requests.
+                    result = await (Message as any)
+                         .findOneAndUpdate(
+                              { clientMessageId: msgKey },
+                              {
+                                   $setOnInsert: {
+                                        stream: streamId,
+                                        sender: userId,
+                                        content: normalizedContent,
+                                        type,
+                                        clientMessageId: msgKey,
+                                        isModerated: false,
+                                        isPinned: false,
+                                   },
+                              },
+                              {
+                                   upsert: true,
+                                   new: true,
+                                   rawResult: true,
+                              },
+                         )
+                         .populate('sender', 'name userName image');
+               } catch (upsertError: any) {
+                    // Race condition fallback: if duplicate key occurs, return existing.
+                    if (upsertError?.code === 11000) {
+                         const existing = await Message.findOne({ clientMessageId: msgKey })
+                              .populate('sender', 'name userName image');
+
+                         if (existing) {
+                              return {
+                                   message: existing,
+                                   isNew: false,
+                              };
+                         }
+                    }
+
+                    throw upsertError;
+               }
 
                const isNew: boolean = !result.lastErrorObject?.updatedExisting;
                const message = result.value;
