@@ -77,7 +77,7 @@ export const sendChatMessageSchema = z.object({
      body: z.object({
           content: z.string({ required_error: 'Content is required' }).min(1).max(500),
           type: z.enum(['text', 'emoji', 'gift']).optional(),
-          clientMessageId: z.string().min(1).max(100).optional(),
+          clientMessageId: z.string({ required_error: 'clientMessageId is required' }).min(1).max(100),
      }),
 });
 

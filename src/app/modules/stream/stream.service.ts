@@ -505,17 +505,17 @@ class StreamService {
 
                const normalizedContent = content.trim();
 
-               // clientMessageId না থাকলে require করো — Flutter থেকে সবসময় unique id পাঠাতে হবে
+               // clientMessageId required for strict idempotency
                if (!clientMessageId) {
                     throw new AppError(
                          StatusCodes.BAD_REQUEST,
-                         'clientMessageId is required to prevent duplicate messages',
+                         'clientMessageId is required',
                     );
                }
 
-               // ✅ Fully atomic upsert — rawResult দিয়ে isNew detect করা হচ্ছে
-               // Race condition সম্পূর্ণ নেই — DB-level unique index + single operation
-               const rawResult: any = await Message.findOneAndUpdate(
+               // Atomic upsert: prevents duplicate documents under concurrent requests.
+               const result = await (Message as any)
+                    .findOneAndUpdate(
                     { clientMessageId },
                     {
                          $setOnInsert: {
@@ -533,43 +533,45 @@ class StreamService {
                          new: true,
                          rawResult: true,
                     },
-               );
+                    )
+                    .populate('sender', 'name userName image');
 
-               // lastErrorObject.updatedExisting === false → new insert হয়েছে
-               const isNew: boolean = rawResult?.lastErrorObject?.updatedExisting === false;
-               const savedMessage = rawResult?.value;
+               const isNew: boolean = !result.lastErrorObject?.updatedExisting;
+               const message = result.value;
 
-               if (!savedMessage) {
+               if (!message) {
                     throw new AppError(StatusCodes.INTERNAL_SERVER_ERROR, 'Failed to save message');
                }
 
-               const populatedMessage = await savedMessage.populate('sender', 'name userName image');
-
-               if (isNew) {
-                    // stream.chat array update (non-blocking, failure এখানে critical না)
-                    Stream.findByIdAndUpdate(streamId, { $push: { chat: savedMessage._id } }).catch(() => {});
-
-                    // Update analytics chat count
-                    if (stream.analytics) {
-                         StreamAnalytics.findByIdAndUpdate(
-                              stream.analytics,
-                              { $inc: { chatCount: 1 } },
-                         ).catch(() => {});
-                    }
-
-                    // Update challenge progress (non-blocking)
-                    ChallengeService.updateProgress(userId, 'chirp_times', 1).catch((challengeError) => {
-                         errorLogger.error('Challenge progress update failed (chirp_times)', challengeError);
-                    });
-
-                    ChallengeService.updateDailyCommentatorProgress(userId, stream.streamer.toString()).catch((challengeError) => {
-                         errorLogger.error('Challenge progress update failed (daily_commentator)', challengeError);
-                    });
+               if (!isNew) {
+                    return {
+                         message,
+                         isNew: false,
+                    };
                }
 
+               stream.chat.push(message._id);
+               await stream.save();
+
+                    // Update analytics chat count
+               if (stream.analytics) {
+                    await StreamAnalytics.findByIdAndUpdate(
+                         stream.analytics,
+                         { $inc: { chatCount: 1 } },
+                    );
+               }
+
+               ChallengeService.updateProgress(userId, 'chirp_times', 1).catch((challengeError) => {
+                    errorLogger.error('Challenge progress update failed (chirp_times)', challengeError);
+               });
+
+               ChallengeService.updateDailyCommentatorProgress(userId, stream.streamer.toString()).catch((challengeError) => {
+                    errorLogger.error('Challenge progress update failed (daily_commentator)', challengeError);
+               });
+
                return {
-                    message: populatedMessage,
-                    isNew,
+                    message,
+                    isNew: true,
                };
           } catch (error) {
                errorLogger.error('Send chat message error', error);
