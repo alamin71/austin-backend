@@ -8,6 +8,8 @@ import { Wallet } from '../wallet/wallet.model.js';
  * Based on Figma design (Explore > Challenges)
  */
 class ChallengeService {
+  private readonly PROGRESS_WINDOW_MS = 24 * 60 * 60 * 1000;
+
   private parseBoolean(value: unknown, fallback: boolean) {
     if (typeof value === 'boolean') return value;
     if (typeof value === 'string') {
@@ -67,9 +69,30 @@ class ChallengeService {
     return type;
   }
 
-  private getTodayStartUTC() {
-    const now = new Date();
-    return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+  private async getCurrentWindowStart(userId: string) {
+    const nowMs = Date.now();
+
+    const latestProgress: any = await ChallengeProgress.findOne({ userId })
+      .sort({ challengeDate: -1 })
+      .select('challengeDate')
+      .lean();
+
+    if (!latestProgress?.challengeDate) {
+      return new Date(nowMs);
+    }
+
+    const latestStartMs = new Date(latestProgress.challengeDate).getTime();
+    if (!Number.isFinite(latestStartMs)) {
+      return new Date(nowMs);
+    }
+
+    const elapsed = nowMs - latestStartMs;
+    if (elapsed < this.PROGRESS_WINDOW_MS) {
+      return new Date(latestStartMs);
+    }
+
+    const windowsPassed = Math.floor(elapsed / this.PROGRESS_WINDOW_MS);
+    return new Date(latestStartMs + windowsPassed * this.PROGRESS_WINDOW_MS);
   }
 
   private inferProgressUnit(type: 'send_gift' | 'feather_gift', title: string) {
@@ -122,10 +145,9 @@ class ChallengeService {
     return { type: this.normalizeChallengeType(normalized) };
   }
 
-  private async expireOldProgress(userId?: string) {
-    const todayStart = this.getTodayStartUTC();
+  private async expireOldProgress(windowStart: Date, userId?: string) {
     const filter: Record<string, unknown> = {
-      challengeDate: { $lt: todayStart },
+      challengeDate: { $lt: windowStart },
       status: 'in_progress',
     };
 
@@ -134,23 +156,22 @@ class ChallengeService {
     await ChallengeProgress.updateMany(filter, { $set: { status: 'expired' } });
   }
 
-  private async getOrCreateTodayProgress(
+  private async getOrCreateWindowProgress(
     userId: string,
     challengeId: string,
+    windowStart: Date,
   ) {
-    const todayStart = this.getTodayStartUTC();
-
     let progress = await ChallengeProgress.findOne({
       userId,
       challengeId,
-      challengeDate: todayStart,
+      challengeDate: windowStart,
     });
 
     if (!progress) {
       progress = await ChallengeProgress.create({
         userId,
         challengeId,
-        challengeDate: todayStart,
+        challengeDate: windowStart,
         currentProgress: 0,
         status: 'in_progress',
         feathersEarned: 0,
@@ -340,12 +361,12 @@ class ChallengeService {
    * Get user's challenge progress
    */
   async getUserProgress(userId: string) {
-    await this.expireOldProgress(userId);
+    const windowStart = await this.getCurrentWindowStart(userId);
+    await this.expireOldProgress(windowStart, userId);
 
-    const todayStart = this.getTodayStartUTC();
     const challenges = await Challenge.find({ isActive: true }).sort({ createdAt: -1 });
 
-    const progress = await ChallengeProgress.find({ userId, challengeDate: todayStart })
+    const progress = await ChallengeProgress.find({ userId, challengeDate: windowStart })
       .populate('challengeId')
       .sort({ createdAt: -1 });
 
@@ -397,7 +418,8 @@ class ChallengeService {
     });
 
     return {
-      date: todayStart,
+      date: windowStart,
+      resetAt: new Date(windowStart.getTime() + this.PROGRESS_WINDOW_MS),
       progress: items,
       totals: {
         completedToday,
@@ -464,13 +486,18 @@ class ChallengeService {
     challengeType: string,
     incrementBy: number = 1
   ) {
-    await this.expireOldProgress(userId);
+    const windowStart = await this.getCurrentWindowStart(userId);
+    await this.expireOldProgress(windowStart, userId);
 
     const filter = this.getProgressFilterByEvent(challengeType);
     const challenges = await Challenge.find({ isActive: true, ...filter });
 
     for (const challenge of challenges) {
-      const progress = await this.getOrCreateTodayProgress(userId, String((challenge as any)._id));
+      const progress = await this.getOrCreateWindowProgress(
+        userId,
+        String((challenge as any)._id),
+        windowStart,
+      );
       if (progress.status === 'completed') {
         continue;
       }
@@ -487,7 +514,8 @@ class ChallengeService {
    * Daily commentator requires comments on different streamers.
    */
   async updateDailyCommentatorProgress(userId: string, streamerId: string) {
-    await this.expireOldProgress(userId);
+    const windowStart = await this.getCurrentWindowStart(userId);
+    await this.expireOldProgress(windowStart, userId);
 
     const challenges = await Challenge.find({
       isActive: true,
@@ -496,7 +524,11 @@ class ChallengeService {
     });
 
     for (const challenge of challenges) {
-      const progress = await this.getOrCreateTodayProgress(userId, String((challenge as any)._id));
+      const progress = await this.getOrCreateWindowProgress(
+        userId,
+        String((challenge as any)._id),
+        windowStart,
+      );
       if (progress.status === 'completed') {
         continue;
       }
@@ -522,7 +554,8 @@ class ChallengeService {
    * Start watch session for stream binge challenge.
    */
   async startStreamWatchSession(userId: string, streamId: string) {
-    await this.expireOldProgress(userId);
+    const windowStart = await this.getCurrentWindowStart(userId);
+    await this.expireOldProgress(windowStart, userId);
 
     const challenges = await Challenge.find({
       isActive: true,
@@ -531,7 +564,11 @@ class ChallengeService {
     });
 
     for (const challenge of challenges) {
-      const progress = await this.getOrCreateTodayProgress(userId, String((challenge as any)._id));
+      const progress = await this.getOrCreateWindowProgress(
+        userId,
+        String((challenge as any)._id),
+        windowStart,
+      );
       if (progress.status === 'completed') {
         continue;
       }
@@ -557,7 +594,8 @@ class ChallengeService {
    * Stop watch session and convert minutes to hour progress.
    */
   async endStreamWatchSession(userId: string, streamId: string) {
-    await this.expireOldProgress(userId);
+    const windowStart = await this.getCurrentWindowStart(userId);
+    await this.expireOldProgress(windowStart, userId);
 
     const challenges = await Challenge.find({
       isActive: true,
@@ -566,7 +604,11 @@ class ChallengeService {
     });
 
     for (const challenge of challenges) {
-      const progress = await this.getOrCreateTodayProgress(userId, String((challenge as any)._id));
+      const progress = await this.getOrCreateWindowProgress(
+        userId,
+        String((challenge as any)._id),
+        windowStart,
+      );
       if (progress.status === 'completed') {
         continue;
       }

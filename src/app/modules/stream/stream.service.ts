@@ -12,7 +12,6 @@ import { logger, errorLogger } from '../../../shared/logger.js';
 import { uploadFileToS3 } from '../../../helpers/s3Helper.js';
 import AgoraRecordingHelper from '../../../helpers/agoraRecordingHelper.js';
 import ChallengeService from '../challenge/challenge.service.js';
-import { createHash } from 'crypto';
 
 
 class StreamService {
@@ -505,99 +504,72 @@ class StreamService {
                }
 
                const normalizedContent = content.trim();
-               const bucket = Math.floor(Date.now() / 2000);
-               const fallbackMessageKey = createHash('sha1')
-                    .update(`${streamId}:${userId}:${type}:${normalizedContent}:${bucket}`)
-                    .digest('hex');
-               const messageKey = clientMessageId || fallbackMessageKey;
 
-               const duplicateBaseQuery: any = {
-                    stream: streamId,
-                    sender: userId,
-                    content: normalizedContent,
-                    type,
-               };
-
-               let existingMessage: any = null;
-
-               existingMessage = await Message.findOne({
-                    ...duplicateBaseQuery,
-                    clientMessageId: messageKey,
-               })
-                    .populate('sender', 'name userName image')
-                    .sort({ createdAt: -1 });
-
-               if (!existingMessage) {
-                    // Compatibility fallback for old documents (without message key).
-                    const recentWindow = new Date(Date.now() - 2000);
-                    existingMessage = await Message.findOne({
-                         ...duplicateBaseQuery,
-                         createdAt: { $gte: recentWindow },
-                    })
-                         .populate('sender', 'name userName image')
-                         .sort({ createdAt: -1 });
-               }
-
-               if (existingMessage) {
-                    return {
-                         message: existingMessage,
-                         isNew: false,
-                    };
-               }
-
-               const message = new Message({
-                    stream: streamId,
-                    sender: userId,
-                    content: normalizedContent,
-                    type,
-                    clientMessageId: messageKey,
-               });
-
-               try {
-                    await message.save();
-               } catch (saveError: any) {
-                    // Race condition guard: two concurrent requests with same key.
-                    if (saveError?.code === 11000) {
-                         const duplicate = await Message.findOne({
-                              ...duplicateBaseQuery,
-                              clientMessageId: messageKey,
-                         }).populate('sender', 'name userName image');
-
-                         if (duplicate) {
-                              return {
-                                   message: duplicate,
-                                   isNew: false,
-                              };
-                         }
-                    }
-
-                    throw saveError;
-               }
-               stream.chat.push(message._id);
-               await stream.save();
-
-               // Update analytics chat count
-               if (stream.analytics) {
-                    await StreamAnalytics.findByIdAndUpdate(
-                         stream.analytics,
-                         { $inc: { chatCount: 1 } },
+               // clientMessageId না থাকলে require করো — Flutter থেকে সবসময় unique id পাঠাতে হবে
+               if (!clientMessageId) {
+                    throw new AppError(
+                         StatusCodes.BAD_REQUEST,
+                         'clientMessageId is required to prevent duplicate messages',
                     );
                }
 
-               // Update challenge progress (non-blocking)
-               ChallengeService.updateProgress(userId, 'chirp_times', 1).catch((challengeError) => {
-                    errorLogger.error('Challenge progress update failed (chirp_times)', challengeError);
-               });
+               // ✅ Fully atomic upsert — rawResult দিয়ে isNew detect করা হচ্ছে
+               // Race condition সম্পূর্ণ নেই — DB-level unique index + single operation
+               const rawResult: any = await Message.findOneAndUpdate(
+                    { clientMessageId },
+                    {
+                         $setOnInsert: {
+                              stream: streamId,
+                              sender: userId,
+                              content: normalizedContent,
+                              type,
+                              clientMessageId,
+                              isModerated: false,
+                              isPinned: false,
+                         },
+                    },
+                    {
+                         upsert: true,
+                         new: true,
+                         rawResult: true,
+                    },
+               );
 
-               ChallengeService.updateDailyCommentatorProgress(userId, stream.streamer.toString()).catch((challengeError) => {
-                    errorLogger.error('Challenge progress update failed (daily_commentator)', challengeError);
-               });
+               // lastErrorObject.updatedExisting === false → new insert হয়েছে
+               const isNew: boolean = rawResult?.lastErrorObject?.updatedExisting === false;
+               const savedMessage = rawResult?.value;
 
-               const populatedMessage = await message.populate('sender', 'name userName image');
+               if (!savedMessage) {
+                    throw new AppError(StatusCodes.INTERNAL_SERVER_ERROR, 'Failed to save message');
+               }
+
+               const populatedMessage = await savedMessage.populate('sender', 'name userName image');
+
+               if (isNew) {
+                    // stream.chat array update (non-blocking, failure এখানে critical না)
+                    Stream.findByIdAndUpdate(streamId, { $push: { chat: savedMessage._id } }).catch(() => {});
+
+                    // Update analytics chat count
+                    if (stream.analytics) {
+                         StreamAnalytics.findByIdAndUpdate(
+                              stream.analytics,
+                              { $inc: { chatCount: 1 } },
+                         ).catch(() => {});
+                    }
+
+                    // Update challenge progress (non-blocking)
+                    ChallengeService.updateProgress(userId, 'chirp_times', 1).catch((challengeError) => {
+                         errorLogger.error('Challenge progress update failed (chirp_times)', challengeError);
+                    });
+
+                    ChallengeService.updateDailyCommentatorProgress(userId, stream.streamer.toString()).catch((challengeError) => {
+                         errorLogger.error('Challenge progress update failed (daily_commentator)', challengeError);
+                    });
+               }
 
                return {
                     message: populatedMessage,
-                    isNew: true,
+                    isNew,
                };
           } catch (error) {
                errorLogger.error('Send chat message error', error);

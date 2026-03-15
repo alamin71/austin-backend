@@ -44,6 +44,8 @@ const messageSchema = new Schema<IMessage>(
           clientMessageId: {
                type: String,
                trim: true,
+               sparse: true,
+               unique: true,
           },
           messageData: {
                giftId: Schema.Types.ObjectId,
@@ -67,12 +69,5 @@ const messageSchema = new Schema<IMessage>(
 // Index for fast chat retrieval
 messageSchema.index({ stream: 1, createdAt: -1 });
 messageSchema.index({ sender: 1 });
-messageSchema.index(
-     { stream: 1, sender: 1, clientMessageId: 1 },
-     {
-          unique: true,
-          partialFilterExpression: { clientMessageId: { $exists: true, $ne: '' } },
-     },
-);
 
 export const Message = model<IMessage>('StreamMessage', messageSchema);
