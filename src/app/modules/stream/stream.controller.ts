@@ -5,6 +5,7 @@ import sendResponse from '../../../shared/sendResponse.js';
 import StreamService from './stream.service.js';
 import AppError from '../../../errors/AppError.js';
 import { uploadFileToS3 } from '../../../helpers/s3Helper.js';
+import { getSocketInstance, isSocketInitialized } from '../../../helpers/socketInstance.js';
 
 class StreamController {
      startStream = catchAsync(async (req: Request, res: Response) => {
@@ -198,6 +199,23 @@ class StreamController {
                content,
                type || 'text',
           );
+
+          // REST path: io.to(room) — সবাই পায় (socket path নয়, তাই sender এখানে socket-এ নেই)
+          if (isSocketInitialized()) {
+               const io = getSocketInstance();
+               io.to(`stream_${streamId}`).emit('stream:message', {
+                    _id: message._id,
+                    stream: streamId,
+                    sender: message.sender,
+                    content: message.content,
+                    type: message.type,
+                    messageData: message.messageData,
+                    isModerated: message.isModerated,
+                    isPinned: message.isPinned,
+                    createdAt: message.createdAt,
+                    updatedAt: message.updatedAt,
+               });
+          }
 
           sendResponse(res, {
                statusCode: StatusCodes.CREATED,

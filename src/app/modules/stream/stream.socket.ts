@@ -90,12 +90,31 @@ class StreamSocketHandler {
                          try {
                               const { streamId, userId, content } = data;
 
-                              await StreamService.sendChatMessage(
+                              const message = await StreamService.sendChatMessage(
                                    streamId,
                                    userId,
                                    content,
                                    'text',
                               );
+
+                              const payload = {
+                                   _id: message._id,
+                                   stream: streamId,
+                                   sender: message.sender,
+                                   content: message.content,
+                                   type: message.type,
+                                   messageData: message.messageData,
+                                   isModerated: message.isModerated,
+                                   isPinned: message.isPinned,
+                                   createdAt: message.createdAt,
+                                   updatedAt: message.updatedAt,
+                              };
+
+                              // ✅ sender ছাড়া বাকি room-এ broadcast
+                              socket.to(`stream_${streamId}`).emit('stream:message', payload);
+
+                              // ✅ sender-কে acknowledge
+                              socket.emit('stream:message:sent', payload);
 
                               logger.info(
                                    `Chat message sent in stream ${streamId} by user ${userId}`,
