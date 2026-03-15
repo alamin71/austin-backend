@@ -437,29 +437,42 @@ const getTopPerformers = async (query: Record<string, string>) => {
                          ? analytics.revenue
                          : giftSummary[0]?.giftEarned || 0;
 
+               const rawRank = skip + index + 1;
+               const rawPeakViewers = analytics.peakViewers || stream.peakViewerCount || 0;
+               const rawSubscriberGained =
+                    typeof analytics.newSubscribers === 'number'
+                         ? analytics.newSubscribers
+                         : activeSubscribers;
+               const rawDate: Date = stream.endedAt || stream.createdAt;
+               const formattedDate = rawDate
+                    ? new Intl.DateTimeFormat('en-GB', {
+                           day: '2-digit',
+                           month: 'short',
+                           year: 'numeric',
+                      }).format(new Date(rawDate))
+                    : 'N/A';
+
                return {
-                    rank: skip + index + 1,
+                    rank: String(rawRank).padStart(2, '0'),
+                    _id: stream._id,
                     streamerId: stream.streamer?._id,
                     streamerName: stream.streamer?.name || stream.streamer?.userName || 'Unknown',
                     streamId: stream._id,
                     streamTitle: stream.title,
                     category: categoryName,
-                    peakLiveViewers: analytics.peakViewers || stream.peakViewerCount || 0,
-                    giftEarned,
-                    subscriberGained:
-                         typeof analytics.newSubscribers === 'number'
-                              ? analytics.newSubscribers
-                              : activeSubscribers,
-                    date: stream.endedAt || stream.createdAt,
+                    peakLiveViewers: rawPeakViewers.toLocaleString('en-US'),
+                    giftEarned: `$${giftEarned.toLocaleString('en-US')}`,
+                    subscriberGained: rawSubscriberGained,
+                    date: formattedDate,
                };
           }),
      );
 
      const summary = rows.reduce(
           (acc, row) => {
-               acc.totalGiftEarned += row.giftEarned || 0;
-               acc.totalSubscribersGained += row.subscriberGained || 0;
-               acc.totalPeakLiveViewers += row.peakLiveViewers || 0;
+               acc.totalGiftEarned += parseFloat(String(row.giftEarned).replace(/[^0-9.]/g, '')) || 0;
+               acc.totalSubscribersGained += Number(row.subscriberGained) || 0;
+               acc.totalPeakLiveViewers += parseInt(String(row.peakLiveViewers).replace(/,/g, ''), 10) || 0;
                return acc;
           },
           {
