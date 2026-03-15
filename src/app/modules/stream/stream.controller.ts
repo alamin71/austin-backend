@@ -187,21 +187,24 @@ class StreamController {
      sendChatMessage = catchAsync(async (req: Request, res: Response) => {
           const userId = (req.user as any)?._id || (req.user as any)?.id;
           const { streamId } = req.params;
-          const { content, type } = req.body;
+          const { content, type, clientMessageId } = req.body;
 
           if (!userId) {
                throw new AppError(StatusCodes.UNAUTHORIZED, 'User not authenticated');
           }
 
-          const message = await StreamService.sendChatMessage(
+          const result = await StreamService.sendChatMessage(
                streamId,
                userId,
                content,
                type || 'text',
+               clientMessageId,
           );
 
-          // REST path: io.to(room) — সবাই পায় (socket path নয়, তাই sender এখানে socket-এ নেই)
-          if (isSocketInitialized()) {
+          const { message, isNew } = result;
+
+          // Emit only for fresh inserts. If duplicate was detected, skip re-emitting.
+          if (isNew && isSocketInitialized()) {
                const io = getSocketInstance();
                io.to(`stream_${streamId}`).emit('stream:message', {
                     _id: message._id,

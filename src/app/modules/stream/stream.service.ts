@@ -487,6 +487,7 @@ class StreamService {
           userId: string,
           content: string,
           type: 'text' | 'emoji' | 'gift' = 'text',
+          clientMessageId?: string,
      ) {
           try {
                const stream = await Stream.findById(streamId);
@@ -502,11 +503,46 @@ class StreamService {
                     );
                }
 
+               const duplicateBaseQuery: any = {
+                    stream: streamId,
+                    sender: userId,
+                    content,
+                    type,
+               };
+
+               let existingMessage: any = null;
+
+               if (clientMessageId) {
+                    existingMessage = await Message.findOne({
+                         ...duplicateBaseQuery,
+                         clientMessageId,
+                    })
+                         .populate('sender', 'name userName image')
+                         .sort({ createdAt: -1 });
+               } else {
+                    // Fallback dedupe window for clients that send both REST + socket.
+                    const recentWindow = new Date(Date.now() - 1500);
+                    existingMessage = await Message.findOne({
+                         ...duplicateBaseQuery,
+                         createdAt: { $gte: recentWindow },
+                    })
+                         .populate('sender', 'name userName image')
+                         .sort({ createdAt: -1 });
+               }
+
+               if (existingMessage) {
+                    return {
+                         message: existingMessage,
+                         isNew: false,
+                    };
+               }
+
                const message = new Message({
                     stream: streamId,
                     sender: userId,
                     content,
                     type,
+                    clientMessageId,
                });
 
                await message.save();
@@ -532,7 +568,10 @@ class StreamService {
 
                const populatedMessage = await message.populate('sender', 'name userName image');
 
-               return populatedMessage;
+               return {
+                    message: populatedMessage,
+                    isNew: true,
+               };
           } catch (error) {
                errorLogger.error('Send chat message error', error);
                throw error;

@@ -6,6 +6,7 @@ interface IMessage {
      sender: Types.ObjectId;
      content: string;
      type: 'text' | 'emoji' | 'gift' | 'system';
+     clientMessageId?: string;
      messageData?: {
           giftId?: Types.ObjectId;
           giftAmount?: number;
@@ -40,6 +41,10 @@ const messageSchema = new Schema<IMessage>(
                enum: ['text', 'emoji', 'gift', 'system'],
                default: 'text',
           },
+          clientMessageId: {
+               type: String,
+               trim: true,
+          },
           messageData: {
                giftId: Schema.Types.ObjectId,
                giftAmount: Number,
@@ -62,5 +67,12 @@ const messageSchema = new Schema<IMessage>(
 // Index for fast chat retrieval
 messageSchema.index({ stream: 1, createdAt: -1 });
 messageSchema.index({ sender: 1 });
+messageSchema.index(
+     { stream: 1, sender: 1, clientMessageId: 1 },
+     {
+          unique: true,
+          partialFilterExpression: { clientMessageId: { $exists: true, $ne: '' } },
+     },
+);
 
 export const Message = model<IMessage>('StreamMessage', messageSchema);

@@ -86,16 +86,20 @@ class StreamSocketHandler {
                          streamId: string;
                          userId: string;
                          content: string;
+                         clientMessageId?: string;
                     }) => {
                          try {
-                              const { streamId, userId, content } = data;
+                              const { streamId, userId, content, clientMessageId } = data;
 
-                              const message = await StreamService.sendChatMessage(
+                              const result = await StreamService.sendChatMessage(
                                    streamId,
                                    userId,
                                    content,
                                    'text',
+                                   clientMessageId,
                               );
+
+                              const { message, isNew } = result;
 
                               const payload = {
                                    _id: message._id,
@@ -110,10 +114,12 @@ class StreamSocketHandler {
                                    updatedAt: message.updatedAt,
                               };
 
-                              // ✅ sender ছাড়া বাকি room-এ broadcast
-                              socket.to(`stream_${streamId}`).emit('stream:message', payload);
+                              // sender বাদে room-এ শুধু নতুন message broadcast.
+                              if (isNew) {
+                                   socket.to(`stream_${streamId}`).emit('stream:message', payload);
+                              }
 
-                              // ✅ sender-কে acknowledge
+                              // sender-কে always acknowledge, duplicate হলে flag থাকবে.
                               socket.emit('stream:message:sent', payload);
 
                               logger.info(
