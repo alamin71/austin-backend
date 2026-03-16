@@ -118,7 +118,6 @@ class PollService {
           pollData: {
                question: string;
                description?: string;
-               image?: string;
                options: string[];
                duration?: number;
                allowMultipleVotes?: boolean;
@@ -167,7 +166,6 @@ class PollService {
                     streamer: streamerId,
                     question: pollData.question?.trim(),
                     description: pollData.description?.trim() || undefined,
-                    image: pollData.image,
                     options: normalizedOptions.map((option) => ({
                          option,
                          votes: 0,

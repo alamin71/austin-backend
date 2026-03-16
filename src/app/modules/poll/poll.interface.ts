@@ -12,7 +12,6 @@ export interface IPoll {
      streamer: Types.ObjectId;
      question: string;
      description?: string;
-     image?: string;
      options: IPollOption[];
      duration: number; // Duration in seconds
      startTime: Date;

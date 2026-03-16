@@ -4,7 +4,6 @@ export const createPollSchema = z.object({
      body: z.object({
           question: z.string().trim().min(1).max(200),
           description: z.string().trim().max(1000).optional(),
-          image: z.string().url().optional(),
           options: z.preprocess(
                (value) => {
                     if (Array.isArray(value)) return value;

@@ -45,9 +45,6 @@ const pollSchema = new Schema<IPoll>(
                trim: true,
                maxlength: 1000,
           },
-          image: {
-               type: String,
-          },
           options: {
                type: [pollOptionSchema],
                required: true,

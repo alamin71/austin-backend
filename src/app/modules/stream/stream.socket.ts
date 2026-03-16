@@ -249,7 +249,6 @@ class StreamSocketHandler {
                          streamerId: string;
                          question: string;
                          description?: string;
-                         image?: string;
                          options: string[];
                          duration?: number;
                     }) => {
@@ -259,7 +258,6 @@ class StreamSocketHandler {
                                    streamerId,
                                    question,
                                    description,
-                                   image,
                                    options,
                                    duration,
                               } =
@@ -272,7 +270,6 @@ class StreamSocketHandler {
                                    {
                                         question,
                                         description,
-                                        image,
                                         options,
                                         duration,
                                         allowMultipleVotes: false,

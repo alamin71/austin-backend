@@ -3,21 +3,14 @@ import catchAsync from '../../../shared/catchAsync.js';
 import sendResponse from '../../../shared/sendResponse.js';
 import { StatusCodes } from 'http-status-codes';
 import PollService from './poll.service.js';
-import { uploadFileToS3 } from '../../../helpers/s3Helper.js';
 
 // Create poll
 const createPoll = catchAsync(async (req: Request, res: Response) => {
      const { streamId } = req.params;
      const streamerId = (req.user as any)?._id || (req.user as any)?.id;
 
-     let image = req.body.image;
-     if (req.file) {
-          image = await uploadFileToS3(req.file, 'polls');
-     }
-
      const poll = await PollService.createPoll(streamId, streamerId, {
           ...req.body,
-          image,
      });
 
      sendResponse(res, {
