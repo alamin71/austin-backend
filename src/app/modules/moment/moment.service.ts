@@ -4,6 +4,46 @@ import { Moment, MomentComment } from './moment.model.js';
 import { uploadFileToS3 } from '../../../helpers/s3Helper.js';
 import { User } from '../user/user.model.js';
 
+const formatTimeAgo = (value?: Date | string) => {
+  if (!value) return '';
+
+  const createdTime = new Date(value).getTime();
+  if (Number.isNaN(createdTime)) return '';
+
+  const diffInSeconds = Math.max(0, Math.floor((Date.now() - createdTime) / 1000));
+
+  if (diffInSeconds < 60) return `${diffInSeconds || 1} sec ago`;
+
+  const diffInMinutes = Math.floor(diffInSeconds / 60);
+  if (diffInMinutes < 60) return `${diffInMinutes} min ago`;
+
+  const diffInHours = Math.floor(diffInMinutes / 60);
+  if (diffInHours < 24) return `${diffInHours} hour${diffInHours > 1 ? 's' : ''} ago`;
+
+  const diffInDays = Math.floor(diffInHours / 24);
+  if (diffInDays < 7) return `${diffInDays} day${diffInDays > 1 ? 's' : ''} ago`;
+
+  const diffInWeeks = Math.floor(diffInDays / 7);
+  if (diffInWeeks < 5) return `${diffInWeeks} week${diffInWeeks > 1 ? 's' : ''} ago`;
+
+  const diffInMonths = Math.floor(diffInDays / 30);
+  if (diffInMonths < 12) return `${diffInMonths} month${diffInMonths > 1 ? 's' : ''} ago`;
+
+  const diffInYears = Math.floor(diffInDays / 365);
+  return `${diffInYears} year${diffInYears > 1 ? 's' : ''} ago`;
+};
+
+const normalizeAuthor = (author: any) => {
+  const name = author?.name || author?.userName || '';
+  const photo = author?.image || null;
+
+  return {
+    ...author,
+    displayName: name,
+    photo,
+  };
+};
+
 const createMoment = async (
   authorId: string,
   description: string | undefined,
@@ -58,6 +98,10 @@ const getMoments = async (
 
   const enriched = moments.map((m) => ({
     ...m,
+    author: normalizeAuthor(m.author),
+    userName: (m.author as any)?.name || (m.author as any)?.userName || '',
+    userPhoto: (m.author as any)?.image || null,
+    timeAgo: formatTimeAgo(m.createdAt),
     isLiked: m.likes.some((id: unknown) => id!.toString() === userId),
     isSaved: m.saves.some((id: unknown) => id!.toString() === userId),
   }));
@@ -142,8 +186,16 @@ const getComments = async (momentId: string, page = 1, limit = 20) => {
     MomentComment.countDocuments({ moment: momentId, isDeleted: false }),
   ]);
 
+  const enrichedComments = comments.map((comment) => ({
+    ...comment,
+    author: normalizeAuthor(comment.author),
+    userName: (comment.author as any)?.name || (comment.author as any)?.userName || '',
+    userPhoto: (comment.author as any)?.image || null,
+    timeAgo: formatTimeAgo(comment.createdAt),
+  }));
+
   return {
-    comments,
+    comments: enrichedComments,
     pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },
   };
 };
