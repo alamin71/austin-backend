@@ -120,7 +120,7 @@ router.patch(
 );
 
 // Delete option (Streamer only)
-router.patch(
+router.delete(
      '/:pollId/options/delete',
      auth(USER_ROLES.USER),
      validateRequest(deletePollOptionSchema),
