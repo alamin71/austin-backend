@@ -1,4 +1,5 @@
 import { StatusCodes } from 'http-status-codes';
+import mongoose from 'mongoose';
 import { Poll, PollVote } from './poll.model.js';
 import AppError from '../../../errors/AppError.js';
 import { logger, errorLogger } from '../../../shared/logger.js';
@@ -36,6 +37,12 @@ const formatTimeAgo = (value?: Date | string) => {
 };
 
 class PollService {
+     private static validatePollIdOrThrow(pollId: string) {
+          if (!mongoose.Types.ObjectId.isValid(pollId)) {
+               throw new AppError(StatusCodes.BAD_REQUEST, 'Invalid pollId');
+          }
+     }
+
      private static buildPollResponse(poll: any, myVotes: number[] = []) {
           const rawPoll = typeof poll?.toObject === 'function' ? poll.toObject() : poll;
           const now = Date.now();
@@ -217,6 +224,8 @@ class PollService {
           optionIndex: number,
      ) {
           try {
+               this.validatePollIdOrThrow(pollId);
+
                const poll = await Poll.findById(pollId);
 
                await this.ensurePollActiveOrThrow(poll);
@@ -287,6 +296,8 @@ class PollService {
       */
      static async getPollResults(pollId: string) {
           try {
+               this.validatePollIdOrThrow(pollId);
+
                const poll = await Poll.findById(pollId)
                     .populate('streamer', 'name userName image verified')
                     .populate('stream', 'title');
@@ -367,6 +378,8 @@ class PollService {
       */
      static async endPoll(pollId: string, streamerId?: string) {
           try {
+               this.validatePollIdOrThrow(pollId);
+
                const poll = await Poll.findById(pollId);
 
                if (!poll) {
@@ -394,6 +407,8 @@ class PollService {
       */
      static async deletePoll(pollId: string, streamerId: string) {
           try {
+               this.validatePollIdOrThrow(pollId);
+
                const poll = await Poll.findOne({
                     _id: pollId,
                     streamer: streamerId,
@@ -423,6 +438,8 @@ class PollService {
       */
      static async addOption(pollId: string, streamerId: string, option: string) {
           try {
+               this.validatePollIdOrThrow(pollId);
+
                const poll = await Poll.findOne({ _id: pollId, streamer: streamerId });
                await this.ensurePollActiveOrThrow(poll);
                const activePoll = poll!;
@@ -446,6 +463,8 @@ class PollService {
       */
      static async deleteOption(pollId: string, streamerId: string, optionIndex: number) {
           try {
+               this.validatePollIdOrThrow(pollId);
+
                const poll = await Poll.findOne({ _id: pollId, streamer: streamerId });
                await this.ensurePollActiveOrThrow(poll);
                const activePoll = poll!;
