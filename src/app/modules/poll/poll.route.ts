@@ -1,4 +1,4 @@
-import { Router } from 'express';
+import { NextFunction, Request, Response, Router } from 'express';
 import multer from 'multer';
 import PollController from './poll.controller.js';
 import auth from '../../middleware/auth.js';
@@ -12,13 +12,70 @@ import {
 import { USER_ROLES } from '../../../enums/user.js';
 
 const router = Router();
-const multipartTextParser = multer().none();
+const multipartParser = multer({ storage: multer.memoryStorage() });
+
+const normalizePollCreateBody = (
+     req: Request,
+     _res: Response,
+     next: NextFunction,
+) => {
+     const source = (req.body || {}) as Record<string, unknown>;
+     const normalizedEntries = Object.entries(source).map(
+          ([key, value]): [string, unknown] => [key.trim().toLowerCase(), value],
+     );
+
+     const normalizedMap = new Map<string, unknown>(normalizedEntries);
+     const readField = (...keys: string[]) => {
+          for (const key of keys) {
+               const value = normalizedMap.get(key.toLowerCase());
+               if (typeof value !== 'undefined') return value;
+          }
+          return undefined;
+     };
+
+     let options = readField('options', 'polloptions', 'polloption');
+     if (!options) {
+          const optionFields = Object.entries(source)
+               .filter(([key]) => /^option\d+$/i.test(key.trim()))
+               .sort(([a], [b]) => a.localeCompare(b))
+               .map(([, value]) => value)
+               .filter((value) => typeof value === 'string' && value.trim().length > 0);
+
+          if (optionFields.length) {
+               options = optionFields;
+          }
+     }
+
+     if (typeof options === 'string') {
+          const trimmed = options.trim();
+          if (
+               (trimmed.startsWith("'[") && trimmed.endsWith("]'")) ||
+               (trimmed.startsWith('"[') && trimmed.endsWith(']"'))
+          ) {
+               options = trimmed.slice(1, -1);
+          }
+     }
+
+     req.body = {
+          question: readField('question', 'pollquestion'),
+          description: readField('description', 'details', 'polldescription'),
+          options,
+          allowMultipleVotes: readField(
+               'allowmultiplevotes',
+               'allow_multiple_votes',
+               'allowmultivotes',
+          ),
+     };
+
+     next();
+};
 
 // Create poll (Streamer only)
 router.post(
      '/stream/:streamId/create',
      auth(USER_ROLES.USER),
-     multipartTextParser,
+     multipartParser.any(),
+     normalizePollCreateBody,
      validateRequest(createPollSchema),
      PollController.createPoll,
 );
