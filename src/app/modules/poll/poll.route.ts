@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import multer from 'multer';
 import PollController from './poll.controller.js';
 import auth from '../../middleware/auth.js';
 import validateRequest from '../../middleware/validateRequest.js';
@@ -11,11 +12,13 @@ import {
 import { USER_ROLES } from '../../../enums/user.js';
 
 const router = Router();
+const multipartTextParser = multer().none();
 
 // Create poll (Streamer only)
 router.post(
      '/stream/:streamId/create',
      auth(USER_ROLES.USER),
+     multipartTextParser,
      validateRequest(createPollSchema),
      PollController.createPoll,
 );
