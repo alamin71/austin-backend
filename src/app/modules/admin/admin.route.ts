@@ -16,6 +16,8 @@ import {
   updateStaticContentSchema,
 } from '../cms/cms.validation.js';
 import challengeController from '../challenge/challenge.controller.js';
+import { ReportController } from '../report/report.controller.js';
+import { ReportValidation } from '../report/report.validation.js';
 
 const router = express.Router();
 
@@ -207,6 +209,35 @@ router.get(
   '/top-performers',
   auth(USER_ROLES.ADMIN, USER_ROLES.SUPER_ADMIN),
   AdminController.getTopPerformers,
+);
+
+// ============================================
+// REPORT MONITORING ENDPOINTS (ADMIN)
+// ============================================
+
+router.get(
+  '/report/stream',
+  auth(USER_ROLES.ADMIN, USER_ROLES.SUPER_ADMIN),
+  ReportController.getStreamReports,
+);
+
+router.get(
+  '/report/profile',
+  auth(USER_ROLES.ADMIN, USER_ROLES.SUPER_ADMIN),
+  ReportController.getProfileReports,
+);
+
+router.get(
+  '/report/post',
+  auth(USER_ROLES.ADMIN, USER_ROLES.SUPER_ADMIN),
+  ReportController.getPostReports,
+);
+
+router.patch(
+  '/report/:reportId/status',
+  auth(USER_ROLES.ADMIN, USER_ROLES.SUPER_ADMIN),
+  validateRequest(ReportValidation.updateReportStatusSchema),
+  ReportController.updateReportStatus,
 );
 
 // ============================================

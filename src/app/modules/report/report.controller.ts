@@ -54,6 +54,45 @@ const getAllReports = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+const getStreamReports = catchAsync(async (req: Request, res: Response) => {
+  const result = await ReportService.getStreamReportsForAdmin(
+    req.query as Record<string, string>,
+  );
+
+  sendResponse(res, {
+    success: true,
+    statusCode: StatusCodes.OK,
+    message: 'Stream reports retrieved successfully',
+    data: result,
+  });
+});
+
+const getProfileReports = catchAsync(async (req: Request, res: Response) => {
+  const result = await ReportService.getProfileReportsForAdmin(
+    req.query as Record<string, string>,
+  );
+
+  sendResponse(res, {
+    success: true,
+    statusCode: StatusCodes.OK,
+    message: 'Profile reports retrieved successfully',
+    data: result,
+  });
+});
+
+const getPostReports = catchAsync(async (req: Request, res: Response) => {
+  const result = await ReportService.getPostReportsForAdmin(
+    req.query as Record<string, string>,
+  );
+
+  sendResponse(res, {
+    success: true,
+    statusCode: StatusCodes.OK,
+    message: 'Post reports retrieved successfully',
+    data: result,
+  });
+});
+
 const getReportById = catchAsync(async (req: Request, res: Response) => {
   const { reportId } = req.params;
   const result = await ReportService.getReportById(reportId);
@@ -85,6 +124,9 @@ export const ReportController = {
   reportProfile,
   reportPost,
   getAllReports,
+  getStreamReports,
+  getProfileReports,
+  getPostReports,
   getReportById,
   updateReportStatus,
 };

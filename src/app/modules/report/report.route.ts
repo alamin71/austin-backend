@@ -42,6 +42,27 @@ router.get(
   ReportController.getAllReports,
 );
 
+/** GET /report/stream  – admin stream report monitoring */
+router.get(
+  '/stream',
+  auth(USER_ROLES.ADMIN, USER_ROLES.SUPER_ADMIN),
+  ReportController.getStreamReports,
+);
+
+/** GET /report/profile  – admin profile report monitoring */
+router.get(
+  '/profile',
+  auth(USER_ROLES.ADMIN, USER_ROLES.SUPER_ADMIN),
+  ReportController.getProfileReports,
+);
+
+/** GET /report/post  – admin post report monitoring */
+router.get(
+  '/post',
+  auth(USER_ROLES.ADMIN, USER_ROLES.SUPER_ADMIN),
+  ReportController.getPostReports,
+);
+
 /** GET /report/:reportId  – get a single report detail */
 router.get(
   '/:reportId',
