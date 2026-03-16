@@ -3,13 +3,22 @@ import catchAsync from '../../../shared/catchAsync.js';
 import sendResponse from '../../../shared/sendResponse.js';
 import { StatusCodes } from 'http-status-codes';
 import PollService from './poll.service.js';
+import { uploadFileToS3 } from '../../../helpers/s3Helper.js';
 
 // Create poll
 const createPoll = catchAsync(async (req: Request, res: Response) => {
      const { streamId } = req.params;
-     const streamerId = (req.user as any)?._id;
+     const streamerId = (req.user as any)?._id || (req.user as any)?.id;
 
-     const poll = await PollService.createPoll(streamId, streamerId, req.body);
+     let image = req.body.image;
+     if (req.file) {
+          image = await uploadFileToS3(req.file, 'polls');
+     }
+
+     const poll = await PollService.createPoll(streamId, streamerId, {
+          ...req.body,
+          image,
+     });
 
      sendResponse(res, {
           statusCode: StatusCodes.CREATED,
@@ -22,7 +31,7 @@ const createPoll = catchAsync(async (req: Request, res: Response) => {
 // Vote on poll
 const votePoll = catchAsync(async (req: Request, res: Response) => {
      const { pollId } = req.params;
-     const userId = (req.user as any)?._id;
+     const userId = (req.user as any)?._id || (req.user as any)?.id;
 
      const poll = await PollService.votePoll(
           pollId,
@@ -80,7 +89,8 @@ const getStreamPolls = catchAsync(async (req: Request, res: Response) => {
 // End poll
 const endPoll = catchAsync(async (req: Request, res: Response) => {
      const { pollId } = req.params;
-     const poll = await PollService.endPoll(pollId);
+     const streamerId = (req.user as any)?._id || (req.user as any)?.id;
+     const poll = await PollService.endPoll(pollId, streamerId);
 
      sendResponse(res, {
           statusCode: StatusCodes.OK,
@@ -93,7 +103,7 @@ const endPoll = catchAsync(async (req: Request, res: Response) => {
 // Delete poll
 const deletePoll = catchAsync(async (req: Request, res: Response) => {
      const { pollId } = req.params;
-     const streamerId = (req.user as any)?._id;
+     const streamerId = (req.user as any)?._id || (req.user as any)?.id;
 
      await PollService.deletePoll(pollId, streamerId);
 
@@ -105,6 +115,40 @@ const deletePoll = catchAsync(async (req: Request, res: Response) => {
      });
 });
 
+// Add option to active poll (streamer only)
+const addOption = catchAsync(async (req: Request, res: Response) => {
+     const { pollId } = req.params;
+     const streamerId = (req.user as any)?._id || (req.user as any)?.id;
+
+     const poll = await PollService.addOption(pollId, streamerId, req.body.option);
+
+     sendResponse(res, {
+          statusCode: StatusCodes.OK,
+          success: true,
+          message: 'Poll option added successfully',
+          data: poll,
+     });
+});
+
+// Delete option from active poll (streamer only)
+const deleteOption = catchAsync(async (req: Request, res: Response) => {
+     const { pollId } = req.params;
+     const streamerId = (req.user as any)?._id || (req.user as any)?.id;
+
+     const poll = await PollService.deleteOption(
+          pollId,
+          streamerId,
+          req.body.optionIndex,
+     );
+
+     sendResponse(res, {
+          statusCode: StatusCodes.OK,
+          success: true,
+          message: 'Poll option deleted successfully',
+          data: poll,
+     });
+});
+
 const PollController = {
      createPoll,
      votePoll,
@@ -113,6 +157,8 @@ const PollController = {
      getStreamPolls,
      endPoll,
      deletePoll,
+     addOption,
+     deleteOption,
 };
 
 export default PollController;

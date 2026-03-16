@@ -248,11 +248,21 @@ class StreamSocketHandler {
                          streamId: string;
                          streamerId: string;
                          question: string;
+                         description?: string;
+                         image?: string;
                          options: string[];
-                         duration: number;
+                         duration?: number;
                     }) => {
                          try {
-                              const { streamId, streamerId, question, options, duration } =
+                              const {
+                                   streamId,
+                                   streamerId,
+                                   question,
+                                   description,
+                                   image,
+                                   options,
+                                   duration,
+                              } =
                                    data;
 
                               // Create poll
@@ -261,6 +271,8 @@ class StreamSocketHandler {
                                    streamerId,
                                    {
                                         question,
+                                        description,
+                                        image,
                                         options,
                                         duration,
                                         allowMultipleVotes: false,
@@ -269,13 +281,7 @@ class StreamSocketHandler {
 
                               // Broadcast new poll to all viewers
                               io.to(`stream_${streamId}`).emit('stream:poll-created', {
-                                   poll: {
-                                        _id: poll._id,
-                                        question: poll.question,
-                                        options: poll.options,
-                                        duration: poll.duration,
-                                        endTime: poll.endTime,
-                                   },
+                                   poll,
                                    timestamp: new Date(),
                               });
 
@@ -311,8 +317,11 @@ class StreamSocketHandler {
                               // Broadcast updated poll results to all viewers
                               io.to(`stream_${streamId}`).emit('stream:poll-updated', {
                                    pollId,
+                                   poll,
                                    options: poll.options,
                                    totalVotes: poll.totalVotes,
+                                   timeLeftSeconds: poll.timeLeftSeconds,
+                                   timeLeftText: poll.timeLeftText,
                               });
 
                               logger.info(
@@ -340,6 +349,7 @@ class StreamSocketHandler {
                               // Broadcast poll ended to all viewers
                               io.to(`stream_${streamId}`).emit('stream:poll-ended', {
                                    pollId,
+                                   poll,
                                    results: poll?.options,
                                    totalVotes: poll?.totalVotes,
                               });

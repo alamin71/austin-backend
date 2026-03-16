@@ -40,6 +40,14 @@ const pollSchema = new Schema<IPoll>(
                trim: true,
                maxlength: 200,
           },
+          description: {
+               type: String,
+               trim: true,
+               maxlength: 1000,
+          },
+          image: {
+               type: String,
+          },
           options: {
                type: [pollOptionSchema],
                required: true,
@@ -54,7 +62,7 @@ const pollSchema = new Schema<IPoll>(
                type: Number,
                required: true,
                min: 30, // Minimum 30 seconds
-               max: 3600, // Maximum 1 hour
+               max: 86400, // Maximum 24 hours
           },
           startTime: {
                type: Date,
