@@ -124,17 +124,26 @@ class PollService {
           },
      ) {
           try {
-               // Check if stream is live and owned by streamer
-               const stream = await Stream.findOne({
-                    _id: streamId,
-                    streamer: streamerId,
-                    status: 'live',
-               });
+               // Validate stream existence and ownership first, then stream state.
+               const stream = await Stream.findById(streamId).select(
+                    'streamer status enablePolls',
+               );
 
                if (!stream) {
+                    throw new AppError(StatusCodes.NOT_FOUND, 'Stream not found');
+               }
+
+               if (stream.streamer.toString() !== streamerId.toString()) {
                     throw new AppError(
-                         StatusCodes.NOT_FOUND,
-                         'Stream not found or not live',
+                         StatusCodes.FORBIDDEN,
+                         'You are not the owner of this stream',
+                    );
+               }
+
+               if (stream.status === 'ended') {
+                    throw new AppError(
+                         StatusCodes.BAD_REQUEST,
+                         'Cannot create poll for an ended stream',
                     );
                }
 
