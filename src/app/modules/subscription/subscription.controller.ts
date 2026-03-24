@@ -5,6 +5,7 @@ import sendResponse from '../../../shared/sendResponse.js';
 import SubscriptionService from './subscription.service.js';
 import validateRequest from '../../middleware/validateRequest.js';
 import { subscriptionValidation } from './subscription.validation.js';
+import AppError from '../../../errors/AppError.js';
 
 class SubscriptionController {
   /**
@@ -89,7 +90,10 @@ class SubscriptionController {
         tierId
       );
     } else {
-      throw new Error('Platform not specified');
+      throw new AppError(
+        StatusCodes.BAD_REQUEST,
+        'Mobile subscriptions must use /subscription/subscribe/iap with platform ios or android'
+      );
     }
 
     sendResponse(res, {

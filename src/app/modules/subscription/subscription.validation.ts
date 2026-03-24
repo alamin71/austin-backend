@@ -20,8 +20,7 @@ export const subscriptionValidation = {
     body: z.object({
       streamerId: z.string(),
       tierId: z.string(),
-      platform: z.enum(['web', 'ios', 'android']),
-      receiptData: z.string().optional(),
+      platform: z.literal('web'),
     }),
   }),
 

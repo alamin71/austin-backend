@@ -199,6 +199,9 @@ class ChallengeService {
       { userId },
       {
         $inc: {
+          featherBalance: challenge.featherReward,
+          totalFeathersEarned: challenge.featherReward,
+          // Legacy compatibility
           balance: challenge.featherReward,
           totalEarned: challenge.featherReward,
         },

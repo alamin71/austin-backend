@@ -2,10 +2,17 @@ import mongoose, { Schema, Document } from 'mongoose';
 
 export interface IWallet extends Document {
   userId: mongoose.Types.ObjectId;
-  balance: number; // Feather balance
-  totalEarned: number; // Total earned from gifts/subscriptions
-  totalSpent: number; // Total spent on gifts
-  totalWithdrawn: number; // Total withdrawn to bank
+  featherBalance: number;
+  cashBalance: number;
+  totalFeathersEarned: number;
+  totalFeathersSpent: number;
+  totalCashEarned: number;
+  totalCashSpent: number;
+  totalCashWithdrawn: number;
+  balance?: number; // Legacy mixed balance (deprecated)
+  totalEarned?: number; // Legacy mixed total (deprecated)
+  totalSpent?: number; // Legacy mixed total (deprecated)
+  totalWithdrawn?: number; // Legacy mixed total (deprecated)
   createdAt: Date;
   updatedAt: Date;
 }
@@ -53,6 +60,42 @@ const walletSchema = new Schema<IWallet>(
       required: true,
       unique: true,
     },
+    featherBalance: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+    cashBalance: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+    totalFeathersEarned: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+    totalFeathersSpent: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+    totalCashEarned: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+    totalCashSpent: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+    totalCashWithdrawn: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+    // Legacy fields for older clients
     balance: {
       type: Number,
       default: 0,

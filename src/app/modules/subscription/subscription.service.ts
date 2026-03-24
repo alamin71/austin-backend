@@ -532,6 +532,9 @@ class SubscriptionService {
         { userId: streamerId },
         {
           $inc: {
+            cashBalance: streamerEarnings,
+            totalCashEarned: streamerEarnings,
+            // Legacy compatibility
             balance: streamerEarnings,
             totalEarned: streamerEarnings,
           },
@@ -677,6 +680,9 @@ class SubscriptionService {
         { userId: streamerId },
         {
           $inc: {
+            cashBalance: streamerEarnings,
+            totalCashEarned: streamerEarnings,
+            // Legacy compatibility
             balance: streamerEarnings,
             totalEarned: streamerEarnings,
           },

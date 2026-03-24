@@ -338,9 +338,14 @@ class GiftService {
                     stream: streamId,
                     gift: gift._id,
                     quantity: 1,
-                    totalAmount: usdValue,
+                    totalAmount: featherAmount,
                     isAnonymous: payload.isAnonymous ?? false,
                     status: 'completed',
+                    metadata: {
+                         unit: 'feather',
+                         featherAmount,
+                         usdValue,
+                    },
                });
 
                await transaction.save();

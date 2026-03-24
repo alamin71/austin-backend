@@ -449,7 +449,16 @@ const getDashboardOverview = async (query: Record<string, string>) => {
           ]),
           GiftTransaction.aggregate([
                { $match: { status: 'completed' } },
-               { $group: { _id: null, total: { $sum: '$totalAmount' } } },
+               {
+                    $group: {
+                         _id: null,
+                         total: {
+                              $sum: {
+                                   $ifNull: ['$metadata.usdValue', '$totalAmount'],
+                              },
+                         },
+                    },
+               },
           ]),
           User.countDocuments({ role: 'USER', isDeleted: { $ne: true }, createdAt: { $gte: thisMonthStart } }),
           User.countDocuments({ role: 'USER', isDeleted: { $ne: true }, createdAt: { $gte: prevMonthStart, $lt: thisMonthStart } }),
@@ -457,11 +466,29 @@ const getDashboardOverview = async (query: Record<string, string>) => {
           User.countDocuments({ role: 'USER', status: 'active', isDeleted: { $ne: true }, createdAt: { $gte: prevMonthStart, $lt: thisMonthStart } }),
           GiftTransaction.aggregate([
                { $match: { status: 'completed', createdAt: { $gte: thisMonthStart } } },
-               { $group: { _id: null, total: { $sum: '$totalAmount' } } },
+               {
+                    $group: {
+                         _id: null,
+                         total: {
+                              $sum: {
+                                   $ifNull: ['$metadata.usdValue', '$totalAmount'],
+                              },
+                         },
+                    },
+               },
           ]),
           GiftTransaction.aggregate([
                { $match: { status: 'completed', createdAt: { $gte: prevMonthStart, $lt: thisMonthStart } } },
-               { $group: { _id: null, total: { $sum: '$totalAmount' } } },
+               {
+                    $group: {
+                         _id: null,
+                         total: {
+                              $sum: {
+                                   $ifNull: ['$metadata.usdValue', '$totalAmount'],
+                              },
+                         },
+                    },
+               },
           ]),
           User.aggregate([
                { $match: { role: 'USER', isDeleted: { $ne: true }, createdAt: { $gte: yearStart, $lt: yearEnd } } },
@@ -477,7 +504,11 @@ const getDashboardOverview = async (query: Record<string, string>) => {
                {
                     $group: {
                          _id: { month: { $month: '$createdAt' } },
-                         amount: { $sum: '$totalAmount' },
+                         amount: {
+                              $sum: {
+                                   $ifNull: ['$metadata.usdValue', '$totalAmount'],
+                              },
+                         },
                     },
                },
           ]),
@@ -716,7 +747,11 @@ const getTopPerformers = async (query: Record<string, string>) => {
                          {
                               $group: {
                                    _id: '$stream',
-                                   giftEarned: { $sum: '$totalAmount' },
+                                   giftEarned: {
+                                        $sum: {
+                                             $ifNull: ['$metadata.usdValue', '$totalAmount'],
+                                        },
+                                   },
                               },
                          },
                     ]),

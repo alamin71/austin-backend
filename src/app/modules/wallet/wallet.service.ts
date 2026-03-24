@@ -18,6 +18,49 @@ const ACCOUNT_TIERS = [
 ];
 
 class WalletService {
+  private static async ensureWalletLedgers(wallet: any) {
+    let changed = false;
+
+    if (typeof wallet.featherBalance !== 'number') {
+      wallet.featherBalance = Math.max(0, Math.floor(wallet.balance || 0));
+      changed = true;
+    }
+
+    if (typeof wallet.cashBalance !== 'number') {
+      wallet.cashBalance = 0;
+      changed = true;
+    }
+
+    if (typeof wallet.totalFeathersEarned !== 'number') {
+      wallet.totalFeathersEarned = Math.max(0, Math.floor(wallet.totalEarned || 0));
+      changed = true;
+    }
+
+    if (typeof wallet.totalFeathersSpent !== 'number') {
+      wallet.totalFeathersSpent = Math.max(0, Math.floor(wallet.totalSpent || 0));
+      changed = true;
+    }
+
+    if (typeof wallet.totalCashEarned !== 'number') {
+      wallet.totalCashEarned = 0;
+      changed = true;
+    }
+
+    if (typeof wallet.totalCashSpent !== 'number') {
+      wallet.totalCashSpent = 0;
+      changed = true;
+    }
+
+    if (typeof wallet.totalCashWithdrawn !== 'number') {
+      wallet.totalCashWithdrawn = Math.max(0, Number(wallet.totalWithdrawn || 0));
+      changed = true;
+    }
+
+    if (changed) {
+      await wallet.save();
+    }
+  }
+
   /**
    * ==================== WALLET BASICS ====================
    */
@@ -32,6 +75,13 @@ class WalletService {
       if (!wallet) {
         wallet = await Wallet.create({
           userId,
+          featherBalance: 0,
+          cashBalance: 0,
+          totalFeathersEarned: 0,
+          totalFeathersSpent: 0,
+          totalCashEarned: 0,
+          totalCashSpent: 0,
+          totalCashWithdrawn: 0,
           balance: 0,
           totalEarned: 0,
           totalSpent: 0,
@@ -39,6 +89,8 @@ class WalletService {
         });
         logger.info(`✓ Wallet created for user: ${userId}`);
       }
+
+      await this.ensureWalletLedgers(wallet);
 
       return wallet;
     } catch (error) {
@@ -54,10 +106,18 @@ class WalletService {
     try {
       const wallet = await this.getOrCreateWallet(userId);
       return {
-        balance: wallet.balance,
-        totalEarned: wallet.totalEarned,
-        totalSpent: wallet.totalSpent,
-        totalWithdrawn: wallet.totalWithdrawn,
+        featherBalance: wallet.featherBalance,
+        cashBalance: wallet.cashBalance,
+        totalFeathersEarned: wallet.totalFeathersEarned,
+        totalFeathersSpent: wallet.totalFeathersSpent,
+        totalCashEarned: wallet.totalCashEarned,
+        totalCashSpent: wallet.totalCashSpent,
+        totalCashWithdrawn: wallet.totalCashWithdrawn,
+        // Legacy compatibility fields
+        balance: wallet.cashBalance,
+        totalEarned: wallet.totalCashEarned,
+        totalSpent: wallet.totalCashSpent,
+        totalWithdrawn: wallet.totalCashWithdrawn,
       };
     } catch (error) {
       errorLogger.error('Get wallet balance error', error);
@@ -71,7 +131,7 @@ class WalletService {
   static async getAccountProgression(userId: string) {
     try {
       const wallet = await this.getOrCreateWallet(userId);
-      const currentFeathers = Math.max(0, Math.floor(wallet.balance || 0));
+      const currentFeathers = Math.max(0, Math.floor(wallet.featherBalance || 0));
 
       const activeTier =
         [...ACCOUNT_TIERS]
@@ -142,7 +202,12 @@ class WalletService {
     try {
       const wallet = await this.getOrCreateWallet(userId);
 
-      wallet.balance += amount;
+      wallet.featherBalance += amount;
+      wallet.totalFeathersEarned += amount;
+
+      // Keep legacy fields in sync for backward compatibility.
+      wallet.balance = wallet.featherBalance;
+      wallet.totalEarned = wallet.totalFeathersEarned;
       await wallet.save();
 
       // Create transaction record
@@ -153,6 +218,7 @@ class WalletService {
         description: `${amount} feathers added (${source})`,
         transactionId,
         status: 'completed',
+        metadata: { unit: 'feather' },
       });
 
       logger.info(`✓ Added ${amount} feathers to user ${userId}`);
@@ -180,7 +246,7 @@ class WalletService {
     try {
       // Check sender has enough feathers
       const senderWallet = await this.getOrCreateWallet(senderId);
-      if (senderWallet.balance < featherAmount) {
+      if (senderWallet.featherBalance < featherAmount) {
         throw new AppError(
           StatusCodes.BAD_REQUEST,
           'Insufficient feather balance'
@@ -203,8 +269,12 @@ class WalletService {
       }
 
       // Deduct from sender
-      senderWallet.balance -= featherAmount;
-      senderWallet.totalSpent += giftValue;
+      senderWallet.featherBalance -= featherAmount;
+      senderWallet.totalFeathersSpent += featherAmount;
+
+      // Legacy compatibility fields
+      senderWallet.balance = senderWallet.featherBalance;
+      senderWallet.totalSpent = senderWallet.totalFeathersSpent;
       await senderWallet.save();
 
       // Add to receiver
@@ -212,8 +282,12 @@ class WalletService {
       const platformFee = giftValue * 0.15; // 15% commission
       const streamerEarnings = giftValue - platformFee;
 
-      receiverWallet.balance += streamerEarnings;
-      receiverWallet.totalEarned += streamerEarnings;
+      receiverWallet.cashBalance += streamerEarnings;
+      receiverWallet.totalCashEarned += streamerEarnings;
+
+      // Legacy compatibility fields
+      receiverWallet.balance = receiverWallet.cashBalance;
+      receiverWallet.totalEarned = receiverWallet.totalCashEarned;
       await receiverWallet.save();
 
       // Record transactions
@@ -228,7 +302,7 @@ class WalletService {
           streamerId: receiverId,
           transactionId,
           status: 'completed',
-          metadata: { giftValue, platformFee },
+          metadata: { unit: 'feather', giftValue, platformFee },
         },
         {
           userId: receiverId,
@@ -238,7 +312,7 @@ class WalletService {
           streamerId: senderId,
           transactionId,
           status: 'completed',
-          metadata: { featherAmount, platformFee },
+          metadata: { unit: 'usd', featherAmount, platformFee },
         },
       ]);
 
@@ -247,7 +321,7 @@ class WalletService {
       );
 
       return {
-        senderBalance: senderWallet.balance,
+        senderBalance: senderWallet.featherBalance,
         streamerEarnings,
         platformFee,
       };
@@ -319,8 +393,12 @@ class WalletService {
       const platformFee = amount * 0.15;
       const earnings = amount - platformFee;
 
-      wallet.balance += earnings;
-      wallet.totalEarned += earnings;
+      wallet.cashBalance += earnings;
+      wallet.totalCashEarned += earnings;
+
+      // Legacy compatibility fields
+      wallet.balance = wallet.cashBalance;
+      wallet.totalEarned = wallet.totalCashEarned;
       await wallet.save();
 
       await WalletTransaction.create({
@@ -368,7 +446,7 @@ class WalletService {
 
       const wallet = await this.getOrCreateWallet(userId);
 
-      if (wallet.balance < featherAmount) {
+      if (wallet.featherBalance < featherAmount) {
         throw new AppError(
           StatusCodes.BAD_REQUEST,
           'Insufficient feather balance'
@@ -377,9 +455,14 @@ class WalletService {
 
       const dollarAmount = featherAmount / FEATHER_TO_DOLLAR_RATE;
 
-      // Deduct feathers, add dollars to balance
-      wallet.balance -= featherAmount;
-      wallet.balance += dollarAmount;
+      // Deduct feathers ledger and add dollars in cash ledger.
+      wallet.featherBalance -= featherAmount;
+      wallet.cashBalance += dollarAmount;
+      wallet.totalCashEarned += dollarAmount;
+
+      // Legacy compatibility fields
+      wallet.balance = wallet.cashBalance;
+      wallet.totalEarned = wallet.totalCashEarned;
       await wallet.save();
 
       // Create transaction record
@@ -397,7 +480,8 @@ class WalletService {
       return {
         feathersConverted: featherAmount,
         dollarsReceived: dollarAmount,
-        newBalance: wallet.balance,
+        newFeatherBalance: wallet.featherBalance,
+        newCashBalance: wallet.cashBalance,
       };
     } catch (error) {
       errorLogger.error('Convert feathers error', error);
@@ -421,7 +505,7 @@ class WalletService {
     try {
       const wallet = await this.getOrCreateWallet(userId);
 
-      if (wallet.balance < amount) {
+      if (wallet.cashBalance < amount) {
         throw new AppError(
           StatusCodes.BAD_REQUEST,
           'Insufficient balance for withdrawal'
@@ -444,8 +528,12 @@ class WalletService {
       }
 
       // Deduct from balance
-      wallet.balance -= amount;
-      wallet.totalWithdrawn += amount;
+      wallet.cashBalance -= amount;
+      wallet.totalCashWithdrawn += amount;
+
+      // Legacy compatibility fields
+      wallet.balance = wallet.cashBalance;
+      wallet.totalWithdrawn = wallet.totalCashWithdrawn;
       await wallet.save();
 
       // Create transaction
@@ -527,7 +615,7 @@ class WalletService {
       const [wallets, total] = await Promise.all([
         Wallet.find()
           .populate('userId', 'name email image')
-          .sort({ totalEarned: -1 })
+          .sort({ totalCashEarned: -1 })
           .skip(skip)
           .limit(limit),
         Wallet.countDocuments(),

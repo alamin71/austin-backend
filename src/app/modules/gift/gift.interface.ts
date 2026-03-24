@@ -25,6 +25,11 @@ export interface IGiftTransaction {
      message?: string; // Optional message with gift
      isAnonymous: boolean;
      status: 'pending' | 'completed' | 'refunded';
+     metadata?: {
+          unit?: 'usd' | 'feather';
+          featherAmount?: number;
+          usdValue?: number;
+     };
      createdAt?: Date;
      updatedAt?: Date;
 }

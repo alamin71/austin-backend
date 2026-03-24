@@ -95,6 +95,10 @@ const giftTransactionSchema = new Schema<IGiftTransaction>(
                enum: ['pending', 'completed', 'refunded'],
                default: 'completed',
           },
+          metadata: {
+               type: Schema.Types.Mixed,
+               default: {},
+          },
      },
      {
           timestamps: true,
