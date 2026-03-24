@@ -240,6 +240,17 @@ const getDashboardOverview = catchAsync(async (req: Request, res: Response) => {
      });
 });
 
+const getAdminEarnings = catchAsync(async (req: Request, res: Response) => {
+     const result = await AdminService.getAdminEarnings(req.query as Record<string, string>);
+
+     sendResponse(res, {
+          statusCode: StatusCodes.OK,
+          success: true,
+          message: 'Admin earnings retrieved successfully',
+          data: result,
+     });
+});
+
 export const AdminController = {
      deleteAdmin,
      createAdmin,
@@ -258,5 +269,6 @@ export const AdminController = {
      endStream,
      getStreamerWarnings,
      getDashboardOverview,
+     getAdminEarnings,
      getTopPerformers,
 };

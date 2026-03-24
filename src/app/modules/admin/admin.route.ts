@@ -217,6 +217,12 @@ router.get(
   AdminController.getDashboardOverview,
 );
 
+router.get(
+  '/earnings',
+  auth(USER_ROLES.ADMIN, USER_ROLES.SUPER_ADMIN),
+  AdminController.getAdminEarnings,
+);
+
 // ============================================
 // REPORT MONITORING ENDPOINTS (ADMIN)
 // ============================================

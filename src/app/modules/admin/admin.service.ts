@@ -8,6 +8,7 @@ import { Stream } from '../stream/stream.model.js';
 import { StreamWarning } from '../stream/streamWarning.model.js';
 import { Subscription } from '../subscription/subscription.model.js';
 import { GiftTransaction } from '../gift/gift.model.js';
+import { WalletTransaction } from '../wallet/wallet.model.js';
 import config from '../../../config/index.js';
 import { emailHelper } from '../../../helpers/emailHelper.js';
 import { jwtHelper } from '../../../helpers/jwtHelper.js';
@@ -699,6 +700,120 @@ const getDashboardOverview = async (query: Record<string, string>) => {
      };
 };
 
+const getAdminEarnings = async (query: Record<string, string>) => {
+     const page = Math.max(parseInt(query.page || '1', 10), 1);
+     const limit = Math.max(parseInt(query.limit || '10', 10), 1);
+     const skip = (page - 1) * limit;
+     const search = String(query.search || '').trim().toLowerCase();
+
+     const txns: any[] = await WalletTransaction.find({
+          type: { $in: ['platform_commission', 'subscription_commission'] },
+          status: 'completed',
+     })
+          .sort({ createdAt: -1 })
+          .lean();
+
+     const userIds = Array.from(
+          new Set(
+               txns
+                    .map((txn: any) => String(txn?.metadata?.streamerId || txn?.streamerId || ''))
+                    .filter(Boolean),
+          ),
+     );
+
+     const users = await User.find({ _id: { $in: userIds } })
+          .select('_id name userName')
+          .lean();
+     const userMap = new Map(users.map((u: any) => [String(u._id), u]));
+
+     const sourceLabelMap: Record<string, string> = {
+          subscription: 'Streamer',
+          gift: 'Streamer',
+          marketplace: 'Business',
+          other: 'Other',
+     };
+
+     const defaultCommissionMap: Record<string, number> = {
+          subscription: 33,
+          gift: 15,
+          marketplace: 5,
+          other: 0,
+     };
+
+     const rows = txns.map((txn: any, index: number) => {
+          const sourceKey = String(txn?.metadata?.source || 'other').toLowerCase();
+          const sourceType = sourceLabelMap[sourceKey] || 'Other';
+          const commissionPercentage = Number(
+               txn?.metadata?.commissionPercentage ?? defaultCommissionMap[sourceKey] ?? 0,
+          );
+
+          const adminShare = Number(txn.amount || 0);
+          const grossValue = Number(
+               txn?.metadata?.totalAmount ??
+                    (commissionPercentage > 0 ? adminShare / (commissionPercentage / 100) : adminShare),
+          );
+
+          const userId = String(txn?.metadata?.streamerId || txn?.streamerId || '');
+          const user = userMap.get(userId);
+          const userName = user?.name || user?.userName || 'Unknown';
+
+          const notes =
+               String(txn?.description || '').trim() ||
+               (sourceType === 'Business'
+                    ? "Admin's fee from all business sales"
+                    : "Admin's cut from all streamer earnings");
+
+          const date = new Intl.DateTimeFormat('en-GB', {
+               day: '2-digit',
+               month: 'short',
+               year: 'numeric',
+          }).format(new Date(txn.createdAt));
+
+          const serial = String(skip + index + 1).padStart(4, '0');
+
+          return {
+               id: serial,
+               sourceType,
+               userName,
+               totalValue: `$${Math.round(grossValue).toLocaleString('en-US')}`,
+               commissionPercentage: `${commissionPercentage}%`,
+               adminShare: `$${Math.round(adminShare).toLocaleString('en-US')} (${commissionPercentage}%)`,
+               notes,
+               date,
+          };
+     });
+
+     const filteredRows = search
+          ? rows.filter((row: any) => {
+                 const haystack = [
+                      row.id,
+                      row.sourceType,
+                      row.userName,
+                      row.totalValue,
+                      row.commissionPercentage,
+                      row.adminShare,
+                      row.notes,
+                      row.date,
+                 ]
+                      .join(' ')
+                      .toLowerCase();
+                 return haystack.includes(search);
+            })
+          : rows;
+
+     const paginatedRows = filteredRows.slice(skip, skip + limit);
+
+     return {
+          rows: paginatedRows,
+          pagination: {
+               page,
+               limit,
+               total: filteredRows.length,
+               totalPages: Math.ceil(filteredRows.length / limit),
+          },
+     };
+};
+
 const getTopPerformers = async (query: Record<string, string>) => {
      const page = Math.max(parseInt(query.page || '1', 10), 1);
      const limit = Math.max(parseInt(query.limit || '10', 10), 1);
@@ -851,5 +966,6 @@ export const AdminService = {
      endStream,
      getStreamerWarnings,
      getDashboardOverview,
+     getAdminEarnings,
      getTopPerformers,
 };
