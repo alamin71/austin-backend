@@ -219,25 +219,50 @@ const getReportsByTypeForAdmin = async (
   const page = toPositiveInt(query.page, 1);
   const limit = toPositiveInt(query.limit, 20);
   const skip = (page - 1) * limit;
+  const search = String(query.search || '').trim().toLowerCase();
 
-  const [reports, total, dashboard] = await Promise.all([
+  const [reports, dashboard] = await Promise.all([
     Report.find(filter)
       .populate('reporter', 'name userName image email')
       .populate('reviewedBy', 'name userName email')
       .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(limit)
       .lean(),
-    Report.countDocuments(filter),
     getDashboardStats(),
   ]);
 
   const rows = await enrichReportsByType(reports as any[], reportType);
 
+  const filteredRows = search
+    ? rows.filter((row: any) => {
+        const haystack = [
+          row.reportCode,
+          row.reportReason,
+          row.status,
+          row.streamTitle,
+          row.streamerName,
+          row.profileName,
+          row.profileUserName,
+          row.postDescription,
+          row.postAuthorName,
+          row.reportedBy?.name,
+          row.reportedBy?.userName,
+          row.date ? new Date(row.date).toISOString() : null,
+        ]
+          .filter(Boolean)
+          .map((value) => String(value).toLowerCase())
+          .join(' ');
+
+        return haystack.includes(search);
+      })
+    : rows;
+
+  const total = filteredRows.length;
+  const paginatedRows = filteredRows.slice(skip, skip + limit);
+
   return {
     reportType,
     dashboard,
-    reports: rows,
+    reports: paginatedRows,
     pagination: {
       page,
       limit,
