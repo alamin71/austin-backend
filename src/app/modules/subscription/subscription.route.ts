@@ -87,6 +87,7 @@ router.post(
   '/admin/tiers',
   auth(USER_ROLES.SUPER_ADMIN, USER_ROLES.ADMIN),
   upload.single('badgeIcon'),
+  validateRequest(subscriptionValidation.createTierSchema),
   subscriptionController.createSubscriptionTier
 );
 
@@ -95,6 +96,7 @@ router.put(
   '/admin/tiers/:tierId',
   auth(USER_ROLES.SUPER_ADMIN, USER_ROLES.ADMIN),
   upload.single('badgeIcon'),
+  validateRequest(subscriptionValidation.updateTierSchema),
   subscriptionController.updateSubscriptionTier
 );
 

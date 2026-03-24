@@ -16,6 +16,23 @@ export const subscriptionValidation = {
     }),
   }),
 
+  updateTierSchema: z.object({
+    body: z.object({
+      name: z.string().min(1, 'Tier name is required').optional(),
+      slug: z.enum(['supporter', 'premium', 'exclusive']).optional(),
+      price: z.number().positive('Price must be positive').optional(),
+      billingPeriod: z.enum(['monthly', 'yearly']).optional(),
+      features: z.array(z.string()).optional(),
+      badge: z
+        .object({
+          icon: z.string().optional(),
+          displayName: z.string().optional(),
+        })
+        .optional(),
+      isActive: z.boolean().optional(),
+    }),
+  }),
+
   createSubscriptionSchema: z.object({
     body: z.object({
       streamerId: z.string(),
