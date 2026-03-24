@@ -229,6 +229,17 @@ const getTopPerformers = catchAsync(async (req: Request, res: Response) => {
      });
 });
 
+const getDashboardOverview = catchAsync(async (req: Request, res: Response) => {
+     const result = await AdminService.getDashboardOverview(req.query as Record<string, string>);
+
+     sendResponse(res, {
+          statusCode: StatusCodes.OK,
+          success: true,
+          message: 'Admin dashboard overview retrieved successfully',
+          data: result,
+     });
+});
+
 export const AdminController = {
      deleteAdmin,
      createAdmin,
@@ -246,5 +257,6 @@ export const AdminController = {
      warnStreamer,
      endStream,
      getStreamerWarnings,
+     getDashboardOverview,
      getTopPerformers,
 };

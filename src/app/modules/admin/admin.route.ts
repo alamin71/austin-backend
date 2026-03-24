@@ -211,6 +211,12 @@ router.get(
   AdminController.getTopPerformers,
 );
 
+router.get(
+  '/overview',
+  auth(USER_ROLES.ADMIN, USER_ROLES.SUPER_ADMIN),
+  AdminController.getDashboardOverview,
+);
+
 // ============================================
 // REPORT MONITORING ENDPOINTS (ADMIN)
 // ============================================

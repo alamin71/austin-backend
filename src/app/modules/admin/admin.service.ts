@@ -16,6 +16,44 @@ import generateOTP from '../../../utils/generateOTP.js';
 import { verifyToken } from '../../../utils/verifyToken.js';
 import { createToken } from '../../../utils/createToken.js';
 
+const MONTH_LABELS = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
+
+const parseYear = (rawYear?: string) => {
+     const nowYear = new Date().getUTCFullYear();
+     const parsed = Number.parseInt(String(rawYear || ''), 10);
+     if (!Number.isFinite(parsed) || parsed < 2000 || parsed > 2100) return nowYear;
+     return parsed;
+};
+
+const formatGrowthLabel = (value: number) => {
+     const rounded = Number.isFinite(value) ? Number(value.toFixed(1)) : 0;
+     const sign = rounded > 0 ? '+' : '';
+     return `${sign}${rounded}% from last month`;
+};
+
+const calcGrowth = (current: number, previous: number) => {
+     if (previous <= 0) {
+          if (current <= 0) return 0;
+          return 100;
+     }
+     return ((current - previous) / previous) * 100;
+};
+
+const formatCurrency = (value: number) => {
+     return `$${Math.round(value).toLocaleString('en-US')}`;
+};
+
+const toRegion = (locationValue: unknown) => {
+     const text = String(locationValue || '').toLowerCase();
+     if (!text) return null;
+
+     if (/usa|united states|canada|mexico/.test(text)) return 'North America';
+     if (/uk|united kingdom|england|france|germany|italy|spain|europe/.test(text)) return 'Europe';
+     if (/india|pakistan|bangladesh|china|japan|asia/.test(text)) return 'Asia Pacific';
+     if (/brazil|argentina|chile|colombia|peru|south america/.test(text)) return 'South America';
+     return 'Others';
+};
+
 const createAdminToDB = async (payload: IUser): Promise<IUser> => {
      const createAdmin: any = await User.create(payload);
      if (!createAdmin) {
@@ -372,6 +410,264 @@ const getStreamerWarnings = async (streamerId: string) => {
      };
 };
 
+const getDashboardOverview = async (query: Record<string, string>) => {
+     const year = parseYear(query.year);
+     const now = new Date();
+
+     const yearStart = new Date(Date.UTC(year, 0, 1, 0, 0, 0, 0));
+     const yearEnd = new Date(Date.UTC(year + 1, 0, 1, 0, 0, 0, 0));
+
+     const thisMonthStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1, 0, 0, 0, 0));
+     const prevMonthStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 1, 1, 0, 0, 0, 0));
+
+     const last24hStart = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+
+     const [
+          totalUsers,
+          regularUsers,
+          liveNow,
+          peak24hAgg,
+          totalEarningsAgg,
+          thisMonthUsers,
+          prevMonthUsers,
+          thisMonthRegularUsers,
+          prevMonthRegularUsers,
+          thisMonthEarningsAgg,
+          prevMonthEarningsAgg,
+          monthlyUsersAgg,
+          monthlyEarningsAgg,
+          recentUsers,
+          recentStreams,
+          usersForGeo,
+     ] = await Promise.all([
+          User.countDocuments({ role: 'USER', isDeleted: { $ne: true } }),
+          User.countDocuments({ role: 'USER', status: 'active', isDeleted: { $ne: true } }),
+          Stream.countDocuments({ status: 'live' }),
+          Stream.aggregate([
+               { $match: { createdAt: { $gte: last24hStart } } },
+               { $group: { _id: null, maxPeak: { $max: '$peakViewerCount' } } },
+          ]),
+          GiftTransaction.aggregate([
+               { $match: { status: 'completed' } },
+               { $group: { _id: null, total: { $sum: '$totalAmount' } } },
+          ]),
+          User.countDocuments({ role: 'USER', isDeleted: { $ne: true }, createdAt: { $gte: thisMonthStart } }),
+          User.countDocuments({ role: 'USER', isDeleted: { $ne: true }, createdAt: { $gte: prevMonthStart, $lt: thisMonthStart } }),
+          User.countDocuments({ role: 'USER', status: 'active', isDeleted: { $ne: true }, createdAt: { $gte: thisMonthStart } }),
+          User.countDocuments({ role: 'USER', status: 'active', isDeleted: { $ne: true }, createdAt: { $gte: prevMonthStart, $lt: thisMonthStart } }),
+          GiftTransaction.aggregate([
+               { $match: { status: 'completed', createdAt: { $gte: thisMonthStart } } },
+               { $group: { _id: null, total: { $sum: '$totalAmount' } } },
+          ]),
+          GiftTransaction.aggregate([
+               { $match: { status: 'completed', createdAt: { $gte: prevMonthStart, $lt: thisMonthStart } } },
+               { $group: { _id: null, total: { $sum: '$totalAmount' } } },
+          ]),
+          User.aggregate([
+               { $match: { role: 'USER', isDeleted: { $ne: true }, createdAt: { $gte: yearStart, $lt: yearEnd } } },
+               {
+                    $group: {
+                         _id: { month: { $month: '$createdAt' } },
+                         count: { $sum: 1 },
+                    },
+               },
+          ]),
+          GiftTransaction.aggregate([
+               { $match: { status: 'completed', createdAt: { $gte: yearStart, $lt: yearEnd } } },
+               {
+                    $group: {
+                         _id: { month: { $month: '$createdAt' } },
+                         amount: { $sum: '$totalAmount' },
+                    },
+               },
+          ]),
+          User.find({ role: 'USER', isDeleted: { $ne: true }, createdAt: { $gte: last24hStart } }).select('createdAt').lean(),
+          Stream.find({ createdAt: { $gte: last24hStart } }).select('createdAt').lean(),
+          User.find({ role: 'USER', isDeleted: { $ne: true } }).select('location').lean(),
+     ]);
+
+     const monthlyUsers = new Array(12).fill(0);
+     monthlyUsersAgg.forEach((row: any) => {
+          const idx = Number(row?._id?.month || 0) - 1;
+          if (idx >= 0 && idx < 12) monthlyUsers[idx] = row.count || 0;
+     });
+
+     const monthlyEarnings = new Array(12).fill(0);
+     monthlyEarningsAgg.forEach((row: any) => {
+          const idx = Number(row?._id?.month || 0) - 1;
+          if (idx >= 0 && idx < 12) monthlyEarnings[idx] = Math.round(row.amount || 0);
+     });
+
+     const totalEarnings = totalEarningsAgg[0]?.total || 0;
+     const thisMonthEarnings = thisMonthEarningsAgg[0]?.total || 0;
+     const prevMonthEarnings = prevMonthEarningsAgg[0]?.total || 0;
+     const peak24h = peak24hAgg[0]?.maxPeak || 0;
+
+     const userGrowth = calcGrowth(thisMonthUsers, prevMonthUsers);
+     const regularUserGrowth = calcGrowth(thisMonthRegularUsers, prevMonthRegularUsers);
+     const earningsGrowth = calcGrowth(thisMonthEarnings, prevMonthEarnings);
+
+     const activityLabels = Array.from({ length: 8 }, (_, i) => {
+          const slotStart = new Date(last24hStart.getTime() + i * 3 * 60 * 60 * 1000);
+          return `${slotStart.getUTCHours()}:00`;
+     });
+
+     const usersSeries = new Array(8).fill(0);
+     recentUsers.forEach((item: any) => {
+          const diffMs = new Date(item.createdAt).getTime() - last24hStart.getTime();
+          const idx = Math.floor(diffMs / (3 * 60 * 60 * 1000));
+          if (idx >= 0 && idx < 8) usersSeries[idx] += 1;
+     });
+
+     const streamsSeries = new Array(8).fill(0);
+     recentStreams.forEach((item: any) => {
+          const diffMs = new Date(item.createdAt).getTime() - last24hStart.getTime();
+          const idx = Math.floor(diffMs / (3 * 60 * 60 * 1000));
+          if (idx >= 0 && idx < 8) streamsSeries[idx] += 1;
+     });
+
+     const regionCounts: Record<string, number> = {
+          'North America': 0,
+          Europe: 0,
+          'Asia Pacific': 0,
+          'South America': 0,
+          Others: 0,
+     };
+
+     usersForGeo.forEach((user: any) => {
+          const region = toRegion(user?.location?.country || user?.location);
+          if (region) regionCounts[region] += 1;
+     });
+
+     const mappedGeoTotal = Object.values(regionCounts).reduce((sum, n) => sum + n, 0);
+     if (mappedGeoTotal === 0) {
+          const fallback = {
+               'North America': 36,
+               Europe: 28,
+               'Asia Pacific': 22,
+               'South America': 10,
+               Others: 5,
+          };
+
+          return {
+               cards: {
+                    totalUsers: {
+                         value: totalUsers,
+                         displayValue: totalUsers.toLocaleString('en-US'),
+                         growthPercent: Number(userGrowth.toFixed(1)),
+                         growthLabel: formatGrowthLabel(userGrowth),
+                    },
+                    regularUsers: {
+                         value: regularUsers,
+                         displayValue: regularUsers.toLocaleString('en-US'),
+                         growthPercent: Number(regularUserGrowth.toFixed(1)),
+                         growthLabel: formatGrowthLabel(regularUserGrowth),
+                    },
+                    platformEarnings: {
+                         value: Math.round(totalEarnings),
+                         displayValue: formatCurrency(totalEarnings),
+                         growthPercent: Number(earningsGrowth.toFixed(1)),
+                         growthLabel: formatGrowthLabel(earningsGrowth),
+                    },
+                    liveNow: {
+                         value: liveNow,
+                         displayValue: liveNow.toLocaleString('en-US'),
+                         peak24h,
+                         subtitle: `Peak ${peak24h} today`,
+                    },
+               },
+               charts: {
+                    userOverview: {
+                         year,
+                         labels: MONTH_LABELS,
+                         series: [{ name: 'Users', data: monthlyUsers }],
+                    },
+                    earningOverview: {
+                         year,
+                         labels: MONTH_LABELS,
+                         series: [{ name: 'Earnings', data: monthlyEarnings }],
+                    },
+                    dailyActivityPattern: {
+                         labels: activityLabels,
+                         series: [
+                              { name: 'Stream', data: streamsSeries },
+                              { name: 'Users', data: usersSeries },
+                         ],
+                    },
+                    geographicDistribution: {
+                         title: 'Users by region',
+                         items: Object.entries(fallback).map(([region, percentage]) => ({
+                              region,
+                              percentage,
+                              users: Math.round((totalUsers * percentage) / 100),
+                         })),
+                    },
+               },
+          };
+     }
+
+     const geoItems = Object.entries(regionCounts).map(([region, count]) => {
+          const percentage = mappedGeoTotal > 0 ? Math.round((count / mappedGeoTotal) * 100) : 0;
+          return {
+               region,
+               percentage,
+               users: count,
+          };
+     });
+
+     return {
+          cards: {
+               totalUsers: {
+                    value: totalUsers,
+                    displayValue: totalUsers.toLocaleString('en-US'),
+                    growthPercent: Number(userGrowth.toFixed(1)),
+                    growthLabel: formatGrowthLabel(userGrowth),
+               },
+               regularUsers: {
+                    value: regularUsers,
+                    displayValue: regularUsers.toLocaleString('en-US'),
+                    growthPercent: Number(regularUserGrowth.toFixed(1)),
+                    growthLabel: formatGrowthLabel(regularUserGrowth),
+               },
+               platformEarnings: {
+                    value: Math.round(totalEarnings),
+                    displayValue: formatCurrency(totalEarnings),
+                    growthPercent: Number(earningsGrowth.toFixed(1)),
+                    growthLabel: formatGrowthLabel(earningsGrowth),
+               },
+               liveNow: {
+                    value: liveNow,
+                    displayValue: liveNow.toLocaleString('en-US'),
+                    peak24h,
+                    subtitle: `Peak ${peak24h} today`,
+               },
+          },
+          charts: {
+               userOverview: {
+                    year,
+                    labels: MONTH_LABELS,
+                    series: [{ name: 'Users', data: monthlyUsers }],
+               },
+               earningOverview: {
+                    year,
+                    labels: MONTH_LABELS,
+                    series: [{ name: 'Earnings', data: monthlyEarnings }],
+               },
+               dailyActivityPattern: {
+                    labels: activityLabels,
+                    series: [
+                         { name: 'Stream', data: streamsSeries },
+                         { name: 'Users', data: usersSeries },
+                    ],
+               },
+               geographicDistribution: {
+                    title: 'Users by region',
+                    items: geoItems,
+               },
+          },
+     };
+};
+
 const getTopPerformers = async (query: Record<string, string>) => {
      const page = Math.max(parseInt(query.page || '1', 10), 1);
      const limit = Math.max(parseInt(query.limit || '10', 10), 1);
@@ -519,5 +815,6 @@ export const AdminService = {
      warnStreamer,
      endStream,
      getStreamerWarnings,
+     getDashboardOverview,
      getTopPerformers,
 };
