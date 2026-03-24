@@ -10,6 +10,25 @@ import { Subscription } from '../subscription/subscription.model.js';
 import ChallengeService from '../challenge/challenge.service.js';
 
 class GiftService {
+     private static async getOrCreateFeatherTransferGift() {
+          const GIFT_NAME = '__feather_amount_transfer__';
+
+          let gift = await Gift.findOne({ name: GIFT_NAME });
+          if (!gift) {
+               gift = await Gift.create({
+                    name: GIFT_NAME,
+                    description: 'System gift for direct feather amount transfer',
+                    image: 'https://dummyimage.com/512x512/f7c948/ffffff.png&text=Feather',
+                    price: 1,
+                    category: 'basic',
+                    isActive: false,
+                    order: 9999,
+               });
+          }
+
+          return gift;
+     }
+
      /**
       * Create a new gift (Admin only)
       */
@@ -254,6 +273,119 @@ class GiftService {
                ]);
           } catch (error) {
                errorLogger.error('Send gift error', error);
+               throw error;
+          }
+     }
+
+     /**
+      * Send direct feather amount to streamer
+      */
+     static async sendFeatherGift(
+          streamId: string,
+          senderId: string,
+          payload: {
+               featherAmount: number;
+               isAnonymous?: boolean;
+          },
+     ) {
+          try {
+               const featherAmount = Number(payload.featherAmount || 0);
+               if (!Number.isFinite(featherAmount) || featherAmount < 1) {
+                    throw new AppError(StatusCodes.BAD_REQUEST, 'featherAmount must be at least 1');
+               }
+
+               const stream = await Stream.findById(streamId);
+               if (!stream) {
+                    throw new AppError(StatusCodes.NOT_FOUND, 'Stream not found');
+               }
+
+               if (stream.status !== 'live') {
+                    throw new AppError(StatusCodes.BAD_REQUEST, 'Stream is not currently live');
+               }
+
+               if (!stream.allowGifts) {
+                    throw new AppError(StatusCodes.BAD_REQUEST, 'Gifts are disabled for this stream');
+               }
+
+               const isSubscribed = await Subscription.findOne({
+                    userId: senderId,
+                    streamerId: stream.streamer,
+                    status: 'active',
+                    currentPeriodEnd: { $gt: new Date() },
+               });
+
+               if (!isSubscribed) {
+                    throw new AppError(
+                         StatusCodes.FORBIDDEN,
+                         'You must be subscribed to this streamer to send gifts',
+                    );
+               }
+
+               const gift = await this.getOrCreateFeatherTransferGift();
+               const usdValue = featherAmount / 100;
+
+               const walletResult = await WalletService.sendGift(
+                    senderId,
+                    stream.streamer._id.toString(),
+                    streamId,
+                    featherAmount,
+                    usdValue,
+               );
+
+               const transaction = new GiftTransaction({
+                    sender: senderId,
+                    receiver: stream.streamer,
+                    stream: streamId,
+                    gift: gift._id,
+                    quantity: 1,
+                    totalAmount: usdValue,
+                    isAnonymous: payload.isAnonymous ?? false,
+                    status: 'completed',
+               });
+
+               await transaction.save();
+
+               ChallengeService.updateProgress(senderId, 'gift_giver', 1).catch((challengeError) => {
+                    errorLogger.error('Challenge progress update failed (send-feather)', challengeError);
+               });
+
+               if (stream.analytics) {
+                    await StreamAnalytics.findByIdAndUpdate(stream.analytics, {
+                         $inc: {
+                              giftsReceived: 1,
+                              revenue: usdValue,
+                         },
+                    });
+               }
+
+               await Stream.findByIdAndUpdate(streamId, {
+                    $push: {
+                         gifts: {
+                              user: senderId,
+                              gift: gift._id,
+                              quantity: 1,
+                              timestamp: new Date(),
+                         },
+                    },
+               });
+
+               logger.info(
+                    `✓ Feather amount gift sent: ${featherAmount} feathers ($${usdValue}) to stream ${streamId}`,
+               );
+
+               const populatedTxn = await transaction.populate([
+                    { path: 'sender', select: 'name image' },
+                    { path: 'receiver', select: 'name image' },
+                    { path: 'gift' },
+               ]);
+
+               return {
+                    transaction: populatedTxn,
+                    giftedFeathers: featherAmount,
+                    availableFeathers: walletResult.senderBalance,
+               };
+          } catch (error) {
+               errorLogger.error('Send feather gift error', error);
                throw error;
           }
      }

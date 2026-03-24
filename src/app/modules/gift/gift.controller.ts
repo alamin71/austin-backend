@@ -96,6 +96,21 @@ const sendGift = catchAsync(async (req: Request, res: Response) => {
      });
 });
 
+// Send custom feather amount to streamer
+const sendFeatherGift = catchAsync(async (req: Request, res: Response) => {
+     const { streamId } = req.params;
+     const userId = (req.user as any)?._id;
+
+     const result = await GiftService.sendFeatherGift(streamId, userId, req.body);
+
+     sendResponse(res, {
+          statusCode: StatusCodes.CREATED,
+          success: true,
+          message: 'Feather gift sent successfully',
+          data: result,
+     });
+});
+
 // Get stream gifts
 const getStreamGifts = catchAsync(async (req: Request, res: Response) => {
      const { streamId } = req.params;
@@ -130,6 +145,7 @@ const GiftController = {
      updateGift,
      deleteGift,
      sendGift,
+     sendFeatherGift,
      getStreamGifts,
      getStreamerGifts,
 };

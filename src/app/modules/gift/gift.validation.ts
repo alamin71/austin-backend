@@ -33,3 +33,10 @@ export const sendGiftSchema = z.object({
           isAnonymous: z.boolean().default(false),
      }),
 });
+
+export const sendFeatherGiftSchema = z.object({
+     body: z.object({
+          featherAmount: z.coerce.number().int().min(1),
+          isAnonymous: z.coerce.boolean().optional().default(false),
+     }),
+});

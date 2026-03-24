@@ -7,6 +7,7 @@ import {
      createGiftSchema,
      updateGiftSchema,
      sendGiftSchema,
+     sendFeatherGiftSchema,
 } from './gift.validation.js';
 
 const router = Router();
@@ -37,6 +38,12 @@ router.post(
      auth(USER_ROLES.USER),
      validateRequest(sendGiftSchema),
      GiftController.sendGift,
+);
+router.post(
+     '/send-feather/:streamId',
+     auth(USER_ROLES.USER),
+     validateRequest(sendFeatherGiftSchema),
+     GiftController.sendFeatherGift,
 );
 router.get(
      '/stream/:streamId/list',
