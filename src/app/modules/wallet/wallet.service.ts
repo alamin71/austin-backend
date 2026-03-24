@@ -3,7 +3,19 @@ import AppError from '../../../errors/AppError.js';
 import { Wallet, WalletTransaction, FeatherPackage } from './wallet.model.js';
 import { User } from '../user/user.model.js';
 import { Subscription } from '../subscription/subscription.model.js';
+import { ChallengeProgress } from '../challenge/challenge.model.js';
 import { logger, errorLogger } from '../../../shared/logger.js';
+
+const FEATHER_TO_COIN_RATE = 1200;
+const DAILY_FEATHER_TARGET = 200;
+
+const ACCOUNT_TIERS = [
+  { name: 'Hatchling', minFeathers: 0, nextTarget: 1200 },
+  { name: 'Rising Bird', minFeathers: 1200, nextTarget: 5000 },
+  { name: 'Sky Explorer', minFeathers: 5000, nextTarget: 12000 },
+  { name: 'Phoenix', minFeathers: 12000, nextTarget: 25000 },
+  { name: 'Legend', minFeathers: 25000, nextTarget: 25000 },
+];
 
 class WalletService {
   /**
@@ -49,6 +61,53 @@ class WalletService {
       };
     } catch (error) {
       errorLogger.error('Get wallet balance error', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get account progression data for wallet/progression screen
+   */
+  static async getAccountProgression(userId: string) {
+    try {
+      const wallet = await this.getOrCreateWallet(userId);
+      const currentFeathers = Math.max(0, Math.floor(wallet.balance || 0));
+
+      const activeTier =
+        [...ACCOUNT_TIERS]
+          .reverse()
+          .find((tier) => currentFeathers >= tier.minFeathers) || ACCOUNT_TIERS[0];
+
+      const since = new Date(Date.now() - 24 * 60 * 60 * 1000);
+      const dailyEarnedRows = await ChallengeProgress.aggregate([
+        {
+          $match: {
+            userId: wallet.userId,
+            status: 'completed',
+            challengeDate: { $gte: since },
+          },
+        },
+        {
+          $group: {
+            _id: null,
+            total: { $sum: '$feathersEarned' },
+          },
+        },
+      ]);
+
+      const dailyProgress = Math.max(0, Math.floor(dailyEarnedRows[0]?.total || 0));
+      const coinBalance = Math.floor(currentFeathers / FEATHER_TO_COIN_RATE);
+
+      return {
+        tierName: activeTier.name,
+        currentFeathers,
+        nextTierTarget: activeTier.nextTarget,
+        dailyProgress,
+        dailyTarget: DAILY_FEATHER_TARGET,
+        coinBalance,
+      };
+    } catch (error) {
+      errorLogger.error('Get account progression error', error);
       throw error;
     }
   }

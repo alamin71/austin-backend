@@ -16,6 +16,13 @@ router.get(
   walletController.getWalletBalance
 );
 
+// Get account progression
+router.get(
+  '/account-progression',
+  auth(USER_ROLES.USER),
+  walletController.getAccountProgression
+);
+
 // Get transaction history
 router.get(
   '/transactions',

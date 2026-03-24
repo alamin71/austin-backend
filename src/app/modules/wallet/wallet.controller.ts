@@ -6,6 +6,21 @@ import WalletService from './wallet.service.js';
 
 class WalletController {
   /**
+   * Get account progression
+   */
+  getAccountProgression = catchAsync(async (req: Request, res: Response) => {
+    const userId = (req.user as any)._id;
+    const result = await WalletService.getAccountProgression(userId);
+
+    sendResponse(res, {
+      statusCode: StatusCodes.OK,
+      success: true,
+      message: 'Account progression retrieved successfully',
+      data: result,
+    });
+  });
+
+  /**
    * Get wallet balance
    */
   getWalletBalance = catchAsync(async (req: Request, res: Response) => {
