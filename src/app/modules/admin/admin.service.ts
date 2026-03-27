@@ -1160,9 +1160,12 @@ const getStreamersData = async (query: Record<string, string>) => {
           // Fetch detailed data for each streamer
           const streamersData = await Promise.all(
                streamers.map(async (user: any) => {
+                    // Fetch streams first to use in warning count
+                    const userStreams = await Stream.find({ streamer: user._id }).lean();
+                    const streamIds = userStreams.map((s: any) => s._id);
+
                     const [
                          wallet,
-                         streams,
                          warnings,
                          subscribers,
                          lastStream,
@@ -1170,9 +1173,8 @@ const getStreamersData = async (query: Record<string, string>) => {
                          totalEarnings,
                     ] = await Promise.all([
                          Wallet.findOne({ userId: user._id }).lean(),
-                         Stream.find({ streamer: user._id }).lean(),
                          StreamWarning.countDocuments({
-                              stream: { $in: streams.map((s: any) => s._id) },
+                              stream: { $in: streamIds },
                               status: 'active',
                          }),
                          Subscription.countDocuments({
