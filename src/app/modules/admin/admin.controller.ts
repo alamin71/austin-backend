@@ -323,6 +323,30 @@ const getUserDetails = catchAsync(async (req: Request, res: Response) => {
      });
 });
 
+const blockUserByAdmin = catchAsync(async (req: Request, res: Response) => {
+     const { userId } = req.params;
+     const result = await AdminService.blockUserByAdmin(userId);
+
+     sendResponse(res, {
+          statusCode: StatusCodes.OK,
+          success: true,
+          message: 'User blocked successfully',
+          data: result,
+     });
+});
+
+const unblockUserByAdmin = catchAsync(async (req: Request, res: Response) => {
+     const { userId } = req.params;
+     const result = await AdminService.unblockUserByAdmin(userId);
+
+     sendResponse(res, {
+          statusCode: StatusCodes.OK,
+          success: true,
+          message: 'User unblocked successfully',
+          data: result,
+     });
+});
+
 export const AdminController = {
      deleteAdmin,
      createAdmin,
@@ -347,6 +371,8 @@ export const AdminController = {
      getTopPerformers,
      getStreamersData,
      getUserDetails,
+     blockUserByAdmin,
+     unblockUserByAdmin,
      requestAdminPayout,
      getAdminPayoutRequests,
 };

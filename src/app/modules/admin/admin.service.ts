@@ -1286,6 +1286,54 @@ const getUserDetails = async (userId: string) => {
      }
 };
 
+const blockUserByAdmin = async (userId: string) => {
+     const user = await User.findById(userId);
+
+     if (!user) {
+          throw new AppError(StatusCodes.NOT_FOUND, 'User not found');
+     }
+
+     if (user.role !== 'USER') {
+          throw new AppError(StatusCodes.BAD_REQUEST, 'Only user accounts can be blocked');
+     }
+
+     if (user.status === 'blocked') {
+          return user;
+     }
+
+     const updatedUser = await User.findByIdAndUpdate(
+          userId,
+          { status: 'blocked' },
+          { new: true },
+     ).select('_id name userName email image status updatedAt');
+
+     return updatedUser;
+};
+
+const unblockUserByAdmin = async (userId: string) => {
+     const user = await User.findById(userId);
+
+     if (!user) {
+          throw new AppError(StatusCodes.NOT_FOUND, 'User not found');
+     }
+
+     if (user.role !== 'USER') {
+          throw new AppError(StatusCodes.BAD_REQUEST, 'Only user accounts can be unblocked');
+     }
+
+     if (user.status !== 'blocked') {
+          return user;
+     }
+
+     const updatedUser = await User.findByIdAndUpdate(
+          userId,
+          { status: 'active' },
+          { new: true },
+     ).select('_id name userName email image status updatedAt');
+
+     return updatedUser;
+};
+
 export const AdminService = {
      createAdminToDB,
      deleteAdminFromDB,
@@ -1310,6 +1358,8 @@ export const AdminService = {
      getTopPerformers,
      getStreamersData,
      getUserDetails,
+     blockUserByAdmin,
+     unblockUserByAdmin,
      requestAdminPayout,
      getAdminPayoutRequests,
 };

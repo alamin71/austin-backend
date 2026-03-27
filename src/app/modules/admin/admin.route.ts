@@ -247,6 +247,18 @@ router.get(
   AdminController.getUserDetails,
 );
 
+router.patch(
+  '/users/:userId/block',
+  auth(USER_ROLES.ADMIN, USER_ROLES.SUPER_ADMIN),
+  AdminController.blockUserByAdmin,
+);
+
+router.patch(
+  '/users/:userId/unblock',
+  auth(USER_ROLES.ADMIN, USER_ROLES.SUPER_ADMIN),
+  AdminController.unblockUserByAdmin,
+);
+
 // ============================================
 // ADMIN PAYOUT MANAGEMENT ENDPOINTS
 // ============================================
