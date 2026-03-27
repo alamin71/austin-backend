@@ -1254,7 +1254,7 @@ const getUserDetails = async (userId: string) => {
      try {
           const user = await User.findById(userId)
                .select('_id name userName email image bio followers following friends createdAt updatedAt')
-               .lean();
+               .lean() as any;
 
           if (!user) {
                throw new AppError(StatusCodes.NOT_FOUND, 'User not found');
