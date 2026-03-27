@@ -263,6 +263,18 @@ const getActiveStreams = async () => {
      };
 };
 
+const getSingleActiveStream = async (streamId: string) => {
+     const stream = await Stream.findOne({ _id: streamId, status: 'live' })
+          .populate('streamer', 'name userName image email')
+          .populate('category', 'name');
+
+     if (!stream) {
+          throw new AppError(StatusCodes.NOT_FOUND, 'Active stream not found');
+     }
+
+     return stream;
+};
+
 const getStreamMonitoring = async () => {
      const activeStreams = await Stream.find({ status: 'live' })
           .populate('streamer', 'name userName email image')
@@ -1129,6 +1141,113 @@ const getAdminPayoutRequests = async (query: Record<string, any>) => {
      }
 };
 
+const getStreamersData = async (query: Record<string, string>) => {
+     try {
+          const page = Math.max(parseInt(query.page || '1', 10), 1);
+          const limit = Math.max(parseInt(query.limit || '10', 10), 1);
+          const skip = (page - 1) * limit;
+
+          // Fetch all streamers (users with role USER)
+          const [streamers, total] = await Promise.all([
+               User.find({ role: 'USER', isDeleted: { $ne: true } })
+                    .select('_id name userName image followers following friends createdAt')
+                    .skip(skip)
+                    .limit(limit)
+                    .lean(),
+               User.countDocuments({ role: 'USER', isDeleted: { $ne: true } }),
+          ]);
+
+          // Fetch detailed data for each streamer
+          const streamersData = await Promise.all(
+               streamers.map(async (user: any) => {
+                    const [
+                         wallet,
+                         streams,
+                         warnings,
+                         subscribers,
+                         lastStream,
+                         avgViewers,
+                         totalEarnings,
+                    ] = await Promise.all([
+                         Wallet.findOne({ userId: user._id }).lean(),
+                         Stream.find({ streamer: user._id }).lean(),
+                         StreamWarning.countDocuments({
+                              stream: { $in: streams.map((s: any) => s._id) },
+                              status: 'active',
+                         }),
+                         Subscription.countDocuments({
+                              streamerId: user._id,
+                              status: 'active',
+                         }),
+                         Stream.findOne({ streamer: user._id })
+                              .sort({ createdAt: -1 })
+                              .select('createdAt')
+                              .lean(),
+                         Stream.aggregate([
+                              { $match: { streamer: user._id } },
+                              { $group: { _id: null, avg: { $avg: '$currentViewerCount' } } },
+                         ]),
+                         GiftTransaction.aggregate([
+                              { $match: { status: 'completed' } },
+                              {
+                                   $group: {
+                                        _id: null,
+                                        total: {
+                                             $sum: {
+                                                  $ifNull: ['$metadata.usdValue', '$totalAmount'],
+                                             },
+                                        },
+                                   },
+                              },
+                         ]),
+                    ]);
+
+                    const featherLevel = wallet ? Math.ceil(wallet.totalFeathersEarned / 1000) || 0 : 0;
+                    const totalCoins = wallet?.totalCashEarned || 0;
+                    const totalEarned = wallet?.totalCashEarned || 0;
+                    const avgViews = Math.round(avgViewers[0]?.avg || 0);
+                    const lastStreamDate = lastStream?.createdAt
+                         ? new Intl.DateTimeFormat('en-GB', {
+                                day: '2-digit',
+                                month: 'short',
+                                year: 'numeric',
+                           }).format(new Date(lastStream.createdAt))
+                         : 'Never';
+
+                    return {
+                         id: user._id,
+                         name: user.name,
+                         location: 'New York, USA', // Placeholder since location field not in User model
+                         featherLevel: featherLevel,
+                         avgViewers: avgViews,
+                         totalFeather: wallet?.totalFeathersEarned || 0,
+                         totalCoins: Math.round(totalCoins),
+                         flagged: warnings || 0,
+                         followers: user.followers?.length || 0,
+                         following: user.following?.length || 0,
+                         friends: user.friends?.length || 0,
+                         subscribers: subscribers,
+                         totalEarnings: `$${Math.round(totalEarned).toLocaleString('en-US')}`,
+                         lastStream: lastStreamDate,
+                    };
+               }),
+          );
+
+          return {
+               rows: streamersData,
+               pagination: {
+                    page,
+                    limit,
+                    total,
+                    pages: Math.ceil(total / limit),
+               },
+          };
+     } catch (error) {
+          errorLogger.error('Get streamers data error', error);
+          throw error;
+     }
+};
+
 export const AdminService = {
      createAdminToDB,
      deleteAdminFromDB,
@@ -1142,6 +1261,7 @@ export const AdminService = {
      adminResetPasswordToDB,
      adminResendOtpToDB,
      getActiveStreams,
+     getSingleActiveStream,
      getStreamMonitoring,
      getSingleStreamMonitoring,
      warnStreamer,
@@ -1150,6 +1270,7 @@ export const AdminService = {
      getDashboardOverview,
      getAdminEarnings,
      getTopPerformers,
+     getStreamersData,
      requestAdminPayout,
      getAdminPayoutRequests,
 };

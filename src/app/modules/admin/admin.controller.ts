@@ -158,6 +158,18 @@ const getActiveStreams = catchAsync(async (req: Request, res: Response) => {
      });
 });
 
+const getSingleActiveStream = catchAsync(async (req: Request, res: Response) => {
+     const { streamId } = req.params;
+     const result = await AdminService.getSingleActiveStream(streamId);
+
+     sendResponse(res, {
+          statusCode: StatusCodes.OK,
+          success: true,
+          message: 'Single active stream retrieved',
+          data: result,
+     });
+});
+
 const getStreamMonitoring = catchAsync(async (req: Request, res: Response) => {
      const result = await AdminService.getStreamMonitoring();
 
@@ -288,6 +300,17 @@ const getAdminPayoutRequests = catchAsync(async (req: Request, res: Response) =>
      });
 });
 
+const getStreamersData = catchAsync(async (req: Request, res: Response) => {
+     const result = await AdminService.getStreamersData(req.query as Record<string, string>);
+
+     sendResponse(res, {
+          statusCode: StatusCodes.OK,
+          success: true,
+          message: 'Streamers data retrieved successfully',
+          data: result,
+     });
+});
+
 export const AdminController = {
      deleteAdmin,
      createAdmin,
@@ -301,6 +324,7 @@ export const AdminController = {
      adminResetPassword,
      adminResendOtp,
      getActiveStreams,
+     getSingleActiveStream,
      getStreamMonitoring,
      getSingleStreamMonitoring,
      warnStreamer,
@@ -309,6 +333,7 @@ export const AdminController = {
      getDashboardOverview,
      getAdminEarnings,
      getTopPerformers,
+     getStreamersData,
      requestAdminPayout,
      getAdminPayoutRequests,
 };

@@ -200,6 +200,12 @@ router.get(
 );
 
 router.get(
+  '/stream/active/:streamId',
+  auth(USER_ROLES.ADMIN, USER_ROLES.SUPER_ADMIN),
+  AdminController.getSingleActiveStream,
+);
+
+router.get(
   '/stream/monitoring',
   auth(USER_ROLES.ADMIN, USER_ROLES.SUPER_ADMIN),
   AdminController.getStreamMonitoring,
@@ -227,6 +233,12 @@ router.get(
   '/earnings',
   auth(USER_ROLES.ADMIN, USER_ROLES.SUPER_ADMIN),
   AdminController.getAdminEarnings,
+);
+
+router.get(
+  '/users/streamers',
+  auth(USER_ROLES.ADMIN, USER_ROLES.SUPER_ADMIN),
+  AdminController.getStreamersData,
 );
 
 // ============================================
