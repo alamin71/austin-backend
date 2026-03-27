@@ -241,6 +241,12 @@ router.get(
   AdminController.getStreamersData,
 );
 
+router.get(
+  '/users/:userId',
+  auth(USER_ROLES.ADMIN, USER_ROLES.SUPER_ADMIN),
+  AdminController.getUserDetails,
+);
+
 // ============================================
 // ADMIN PAYOUT MANAGEMENT ENDPOINTS
 // ============================================

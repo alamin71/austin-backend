@@ -311,6 +311,18 @@ const getStreamersData = catchAsync(async (req: Request, res: Response) => {
      });
 });
 
+const getUserDetails = catchAsync(async (req: Request, res: Response) => {
+     const { userId } = req.params;
+     const result = await AdminService.getUserDetails(userId);
+
+     sendResponse(res, {
+          statusCode: StatusCodes.OK,
+          success: true,
+          message: 'User details retrieved successfully',
+          data: result,
+     });
+});
+
 export const AdminController = {
      deleteAdmin,
      createAdmin,
@@ -334,6 +346,7 @@ export const AdminController = {
      getAdminEarnings,
      getTopPerformers,
      getStreamersData,
+     getUserDetails,
      requestAdminPayout,
      getAdminPayoutRequests,
 };

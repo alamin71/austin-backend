@@ -1250,6 +1250,42 @@ const getStreamersData = async (query: Record<string, string>) => {
      }
 };
 
+const getUserDetails = async (userId: string) => {
+     try {
+          const user = await User.findById(userId)
+               .select('_id name userName email image bio followers following friends createdAt updatedAt')
+               .lean();
+
+          if (!user) {
+               throw new AppError(StatusCodes.NOT_FOUND, 'User not found');
+          }
+
+          const [wallet, subscriber] = await Promise.all([
+               Wallet.findOne({ userId: user._id }).lean(),
+               Subscription.findOne({ streamerId: user._id, status: 'active' }).lean(),
+          ]);
+
+          return {
+               id: user._id,
+               name: user.name,
+               userName: user.userName,
+               email: user.email,
+               image: user.image || '',
+               bio: user.bio || '',
+               location: 'New York, USA', // Placeholder - location field not in User model
+               followers: user.followers?.length || 0,
+               following: user.following?.length || 0,
+               friends: user.friends?.length || 0,
+               totalFeathersEarned: wallet?.totalFeathersEarned || 0,
+               totalCashEarned: wallet?.totalCashEarned || 0,
+               createdAt: user.createdAt,
+          };
+     } catch (error) {
+          errorLogger.error('Get user details error', error);
+          throw error;
+     }
+};
+
 export const AdminService = {
      createAdminToDB,
      deleteAdminFromDB,
@@ -1273,6 +1309,7 @@ export const AdminService = {
      getAdminEarnings,
      getTopPerformers,
      getStreamersData,
+     getUserDetails,
      requestAdminPayout,
      getAdminPayoutRequests,
 };
