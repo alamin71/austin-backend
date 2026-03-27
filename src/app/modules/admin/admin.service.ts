@@ -1219,7 +1219,7 @@ const getStreamersData = async (query: Record<string, string>) => {
                     return {
                          id: user._id,
                          name: user.name,
-                         status: user.status,
+                         status: user.status === 'blocked' ? 'blocked' : 'active',
                          location: 'New York, USA', // Placeholder since location field not in User model
                          featherLevel: featherLevel,
                          avgViewers: avgViews,
