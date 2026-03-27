@@ -1150,7 +1150,7 @@ const getStreamersData = async (query: Record<string, string>) => {
           // Fetch all streamers (users with role USER)
           const [streamers, total] = await Promise.all([
                User.find({ role: 'USER', isDeleted: { $ne: true } })
-                    .select('_id name userName image followers following friends createdAt')
+                    .select('_id name userName image status followers following friends createdAt')
                     .skip(skip)
                     .limit(limit)
                     .lean(),
@@ -1219,6 +1219,7 @@ const getStreamersData = async (query: Record<string, string>) => {
                     return {
                          id: user._id,
                          name: user.name,
+                         status: user.status,
                          location: 'New York, USA', // Placeholder since location field not in User model
                          featherLevel: featherLevel,
                          avgViewers: avgViews,
