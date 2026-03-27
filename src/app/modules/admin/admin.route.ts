@@ -206,6 +206,12 @@ router.get(
 );
 
 router.get(
+  '/stream/monitoring/:streamId',
+  auth(USER_ROLES.ADMIN, USER_ROLES.SUPER_ADMIN),
+  AdminController.getSingleStreamMonitoring,
+);
+
+router.get(
   '/top-performers',
   auth(USER_ROLES.ADMIN, USER_ROLES.SUPER_ADMIN),
   AdminController.getTopPerformers,
@@ -221,6 +227,24 @@ router.get(
   '/earnings',
   auth(USER_ROLES.ADMIN, USER_ROLES.SUPER_ADMIN),
   AdminController.getAdminEarnings,
+);
+
+// ============================================
+// ADMIN PAYOUT MANAGEMENT ENDPOINTS
+// ============================================
+
+// Admin direct payout (single-admin flow)
+router.post(
+  '/payout-withdraw',
+  auth(USER_ROLES.ADMIN, USER_ROLES.SUPER_ADMIN),
+  AdminController.requestAdminPayout,
+);
+
+// Admin payout history
+router.get(
+  '/payout-requests',
+  auth(USER_ROLES.ADMIN),
+  AdminController.getAdminPayoutRequests,
 );
 
 // ============================================

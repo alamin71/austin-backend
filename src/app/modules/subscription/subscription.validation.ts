@@ -50,6 +50,15 @@ export const subscriptionValidation = {
     }),
   }),
 
+  iapSettlementWebhookSchema: z.object({
+    body: z.object({
+      transactionId: z.string().min(1),
+      settlementStatus: z.enum(['released', 'failed']),
+      storePayoutId: z.string().optional(),
+      failureReason: z.string().optional(),
+    }),
+  }),
+
   confirmSubscriptionSchema: z.object({
     body: z.object({
       paymentIntentId: z.string(),

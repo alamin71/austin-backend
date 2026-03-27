@@ -8,11 +8,13 @@ import { Stream } from '../stream/stream.model.js';
 import { StreamWarning } from '../stream/streamWarning.model.js';
 import { Subscription } from '../subscription/subscription.model.js';
 import { GiftTransaction } from '../gift/gift.model.js';
-import { WalletTransaction } from '../wallet/wallet.model.js';
+import { Wallet, WalletTransaction } from '../wallet/wallet.model.js';
+import { AdminPayout } from './adminPayout.model.js';
 import config from '../../../config/index.js';
 import { emailHelper } from '../../../helpers/emailHelper.js';
 import { jwtHelper } from '../../../helpers/jwtHelper.js';
 import { emailTemplate } from '../../../shared/emailTemplate.js';
+import { logger, errorLogger } from '../../../shared/logger.js';
 import generateOTP from '../../../utils/generateOTP.js';
 import { verifyToken } from '../../../utils/verifyToken.js';
 import { createToken } from '../../../utils/createToken.js';
@@ -304,6 +306,29 @@ const getStreamMonitoring = async () => {
           peakConcurrent,
           warningsCount,
           streams: streamsWithFlags,
+     };
+};
+
+const getSingleStreamMonitoring = async (streamId: string) => {
+     const stream = await Stream.findById(streamId)
+          .populate('streamer', 'name userName email image')
+          .populate('category', 'name')
+          .select(
+               'title streamer category status currentViewerCount peakViewerCount startedAt duration',
+          );
+
+     if (!stream) {
+          throw new AppError(StatusCodes.NOT_FOUND, 'Stream not found');
+     }
+
+     const flaggedCount = await StreamWarning.countDocuments({
+          stream: stream._id,
+          status: 'active',
+     });
+
+     return {
+          ...stream.toObject(),
+          flaggedCount,
      };
 };
 
@@ -948,6 +973,162 @@ const getTopPerformers = async (query: Record<string, string>) => {
      };
 };
 
+/**
+ * ==================== ADMIN PAYOUT MANAGEMENT ====================
+ */
+
+const requestAdminPayout = async (adminUserId: string, payload: {
+     amount: number;
+     payoutMethod: 'bank_transfer' | 'stripe' | 'paypal';
+     bankDetails?: Record<string, any>;
+     stripeDetails?: Record<string, any>;
+     paypalDetails?: Record<string, any>;
+}) => {
+     try {
+          // Get admin wallet
+          const wallet = await Wallet.findOne({ userId: adminUserId });
+          if (!wallet) {
+               throw new AppError(StatusCodes.NOT_FOUND, 'Admin wallet not found');
+          }
+
+          if (wallet.cashBalance < payload.amount) {
+               throw new AppError(StatusCodes.BAD_REQUEST, 'Insufficient cash balance for payout');
+          }
+
+          if (payload.amount < 20) {
+               throw new AppError(StatusCodes.BAD_REQUEST, 'Minimum payout amount is $20');
+          }
+
+          const payoutDetails = payload.bankDetails || payload.stripeDetails || payload.paypalDetails;
+          if (!payoutDetails) {
+               throw new AppError(StatusCodes.BAD_REQUEST, 'Payout details are required');
+          }
+
+          // Direct withdrawal for single-admin setup
+          wallet.cashBalance -= payload.amount;
+          wallet.totalCashWithdrawn += payload.amount;
+          wallet.balance = wallet.cashBalance;
+          wallet.totalWithdrawn = wallet.totalCashWithdrawn;
+          await wallet.save();
+
+          const transactionId = `payout_${Date.now()}`;
+
+          // Create payout audit row as already-paid
+          const payoutRequest = await AdminPayout.create({
+               adminUserId,
+               amount: payload.amount,
+               payoutMethod: payload.payoutMethod,
+               bankDetails: payload.bankDetails,
+               stripeDetails: payload.stripeDetails,
+               paypalDetails: payload.paypalDetails,
+               payoutDetails,
+               status: 'paid',
+               requestedAt: new Date(),
+               approvedAt: new Date(),
+               paidAt: new Date(),
+               transactionId,
+          });
+
+          await WalletTransaction.create({
+               userId: adminUserId,
+               type: 'withdrawal',
+               amount: -payload.amount,
+               description: `Admin direct payout via ${payload.payoutMethod} ($${payload.amount})`,
+               status: 'completed',
+               transactionId,
+               metadata: {
+                    payoutMethod: payload.payoutMethod,
+                    payoutId: payoutRequest._id,
+                    payoutDetails,
+               },
+          });
+
+          logger.info(`✓ Direct admin payout completed: ${adminUserId} ($${payload.amount}) via ${payload.payoutMethod}`);
+
+          return {
+               message: 'Payout completed successfully',
+               payoutId: payoutRequest._id,
+               amount: payload.amount,
+               payoutMethod: payload.payoutMethod,
+               status: 'paid',
+               transactionId,
+          };
+     } catch (error) {
+          errorLogger.error('Request admin payout error', error);
+          throw error;
+     }
+};
+
+const getAdminPayoutRequests = async (query: Record<string, any>) => {
+     try {
+          const page = Number(query.page) || 1;
+          const limit = Number(query.limit) || 20;
+          const status = query.status || 'all';
+          const search = query.search || '';
+
+          const skip = (page - 1) * limit;
+
+          // Build filter
+          const filter: any = {};
+          if (status !== 'all') {
+               filter.status = status;
+          }
+
+          // Create search filter for admin name or ID
+          let searchQuery: any = filter;
+          if (search) {
+               const adminUsers = await User.find({
+                    $or: [
+                         { name: { $regex: search, $options: 'i' } },
+                         { email: { $regex: search, $options: 'i' } },
+                    ],
+               }).select('_id');
+
+               const adminIds = adminUsers.map(u => u._id);
+               searchQuery = {
+                    ...filter,
+                    adminUserId: { $in: adminIds },
+               };
+          }
+
+          // Fetch payout requests with pagination
+          const [payouts, total] = await Promise.all([
+               AdminPayout.find(searchQuery)
+                    .populate('adminUserId', 'name email')
+                    .populate('approvedBy', 'name email')
+                    .sort({ requestedAt: -1 })
+                    .skip(skip)
+                    .limit(limit),
+               AdminPayout.countDocuments(searchQuery),
+          ]);
+
+          return {
+               rows: payouts.map((payout: any) => ({
+                    id: payout._id,
+                    adminName: payout.adminUserId?.name,
+                    adminEmail: payout.adminUserId?.email,
+                    amount: payout.amount,
+                    payoutMethod: payout.payoutMethod,
+                    status: payout.status,
+                    requestedAt: payout.requestedAt,
+                    approvedAt: payout.approvedAt,
+                    approvedBy: payout.approvedBy?.name,
+                    paidAt: payout.paidAt,
+                    rejectionReason: payout.rejectionReason,
+               })),
+               pagination: {
+                    page,
+                    limit,
+                    total,
+                    pages: Math.ceil(total / limit),
+               },
+          };
+     } catch (error) {
+          errorLogger.error('Get admin payout requests error', error);
+          throw error;
+     }
+};
+
 export const AdminService = {
      createAdminToDB,
      deleteAdminFromDB,
@@ -962,10 +1143,13 @@ export const AdminService = {
      adminResendOtpToDB,
      getActiveStreams,
      getStreamMonitoring,
+     getSingleStreamMonitoring,
      warnStreamer,
      endStream,
      getStreamerWarnings,
      getDashboardOverview,
      getAdminEarnings,
      getTopPerformers,
+     requestAdminPayout,
+     getAdminPayoutRequests,
 };

@@ -169,6 +169,18 @@ const getStreamMonitoring = catchAsync(async (req: Request, res: Response) => {
      });
 });
 
+const getSingleStreamMonitoring = catchAsync(async (req: Request, res: Response) => {
+     const { streamId } = req.params;
+     const result = await AdminService.getSingleStreamMonitoring(streamId);
+
+     sendResponse(res, {
+          statusCode: StatusCodes.OK,
+          success: true,
+          message: 'Single stream monitoring data retrieved',
+          data: result,
+     });
+});
+
 const warnStreamer = catchAsync(async (req: Request, res: Response) => {
      const adminId = (req.user as any).id;
      const { streamId } = req.params;
@@ -251,6 +263,31 @@ const getAdminEarnings = catchAsync(async (req: Request, res: Response) => {
      });
 });
 
+const requestAdminPayout = catchAsync(async (req: Request, res: Response) => {
+     const adminUserId = (req.user as any)._id;
+     const payload = req.body;
+
+     const result = await AdminService.requestAdminPayout(adminUserId, payload);
+
+     sendResponse(res, {
+          statusCode: StatusCodes.CREATED,
+          success: true,
+          message: result.message,
+          data: result,
+     });
+});
+
+const getAdminPayoutRequests = catchAsync(async (req: Request, res: Response) => {
+     const result = await AdminService.getAdminPayoutRequests(req.query as Record<string, any>);
+
+     sendResponse(res, {
+          statusCode: StatusCodes.OK,
+          success: true,
+          message: 'Payout requests retrieved successfully',
+          data: result,
+     });
+});
+
 export const AdminController = {
      deleteAdmin,
      createAdmin,
@@ -265,10 +302,13 @@ export const AdminController = {
      adminResendOtp,
      getActiveStreams,
      getStreamMonitoring,
+     getSingleStreamMonitoring,
      warnStreamer,
      endStream,
      getStreamerWarnings,
      getDashboardOverview,
      getAdminEarnings,
      getTopPerformers,
+     requestAdminPayout,
+     getAdminPayoutRequests,
 };

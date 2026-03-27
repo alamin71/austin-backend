@@ -31,6 +31,11 @@ class WalletService {
       changed = true;
     }
 
+    if (typeof wallet.pendingCashBalance !== 'number') {
+      wallet.pendingCashBalance = 0;
+      changed = true;
+    }
+
     if (typeof wallet.totalFeathersEarned !== 'number') {
       wallet.totalFeathersEarned = Math.max(0, Math.floor(wallet.totalEarned || 0));
       changed = true;
@@ -77,6 +82,7 @@ class WalletService {
           userId,
           featherBalance: 0,
           cashBalance: 0,
+          pendingCashBalance: 0,
           totalFeathersEarned: 0,
           totalFeathersSpent: 0,
           totalCashEarned: 0,
@@ -108,6 +114,7 @@ class WalletService {
       return {
         featherBalance: wallet.featherBalance,
         cashBalance: wallet.cashBalance,
+        pendingCashBalance: wallet.pendingCashBalance,
         totalFeathersEarned: wallet.totalFeathersEarned,
         totalFeathersSpent: wallet.totalFeathersSpent,
         totalCashEarned: wallet.totalCashEarned,
@@ -315,6 +322,30 @@ class WalletService {
           metadata: { unit: 'usd', featherAmount, platformFee },
         },
       ]);
+
+      // Create platform commission transaction and auto-credit admin
+      const adminUser = await User.findOne({
+        role: { $in: ['ADMIN', 'SUPER_ADMIN'] },
+      }).select('_id');
+
+      if (adminUser) {
+        await WalletTransaction.create({
+          userId: adminUser._id,
+          type: 'platform_commission',
+          amount: platformFee,
+          description: `Platform commission from gift ($${platformFee.toFixed(2)})`,
+          status: 'completed',
+          metadata: {
+            streamerId: receiverId,
+            senderId: senderId,
+            source: 'gift',
+            giftValue,
+          },
+        });
+
+        // Auto-credit admin cashBalance
+        await this.autoCreditAdminOnCommission(adminUser._id.toString(), platformFee);
+      }
 
       logger.info(
         `✓ Gift sent: ${senderId} → ${receiverId} (${featherAmount} feathers, $${giftValue})`
@@ -677,6 +708,103 @@ class WalletService {
       };
     } catch (error) {
       errorLogger.error('Get platform revenue error', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Auto-credit admin cashBalance when commission is earned
+   * Called after platform_commission transaction is created
+   */
+  static async autoCreditAdminOnCommission(adminUserId: string, commissionAmount: number) {
+    try {
+      const wallet = await this.getOrCreateWallet(adminUserId);
+
+      // Credit admin's cashBalance
+      wallet.cashBalance += commissionAmount;
+      wallet.totalCashEarned += commissionAmount;
+
+      // Maintain legacy fields for compatibility
+      wallet.balance = wallet.cashBalance;
+      wallet.totalEarned = wallet.totalCashEarned;
+
+      await wallet.save();
+      logger.info(`✓ Admin cashBalance credited: $${commissionAmount.toFixed(2)} (Total: $${wallet.cashBalance.toFixed(2)})`);
+
+      return wallet;
+    } catch (error) {
+      errorLogger.error('Auto-credit admin on commission error', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Credit a user's pending cash ledger (not withdrawable until settlement release)
+   */
+  static async creditPendingCash(userId: string, amount: number) {
+    try {
+      const wallet = await this.getOrCreateWallet(userId);
+      wallet.pendingCashBalance += amount;
+      await wallet.save();
+      logger.info(`✓ Pending cash credited: ${userId} ($${amount.toFixed(2)})`);
+      return wallet;
+    } catch (error) {
+      errorLogger.error('Credit pending cash error', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Move settled cash from pending ledger to available cash ledger
+   */
+  static async releasePendingCash(userId: string, amount: number) {
+    try {
+      const wallet = await this.getOrCreateWallet(userId);
+
+      if (wallet.pendingCashBalance < amount) {
+        throw new AppError(
+          StatusCodes.BAD_REQUEST,
+          'Insufficient pending cash balance for settlement release'
+        );
+      }
+
+      wallet.pendingCashBalance -= amount;
+      wallet.cashBalance += amount;
+      wallet.totalCashEarned += amount;
+
+      // Maintain legacy fields for compatibility
+      wallet.balance = wallet.cashBalance;
+      wallet.totalEarned = wallet.totalCashEarned;
+
+      await wallet.save();
+      logger.info(`✓ Pending cash released: ${userId} ($${amount.toFixed(2)})`);
+      return wallet;
+    } catch (error) {
+      errorLogger.error('Release pending cash error', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Roll back pending cash when settlement fails/refunds.
+   */
+  static async rollbackPendingCash(userId: string, amount: number) {
+    try {
+      const wallet = await this.getOrCreateWallet(userId);
+
+      if (wallet.pendingCashBalance < amount) {
+        throw new AppError(
+          StatusCodes.BAD_REQUEST,
+          'Insufficient pending cash balance for rollback'
+        );
+      }
+
+      wallet.pendingCashBalance -= amount;
+      await wallet.save();
+      logger.info(`✓ Pending cash rolled back: ${userId} ($${amount.toFixed(2)})`);
+      return wallet;
+    } catch (error) {
+      errorLogger.error('Rollback pending cash error', error);
       throw error;
     }
   }

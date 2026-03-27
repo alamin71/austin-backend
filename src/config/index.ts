@@ -90,6 +90,7 @@ export default {
           android_supporter_product_id: process.env.ANDROID_SUPPORTER_PRODUCT_ID,
           android_premium_product_id: process.env.ANDROID_PREMIUM_PRODUCT_ID,
           android_exclusive_product_id: process.env.ANDROID_EXCLUSIVE_PRODUCT_ID,
+          settlement_webhook_secret: process.env.IAP_SETTLEMENT_WEBHOOK_SECRET,
      },
      agora: {
           app_id: process.env.AGORA_APP_ID,

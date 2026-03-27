@@ -6,6 +6,7 @@ import SubscriptionService from './subscription.service.js';
 import validateRequest from '../../middleware/validateRequest.js';
 import { subscriptionValidation } from './subscription.validation.js';
 import AppError from '../../../errors/AppError.js';
+import config from '../../../config/index.js';
 
 class SubscriptionController {
   /**
@@ -123,6 +124,27 @@ class SubscriptionController {
       statusCode: StatusCodes.CREATED,
       success: true,
       message: 'Subscription created successfully',
+      data: result,
+    });
+  });
+
+  /**
+   * IAP settlement webhook (store-side callback)
+   */
+  handleIapSettlementWebhook = catchAsync(async (req: Request, res: Response) => {
+    const headerSecret = String(req.headers['x-iap-settlement-secret'] || '');
+    const expectedSecret = String((config.iap as any)?.settlement_webhook_secret || '');
+
+    if (!expectedSecret || headerSecret !== expectedSecret) {
+      throw new AppError(StatusCodes.UNAUTHORIZED, 'Invalid settlement webhook secret');
+    }
+
+    const result = await SubscriptionService.processIapSettlementWebhook(req.body);
+
+    sendResponse(res, {
+      statusCode: StatusCodes.OK,
+      success: true,
+      message: 'IAP settlement processed successfully',
       data: result,
     });
   });

@@ -3,6 +3,7 @@ import AppError from '../../../errors/AppError.js';
 import { Subscription, SubscriptionTier, ISubscriptionTier } from './subscription.model.js';
 import { User } from '../user/user.model.js';
 import { Wallet, WalletTransaction } from '../wallet/wallet.model.js';
+import WalletService from '../wallet/wallet.service.js';
 import { sendNotifications } from '../../../helpers/notificationsHelper.js';
 import { logger, errorLogger } from '../../../shared/logger.js';
 import { USER_ROLES } from '../../../enums/user.js';
@@ -124,6 +125,60 @@ class SubscriptionService {
     }
 
     return adminUser._id;
+  }
+
+  static async processIapSettlementWebhook(payload: {
+    transactionId: string;
+    settlementStatus: 'released' | 'failed';
+    storePayoutId?: string;
+    failureReason?: string;
+  }) {
+    try {
+      const pendingRows = await WalletTransaction.find({
+        transactionId: payload.transactionId,
+        status: 'pending',
+        type: { $in: ['subscription_earning', 'platform_commission'] },
+      });
+
+      if (!pendingRows.length) {
+        throw new AppError(
+          StatusCodes.NOT_FOUND,
+          'No pending settlement rows found for this transactionId'
+        );
+      }
+
+      for (const row of pendingRows) {
+        if (payload.settlementStatus === 'released') {
+          await WalletService.releasePendingCash(row.userId.toString(), row.amount);
+          row.status = 'completed';
+        } else {
+          await WalletService.rollbackPendingCash(row.userId.toString(), row.amount);
+          row.status = 'failed';
+        }
+
+        row.metadata = {
+          ...(row.metadata || {}),
+          settlementStatus: payload.settlementStatus,
+          storePayoutId: payload.storePayoutId,
+          failureReason: payload.failureReason,
+          settlementProcessedAt: new Date(),
+        };
+        await row.save();
+      }
+
+      logger.info(
+        `✓ IAP settlement processed: ${payload.transactionId} (${payload.settlementStatus})`
+      );
+
+      return {
+        transactionId: payload.transactionId,
+        settlementStatus: payload.settlementStatus,
+        processedEntries: pendingRows.length,
+      };
+    } catch (error) {
+      errorLogger.error('Process IAP settlement webhook error', error);
+      throw error;
+    }
   }
 
   /**
@@ -527,20 +582,8 @@ class SubscriptionService {
 
       const platformAdminUserId = await this.getPlatformAdminUserId();
 
-      // Add earnings to streamer wallet
-      await Wallet.findOneAndUpdate(
-        { userId: streamerId },
-        {
-          $inc: {
-            cashBalance: streamerEarnings,
-            totalCashEarned: streamerEarnings,
-            // Legacy compatibility
-            balance: streamerEarnings,
-            totalEarned: streamerEarnings,
-          },
-        },
-        { upsert: true, new: true }
-      );
+      // IAP earnings stay pending until store settlement is confirmed.
+      await WalletService.creditPendingCash(streamerId, streamerEarnings);
 
       // Create transaction record for streamer
       await WalletTransaction.create({
@@ -548,7 +591,8 @@ class SubscriptionService {
         type: 'subscription_earning',
         amount: streamerEarnings,
         description: `Subscription earning from ${(tier as any).name} tier`,
-        status: 'completed',
+        status: 'pending',
+        transactionId: verification.transactionId,
         metadata: {
           subscriberId: userId,
           tierId: tierId,
@@ -556,6 +600,7 @@ class SubscriptionService {
           platform: platform,
           totalAmount: totalAmount,
           platformFee: platformFee,
+          settlementStatus: 'pending',
         },
       });
 
@@ -565,15 +610,20 @@ class SubscriptionService {
         type: 'platform_commission',
         amount: platformFee,
         description: `Platform commission from subscription ${(tier as any).name}`,
-        status: 'completed',
+        status: 'pending',
+        transactionId: verification.transactionId,
         metadata: {
           streamerId: streamerId,
           subscriberId: userId,
           tierId: tierId,
           source: 'subscription',
           platform: platform,
+          settlementStatus: 'pending',
         },
       });
+
+      // Platform commission also stays pending until settlement release.
+      await WalletService.creditPendingCash(platformAdminUserId.toString(), platformFee);
 
       // Add subscriber badge to user
       await User.findByIdAndUpdate(userId, {
@@ -722,6 +772,9 @@ class SubscriptionService {
           paymentIntentId: paymentIntentId,
         },
       });
+
+      // Auto-credit admin cashBalance
+      await WalletService.autoCreditAdminOnCommission(platformAdminUserId, platformFee);
 
       // Add badge
       await User.findByIdAndUpdate(userId, {

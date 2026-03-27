@@ -21,6 +21,13 @@ const upload = multer({
 // Get all subscription tiers (public)
 router.get('/tiers', subscriptionController.getAllSubscriptionTiers);
 
+// IAP settlement webhook callback (Apple/Google settlement event bridge)
+router.post(
+  '/webhook/iap-settlement',
+  validateRequest(subscriptionValidation.iapSettlementWebhookSchema),
+  subscriptionController.handleIapSettlementWebhook
+);
+
 /**
  * ==================== USER ROUTES (AUTHENTICATED) ====================
  */

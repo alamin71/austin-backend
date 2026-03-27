@@ -4,6 +4,7 @@ export interface IWallet extends Document {
   userId: mongoose.Types.ObjectId;
   featherBalance: number;
   cashBalance: number;
+  pendingCashBalance: number;
   totalFeathersEarned: number;
   totalFeathersSpent: number;
   totalCashEarned: number;
@@ -66,6 +67,11 @@ const walletSchema = new Schema<IWallet>(
       min: 0,
     },
     cashBalance: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+    pendingCashBalance: {
       type: Number,
       default: 0,
       min: 0,
