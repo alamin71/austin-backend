@@ -255,7 +255,15 @@ const shareMoment = async (momentId: string) => {
   moment.sharesCount = (moment.sharesCount || 0) + 1;
   await moment.save();
 
-  const baseUrl = config.frontend_url || config.backend_url || '';
+  const isLocalhostFrontend = Boolean(
+    config.frontend_url?.includes('localhost') || config.frontend_url?.includes('127.0.0.1'),
+  );
+
+  const baseUrl =
+    config.node_env === 'production' && isLocalhostFrontend
+      ? config.backend_url || ''
+      : config.frontend_url || config.backend_url || '';
+
   const shareUrl = baseUrl ? `${baseUrl}/moment/${moment._id}` : `/moment/${moment._id}`;
 
   return {
