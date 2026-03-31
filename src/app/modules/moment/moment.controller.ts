@@ -206,6 +206,47 @@ const deleteMoment = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+/** PATCH /moment/my/:momentId – update own moment */
+const updateMyMoment = catchAsync(async (req: Request, res: Response) => {
+  const userId = (req.user as any).id;
+  const { momentId } = req.params;
+  const description = req.body.description as string | undefined;
+  const replaceMedia =
+    req.body.replaceMedia === true ||
+    req.body.replaceMedia === 'true' ||
+    req.body.replaceMedia === 1 ||
+    req.body.replaceMedia === '1';
+  const files = (req.files as Express.Multer.File[]) || [];
+
+  const result = await MomentService.updateMyMoment(momentId, userId, {
+    description,
+    replaceMedia,
+    files,
+  });
+
+  sendResponse(res, {
+    success: true,
+    statusCode: StatusCodes.OK,
+    message: 'Moment updated successfully',
+    data: result,
+  });
+});
+
+/** DELETE /moment/my/:momentId – delete own moment */
+const deleteMyMoment = catchAsync(async (req: Request, res: Response) => {
+  const userId = (req.user as any).id;
+  const { momentId } = req.params;
+
+  const result = await MomentService.deleteMoment(momentId, userId);
+
+  sendResponse(res, {
+    success: true,
+    statusCode: StatusCodes.OK,
+    message: result.message,
+    data: {},
+  });
+});
+
 export const MomentController = {
   createMoment,
   getMoments,
@@ -219,5 +260,7 @@ export const MomentController = {
   toggleCommentLike,
   toggleSave,
   shareMoment,
+  updateMyMoment,
+  deleteMyMoment,
   deleteMoment,
 };

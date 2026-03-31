@@ -44,6 +44,17 @@ router.get('/my', auth(USER_ROLES.USER), MomentController.getMyMoments);
 /** GET /moment/user/:userId  – moments by a specific user */
 router.get('/user/:userId', auth(USER_ROLES.USER), MomentController.getUserMoments);
 
+/** PATCH /moment/my/:momentId  – update current user's own moment */
+router.patch(
+  '/my/:momentId',
+  auth(USER_ROLES.USER),
+  upload.array('media', 10),
+  MomentController.updateMyMoment,
+);
+
+/** DELETE /moment/my/:momentId  – delete current user's own moment */
+router.delete('/my/:momentId', auth(USER_ROLES.USER), MomentController.deleteMyMoment);
+
 // ─── Create ──────────────────────────────────────────────────────────────────
 
 /**

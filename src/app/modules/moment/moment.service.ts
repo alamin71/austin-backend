@@ -231,6 +231,60 @@ const deleteMoment = async (momentId: string, userId: string) => {
   return { message: 'Moment deleted successfully' };
 };
 
+const updateMyMoment = async (
+  momentId: string,
+  userId: string,
+  payload: {
+    description?: string;
+    replaceMedia?: boolean;
+    files?: Express.Multer.File[];
+  },
+) => {
+  const moment = await Moment.findOne({ _id: momentId, isDeleted: false });
+  if (!moment) throw new AppError(StatusCodes.NOT_FOUND, 'Moment not found');
+
+  if (moment.author.toString() !== userId) {
+    throw new AppError(StatusCodes.FORBIDDEN, 'You cannot edit this moment');
+  }
+
+  const hasDescriptionUpdate = typeof payload.description === 'string';
+  const incomingFiles = payload.files || [];
+  const hasFiles = incomingFiles.length > 0;
+  const shouldReplaceMedia = Boolean(payload.replaceMedia);
+
+  if (!hasDescriptionUpdate && !hasFiles && !shouldReplaceMedia) {
+    throw new AppError(StatusCodes.BAD_REQUEST, 'No update data provided');
+  }
+
+  if (hasDescriptionUpdate) {
+    moment.description = payload.description?.trim() || undefined;
+  }
+
+  if (hasFiles) {
+    const uploadedMedia: { url: string; type: 'image' | 'video' }[] = [];
+    for (const file of incomingFiles) {
+      const url = await uploadFileToS3(file, 'moments');
+      const type: 'image' | 'video' = file.mimetype.startsWith('video/') ? 'video' : 'image';
+      uploadedMedia.push({ url, type });
+    }
+
+    moment.media = shouldReplaceMedia ? uploadedMedia : [...moment.media, ...uploadedMedia];
+  } else if (shouldReplaceMedia) {
+    moment.media = [];
+  }
+
+  if (!moment.description?.trim() && moment.media.length === 0) {
+    throw new AppError(
+      StatusCodes.BAD_REQUEST,
+      'Moment must have a description or at least one media file',
+    );
+  }
+
+  await moment.save();
+
+  return Moment.findById(moment._id).populate('author', 'name userName image verified');
+};
+
 const toggleSave = async (momentId: string, userId: string) => {
   const moment = await Moment.findOne({ _id: momentId, isDeleted: false });
   if (!moment) throw new AppError(StatusCodes.NOT_FOUND, 'Moment not found');
@@ -318,6 +372,7 @@ export const MomentService = {
   getComments,
   toggleCommentLike,
   deleteMoment,
+  updateMyMoment,
   toggleSave,
   shareMoment,
   getUserMoments,
