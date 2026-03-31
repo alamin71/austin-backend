@@ -69,6 +69,22 @@ const getUserMoments = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+/** GET /moment/my – current user's own moments */
+const getMyMoments = catchAsync(async (req: Request, res: Response) => {
+  const userId = (req.user as any).id;
+  const page = parseInt(req.query.page as string) || 1;
+  const limit = parseInt(req.query.limit as string) || 20;
+
+  const result = await MomentService.getUserMoments(userId, page, limit);
+
+  sendResponse(res, {
+    success: true,
+    statusCode: StatusCodes.OK,
+    message: 'My moments retrieved successfully',
+    data: result,
+  });
+});
+
 /** GET /moment/:momentId – single moment detail */
 const getMomentById = catchAsync(async (req: Request, res: Response) => {
   const userId = (req.user as any).id;
@@ -180,6 +196,7 @@ export const MomentController = {
   createMoment,
   getMoments,
   getSavedMoments,
+  getMyMoments,
   getUserMoments,
   getMomentById,
   toggleLike,

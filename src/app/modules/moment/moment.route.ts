@@ -38,6 +38,9 @@ router.get('/', auth(USER_ROLES.USER), MomentController.getMoments);
 /** GET /moment/saved  – current user's saved moments */
 router.get('/saved', auth(USER_ROLES.USER), MomentController.getSavedMoments);
 
+/** GET /moment/my  – current user's own moments */
+router.get('/my', auth(USER_ROLES.USER), MomentController.getMyMoments);
+
 /** GET /moment/user/:userId  – moments by a specific user */
 router.get('/user/:userId', auth(USER_ROLES.USER), MomentController.getUserMoments);
 
