@@ -21,6 +21,7 @@ const momentSchema = new Schema<IMoment>(
     ],
     likes: [{ type: Schema.Types.ObjectId, ref: 'User' }],
     likesCount: { type: Number, default: 0 },
+    sharesCount: { type: Number, default: 0 },
     commentsCount: { type: Number, default: 0 },
     saves: [{ type: Schema.Types.ObjectId, ref: 'User' }],
     isDeleted: { type: Boolean, default: false },

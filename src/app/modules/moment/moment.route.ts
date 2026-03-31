@@ -75,6 +75,9 @@ router.post('/:momentId/like', auth(USER_ROLES.USER), MomentController.toggleLik
 /** POST /moment/:momentId/save */
 router.post('/:momentId/save', auth(USER_ROLES.USER), MomentController.toggleSave);
 
+/** POST /moment/:momentId/share */
+router.post('/:momentId/share', auth(USER_ROLES.USER), MomentController.shareMoment);
+
 // ─── Comments ────────────────────────────────────────────────────────────────
 
 /** POST /moment/:momentId/comment */

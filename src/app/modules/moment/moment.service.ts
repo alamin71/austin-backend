@@ -3,6 +3,7 @@ import AppError from '../../../errors/AppError.js';
 import { Moment, MomentComment } from './moment.model.js';
 import { uploadFileToS3 } from '../../../helpers/s3Helper.js';
 import { User } from '../user/user.model.js';
+import config from '../../../config/index.js';
 
 const formatTimeAgo = (value?: Date | string) => {
   if (!value) return '';
@@ -247,6 +248,23 @@ const toggleSave = async (momentId: string, userId: string) => {
   return { saved, savesCount: moment.saves.length };
 };
 
+const shareMoment = async (momentId: string) => {
+  const moment = await Moment.findOne({ _id: momentId, isDeleted: false });
+  if (!moment) throw new AppError(StatusCodes.NOT_FOUND, 'Moment not found');
+
+  moment.sharesCount = (moment.sharesCount || 0) + 1;
+  await moment.save();
+
+  const baseUrl = config.frontend_url || config.backend_url || '';
+  const shareUrl = baseUrl ? `${baseUrl}/moment/${moment._id}` : `/moment/${moment._id}`;
+
+  return {
+    momentId: moment._id,
+    shareUrl,
+    sharesCount: moment.sharesCount,
+  };
+};
+
 const getUserMoments = async (profileUserId: string, page = 1, limit = 20) => {
   const skip = (page - 1) * limit;
   const [moments, total] = await Promise.all([
@@ -293,6 +311,7 @@ export const MomentService = {
   toggleCommentLike,
   deleteMoment,
   toggleSave,
+  shareMoment,
   getUserMoments,
   getSavedMoments,
 };

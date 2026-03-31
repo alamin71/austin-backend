@@ -177,6 +177,20 @@ const toggleSave = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+/** POST /moment/:momentId/share – generate share link and track share count */
+const shareMoment = catchAsync(async (req: Request, res: Response) => {
+  const { momentId } = req.params;
+
+  const result = await MomentService.shareMoment(momentId);
+
+  sendResponse(res, {
+    success: true,
+    statusCode: StatusCodes.OK,
+    message: 'Moment share link generated successfully',
+    data: result,
+  });
+});
+
 /** DELETE /moment/:momentId – delete own moment */
 const deleteMoment = catchAsync(async (req: Request, res: Response) => {
   const userId = (req.user as any).id;
@@ -204,5 +218,6 @@ export const MomentController = {
   getComments,
   toggleCommentLike,
   toggleSave,
+  shareMoment,
   deleteMoment,
 };

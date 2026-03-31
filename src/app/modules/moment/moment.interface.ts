@@ -12,6 +12,7 @@ export interface IMoment {
   media: IMomentMedia[];
   likes: Types.ObjectId[];
   likesCount: number;
+  sharesCount: number;
   commentsCount: number;
   saves: Types.ObjectId[];
   isDeleted: boolean;
