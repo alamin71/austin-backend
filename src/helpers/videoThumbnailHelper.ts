@@ -29,16 +29,16 @@ export async function downloadFile(url: string, dest: string): Promise<void> {
  * @returns S3 thumbnail URL
  */
 export async function generateAndUploadThumbnail(videoUrl: string, s3Folder = 'thumbnails'): Promise<string> {
-    const tempVideo = path.join('/tmp', uuidv4() + '.mp4');
     const tempThumb = path.join('/tmp', uuidv4() + '.jpg');
     try {
-        // Download video
-        await downloadFile(videoUrl, tempVideo);
-        // Generate thumbnail
+        // Generate thumbnail directly from remote video (any format: mp4, m3u8, etc)
         await new Promise((resolve, reject) => {
-            ffmpeg(tempVideo)
+            ffmpeg(videoUrl)
                 .on('end', resolve)
-                .on('error', reject)
+                .on('error', (err) => {
+                    console.error('FFmpeg thumbnail error:', err);
+                    reject(err);
+                })
                 .screenshots({
                     timestamps: ['5'], // 5 seconds
                     filename: path.basename(tempThumb),
@@ -59,7 +59,6 @@ export async function generateAndUploadThumbnail(videoUrl: string, s3Folder = 't
         return s3Url;
     } finally {
         // Cleanup temp files
-        if (fs.existsSync(tempVideo)) fs.unlinkSync(tempVideo);
         if (fs.existsSync(tempThumb)) fs.unlinkSync(tempThumb);
     }
 }
