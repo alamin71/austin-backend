@@ -2,6 +2,7 @@ import express, { NextFunction, Request, Response } from 'express';
 import multer from 'multer';
 import { USER_ROLES } from '../../../enums/user.js';
 import { UserController } from './user.controller.js';
+import cmsController from '../cms/cms.controller.js';
 import { UserValidation } from './user.validation.js';
 import auth from '../../middleware/auth.js';
 import validateRequest from '../../middleware/validateRequest.js';
@@ -47,6 +48,12 @@ router.get('/is-blocked/:checkUserId', auth(USER_ROLES.USER), UserController.isU
 
 // Privacy & Safety endpoints (form-data)
 router.get('/privacy-settings', auth(USER_ROLES.USER), UserController.getPrivacySettings);
+
+// CMS: User can get FAQ and static content
+router.get('/faq', auth(USER_ROLES.USER), cmsController.getAllFaqs);
+router.get('/faq/:faqId', auth(USER_ROLES.USER), cmsController.getFaqById);
+router.get('/static-content', auth(USER_ROLES.USER), cmsController.getAllStaticContents);
+router.get('/static-content/:key', auth(USER_ROLES.USER), cmsController.getStaticContentByKey);
 router.patch(
      '/privacy-settings',
      auth(USER_ROLES.USER),
