@@ -97,11 +97,18 @@ class StreamController {
 
           const result = await StreamService.getAllRecordings(userId, page, limit);
 
+          // Add thumbnail to each recording in response
+          const dataWithThumb = Array.isArray(result.data)
+               ? result.data.map((rec) => ({
+                    ...rec.toObject(),
+                    thumbnailUrl: rec.thumbnail || null,
+               }))
+               : result.data;
           sendResponse(res, {
                statusCode: StatusCodes.OK,
                success: true,
                message: 'Recordings retrieved successfully',
-               data: result.data,
+               data: dataWithThumb,
                meta: result.meta,
           });
      });

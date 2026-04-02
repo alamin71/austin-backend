@@ -10,6 +10,7 @@ import { User } from '../user/user.model.js';
 import CategoryService from '../category/category.service.js';
 import { logger, errorLogger } from '../../../shared/logger.js';
 import { uploadFileToS3 } from '../../../helpers/s3Helper.js';
+import { generateAndUploadThumbnail } from '../../../helpers/videoThumbnailHelper.js';
 import AgoraRecordingHelper from '../../../helpers/agoraRecordingHelper.js';
 import ChallengeService from '../challenge/challenge.service.js';
 
@@ -253,8 +254,16 @@ class StreamService {
                                         // Agora fileName already includes full path like "recordings/streams/filename.mp4"
                                         // Don't prepend "recordings/streams/" again to avoid duplication
                                         const recordingUrl = `https://${bucketName}.s3.${region}.amazonaws.com/${fileName}`;
-                                        stream.recordingUrl = recordingUrl;
-                                        logger.info(`Recording URL saved from stop response: ${recordingUrl}`);
+                                                  stream.recordingUrl = recordingUrl;
+                                                  // Generate and upload thumbnail
+                                                  try {
+                                                       const thumbUrl = await generateAndUploadThumbnail(recordingUrl, 'thumbnails');
+                                                       stream.thumbnail = thumbUrl;
+                                                       logger.info(`Thumbnail generated and uploaded: ${thumbUrl}`);
+                                                  } catch (thumbErr) {
+                                                       logger.warn('Thumbnail generation failed:', thumbErr);
+                                                  }
+                                                  logger.info(`Recording URL saved from stop response: ${recordingUrl}`);
                                    } else {
                                         logger.warn('Filename not found in stop response fileList[0]:', JSON.stringify(file));
                                    }
@@ -356,8 +365,16 @@ class StreamService {
                }
 
                if (recordingUrl) {
-                    stream.recordingUrl = recordingUrl;
-                    logger.info(`Recording URL saved for stream ${stream._id}: ${recordingUrl}`);
+                         stream.recordingUrl = recordingUrl;
+                         // Generate and upload thumbnail
+                         try {
+                              const thumbUrl = await generateAndUploadThumbnail(recordingUrl, 'thumbnails');
+                              stream.thumbnail = thumbUrl;
+                              logger.info(`Thumbnail generated and uploaded: ${thumbUrl}`);
+                         } catch (thumbErr) {
+                              logger.warn('Thumbnail generation failed:', thumbErr);
+                         }
+                         logger.info(`Recording URL saved for stream ${stream._id}: ${recordingUrl}`);
                } else {
                     logger.warn(`No recording URL found in webhook payload for stream ${stream._id}`);
                }
