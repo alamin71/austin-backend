@@ -99,10 +99,13 @@ class StreamController {
 
           // Add thumbnail to each recording in response
           const dataWithThumb = Array.isArray(result.data)
-               ? result.data.map((rec) => ({
-                    ...rec.toObject(),
-                    thumbnailUrl: rec.thumbnail || null,
-               }))
+               ? result.data.map((rec) => {
+                    const obj = typeof rec.toObject === 'function' ? rec.toObject() : rec;
+                    return {
+                         ...obj,
+                         thumbnailUrl: obj.thumbnail || null,
+                    };
+               })
                : result.data;
           sendResponse(res, {
                statusCode: StatusCodes.OK,
