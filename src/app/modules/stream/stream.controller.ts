@@ -101,9 +101,11 @@ class StreamController {
           const dataWithThumb = Array.isArray(result.data)
                ? result.data.map((rec) => {
                     const obj = typeof rec.toObject === 'function' ? rec.toObject() : rec;
+                    // Remove raw thumbnail field, keep only thumbnailUrl
+                    const { thumbnail, ...rest } = obj;
                     return {
-                         ...obj,
-                         thumbnailUrl: obj.thumbnail || null,
+                         ...rest,
+                         thumbnailUrl: thumbnail || null,
                     };
                })
                : result.data;
