@@ -49,12 +49,18 @@ const normalizePollCreateBody = (
      }
 
      if (typeof options === 'string') {
-          const trimmed = options.trim();
-          if (
-               (trimmed.startsWith("'[") && trimmed.endsWith("]'")) ||
-               (trimmed.startsWith('"[') && trimmed.endsWith(']"'))
-          ) {
-               options = trimmed.slice(1, -1);
+          let parsed = options.trim();
+          // Try to parse JSON array string
+          try {
+               parsed = JSON.parse(parsed);
+               if (Array.isArray(parsed)) {
+                    options = parsed;
+               } else {
+                    options = [parsed];
+               }
+          } catch {
+               // fallback: comma split
+               options = parsed.split(',').map((o) => o.trim()).filter(Boolean);
           }
      }
 
