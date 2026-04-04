@@ -94,12 +94,22 @@ pollSchema.index({ endTime: 1 });
 
 // Pre-save hook to calculate endTime
 pollSchema.pre('save', function (next) {
+     // Add logging to verify if this hook is firing
+     // eslint-disable-next-line no-console
+     console.log('[PollModel] pre-save hook fired', {
+          isNew: this.isNew,
+          startTime: this.startTime,
+          duration: this.duration,
+          endTime: this.endTime,
+     });
      if (this.isNew) {
           // fallback: if startTime not set, use now
           const startTime = this.startTime ? new Date(this.startTime) : new Date();
           // fallback: if duration not set, use 24 hours
           const duration = this.duration || 86400;
           this.endTime = new Date(startTime.getTime() + duration * 1000);
+          // eslint-disable-next-line no-console
+          console.log('[PollModel] endTime set in pre-save', { endTime: this.endTime });
      }
      next();
 });
