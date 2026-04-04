@@ -1,3 +1,14 @@
+// Get all polls created by the authenticated user (with or without streamId)
+const getMyPolls = catchAsync(async (req: Request, res: Response) => {
+     const userId = (req.user as any)?._id || (req.user as any)?.id;
+     const polls = await PollService.getMyPolls(userId);
+     sendResponse(res, {
+          statusCode: StatusCodes.OK,
+          success: true,
+          message: 'My polls retrieved successfully',
+          data: polls,
+     });
+});
 // Create general poll (no streamId)
 const createGeneralPoll = catchAsync(async (req: Request, res: Response) => {
      const userId = (req.user as any)?._id || (req.user as any)?.id;
@@ -168,6 +179,7 @@ const PollController = {
      deletePoll,
      addOption,
      deleteOption,
+     getMyPolls,
 };
 
 export default PollController;
