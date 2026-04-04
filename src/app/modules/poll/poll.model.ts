@@ -95,8 +95,10 @@ pollSchema.index({ endTime: 1 });
 // Pre-save hook to calculate endTime
 pollSchema.pre('save', function (next) {
      if (this.isNew) {
-          const startTime = this.startTime as Date;
-          const duration = this.duration as number;
+          // fallback: if startTime not set, use now
+          const startTime = this.startTime ? new Date(this.startTime) : new Date();
+          // fallback: if duration not set, use 24 hours
+          const duration = this.duration || 86400;
           this.endTime = new Date(startTime.getTime() + duration * 1000);
      }
      next();
