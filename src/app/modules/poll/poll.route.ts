@@ -1,5 +1,3 @@
-// Get all polls created by the authenticated user (with or without streamId)
-
 
 
 import { NextFunction, Request, Response, Router } from 'express';
@@ -82,6 +80,15 @@ router.post(
      normalizePollCreateBody,
      validateRequest(createPollSchema),
      PollController.createPoll,
+);
+// General poll create route (no streamId)
+router.post(
+     '/create',
+     auth(USER_ROLES.USER),
+     multipartParser.any(),
+     normalizePollCreateBody,
+     validateRequest(createPollSchema),
+     PollController.createGeneralPoll,
 );
 
 // Vote on poll
