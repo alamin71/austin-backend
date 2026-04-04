@@ -98,8 +98,13 @@ router.get('/:pollId/results', PollController.getPollResults);
 // Get active poll for stream
 router.get('/stream/:streamId/active', PollController.getActivePoll);
 
-// Get all polls for stream
-router.get('/stream/:streamId/all', PollController.getStreamPolls);
+
+// Get all polls created by the authenticated user (with or without streamId)
+router.get(
+    '/all',
+    auth(USER_ROLES.USER),
+    PollController.getMyPolls,
+);
 
 // End poll (Streamer only)
 router.post(
