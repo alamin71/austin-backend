@@ -1,3 +1,18 @@
+// Create general poll (no streamId)
+const createGeneralPoll = catchAsync(async (req: Request, res: Response) => {
+     const userId = (req.user as any)?._id || (req.user as any)?.id;
+
+     const poll = await PollService.createGeneralPoll(userId, {
+          ...req.body,
+     });
+
+     sendResponse(res, {
+          statusCode: StatusCodes.CREATED,
+          success: true,
+          message: 'General poll created successfully',
+          data: poll,
+     });
+});
 import { Request, Response } from 'express';
 import catchAsync from '../../../shared/catchAsync.js';
 import sendResponse from '../../../shared/sendResponse.js';
@@ -144,6 +159,7 @@ const deleteOption = catchAsync(async (req: Request, res: Response) => {
 
 const PollController = {
      createPoll,
+     createGeneralPoll,
      votePoll,
      getPollResults,
      getActivePoll,

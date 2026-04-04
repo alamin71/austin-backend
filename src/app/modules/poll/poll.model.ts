@@ -24,11 +24,11 @@ const pollOptionSchema = new Schema(
 
 const pollSchema = new Schema<IPoll>(
      {
-          stream: {
-               type: Schema.Types.ObjectId,
-               ref: 'Stream',
-               required: true,
-          },
+              stream: {
+                   type: Schema.Types.ObjectId,
+                   ref: 'Stream',
+                   required: false, // Now optional for general polls
+              },
           streamer: {
                type: Schema.Types.ObjectId,
                ref: 'User',

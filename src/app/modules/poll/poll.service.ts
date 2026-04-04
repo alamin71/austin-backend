@@ -1,3 +1,5 @@
+
+
 import { StatusCodes } from 'http-status-codes';
 import mongoose from 'mongoose';
 import { Poll, PollVote } from './poll.model.js';
@@ -36,7 +38,47 @@ const formatTimeAgo = (value?: Date | string) => {
      return `${diffInDays}d ago`;
 };
 
+
 class PollService {
+     /**
+      * Create a general poll (no streamId)
+      */
+     static async createGeneralPoll(
+          userId: string,
+          pollData: {
+               question: string;
+               description?: string;
+               options: string[];
+               duration?: number;
+               allowMultipleVotes?: boolean;
+          },
+     ) {
+          try {
+               const normalizedOptions = this.normalizeOptions(pollData.options);
+               const poll = new Poll({
+                    streamer: userId,
+                    question: pollData.question?.trim(),
+                    description: pollData.description?.trim() || undefined,
+                    options: normalizedOptions.map((option) => ({
+                         option,
+                         votes: 0,
+                         voters: [],
+                    })),
+                    duration: POLL_DURATION_SECONDS,
+                    allowMultipleVotes: Boolean(pollData.allowMultipleVotes),
+                    startTime: new Date(),
+               });
+               await poll.save();
+               logger.info(`General poll created: ${poll._id}`);
+               setTimeout(async () => {
+                    await this.endPoll(poll._id.toString());
+               }, POLL_DURATION_SECONDS * 1000);
+               return this.buildPollResponse(poll);
+          } catch (error) {
+               errorLogger.error('Create general poll error', error);
+               throw error;
+          }
+     }
      private static validatePollIdOrThrow(pollId: string) {
           if (!mongoose.Types.ObjectId.isValid(pollId)) {
                throw new AppError(StatusCodes.BAD_REQUEST, 'Invalid pollId');
