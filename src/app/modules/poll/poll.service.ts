@@ -69,6 +69,10 @@ class PollService {
      ) {
           try {
                const normalizedOptions = this.normalizeOptions(pollData.options);
+               // Ensure duration is valid (min 30, max 86400)
+               let duration = Number(pollData.duration) || POLL_DURATION_SECONDS;
+               if (duration < 30) duration = 30;
+               if (duration > 86400) duration = 86400;
                const poll = new Poll({
                     streamer: userId,
                     question: pollData.question?.trim(),
@@ -78,7 +82,7 @@ class PollService {
                          votes: 0,
                          voters: [],
                     })),
-                    duration: POLL_DURATION_SECONDS,
+                    duration,
                     allowMultipleVotes: Boolean(pollData.allowMultipleVotes),
                     startTime: new Date(),
                });
@@ -86,7 +90,7 @@ class PollService {
                logger.info(`General poll created: ${poll._id}`);
                setTimeout(async () => {
                     await this.endPoll(poll._id.toString());
-               }, POLL_DURATION_SECONDS * 1000);
+               }, duration * 1000);
                return this.buildPollResponse(poll);
           } catch (error) {
                errorLogger.error('Create general poll error', error);
