@@ -1,9 +1,4 @@
-// Get all polls created by the authenticated user (with or without streamId)
-router.get(
-     '/all',
-     auth(USER_ROLES.USER),
-     PollController.getMyPolls,
-);
+
 
 
 import { NextFunction, Request, Response, Router } from 'express';

@@ -1,15 +1,4 @@
-     /**
-      * Get all polls created by a user (with or without streamId)
-      */
-     static async getMyPolls(userId: string) {
-          try {
-               const polls = await Poll.find({ streamer: userId }).sort({ createdAt: -1 });
-               return polls.map((poll) => this.buildPollResponse(poll));
-          } catch (error) {
-               errorLogger.error('Get my polls error', error);
-               throw error;
-          }
-     }
+
 
 
 import { StatusCodes } from 'http-status-codes';
@@ -52,6 +41,19 @@ const formatTimeAgo = (value?: Date | string) => {
 
 
 class PollService {
+
+          /**
+           * Get all polls created by a user (with or without streamId)
+           */
+          static async getMyPolls(userId: string) {
+               try {
+                    const polls = await Poll.find({ streamer: userId }).sort({ createdAt: -1 });
+                    return polls.map((poll) => this.buildPollResponse(poll));
+               } catch (error) {
+                    errorLogger.error('Get my polls error', error);
+                    throw error;
+               }
+          }
      /**
       * Create a general poll (no streamId)
       */
