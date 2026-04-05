@@ -31,22 +31,6 @@ import { StatusCodes } from 'http-status-codes';
 import PollService from './poll.service.js';
 
 // Create poll
-// The createPoll function is being removed
-const createPoll = catchAsync(async (req: Request, res: Response) => {
-     const { streamId } = req.params;
-     const streamerId = (req.user as any)?._id || (req.user as any)?.id;
-
-     const poll = await PollService.createPoll(streamId, streamerId, {
-          ...req.body,
-     });
-
-     sendResponse(res, {
-          statusCode: StatusCodes.CREATED,
-          success: true,
-          message: 'Poll created successfully',
-          data: poll,
-     });
-});
 
 // Vote on poll
 const votePoll = catchAsync(async (req: Request, res: Response) => {

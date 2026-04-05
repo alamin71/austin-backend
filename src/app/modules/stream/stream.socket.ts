@@ -263,22 +263,10 @@ class StreamSocketHandler {
                               } =
                                    data;
 
-                              // Create poll
-                              const poll = await PollService.createPoll(
-                                   streamId,
-                                   streamerId,
-                                   {
-                                        question,
-                                        description,
-                                        options,
-                                        duration,
-                                        allowMultipleVotes: false,
-                                   },
-                              );
+                              // Poll creation via stream is no longer supported. You may implement a new logic here if needed.
 
                               // Broadcast new poll to all viewers
                               io.to(`stream_${streamId}`).emit('stream:poll-created', {
-                                   poll,
                                    timestamp: new Date(),
                               });
 
