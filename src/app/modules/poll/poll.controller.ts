@@ -31,6 +31,7 @@ import { StatusCodes } from 'http-status-codes';
 import PollService from './poll.service.js';
 
 // Create poll
+// The createPoll function is being removed
 const createPoll = catchAsync(async (req: Request, res: Response) => {
      const { streamId } = req.params;
      const streamerId = (req.user as any)?._id || (req.user as any)?.id;
@@ -169,7 +170,6 @@ const deleteOption = catchAsync(async (req: Request, res: Response) => {
 });
 
 const PollController = {
-     createPoll,
      createGeneralPoll,
      votePoll,
      getPollResults,

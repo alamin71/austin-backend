@@ -78,15 +78,6 @@ const normalizePollCreateBody = (
      next();
 };
 
-// Create poll (Streamer only)
-router.post(
-     '/stream/:streamId/create',
-     auth(USER_ROLES.USER),
-     multipartParser.any(),
-     normalizePollCreateBody,
-     validateRequest(createPollSchema),
-     PollController.createPoll,
-);
 // General poll create route (no streamId)
 router.post(
      '/create',
