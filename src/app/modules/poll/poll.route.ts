@@ -1,5 +1,3 @@
-
-
 import { NextFunction, Request, Response, Router } from 'express';
 import multer from 'multer';
 import PollController from './poll.controller.js';

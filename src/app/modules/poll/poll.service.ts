@@ -1,46 +1,84 @@
 
-
-
 import { StatusCodes } from 'http-status-codes';
 import mongoose from 'mongoose';
 import { Poll, PollVote } from './poll.model.js';
 import AppError from '../../../errors/AppError.js';
-import { logger, errorLogger } from '../../../shared/logger.js';
-import { Stream } from '../stream/stream.model.js';
+import { errorLogger, logger } from '../../../shared/logger.js';
 
+// 24 hours in seconds
 const POLL_DURATION_SECONDS = 24 * 60 * 60;
 
-const formatTimeLeftText = (timeLeftSeconds: number) => {
-     if (timeLeftSeconds <= 0) return 'Ended';
+function formatTimeLeftText(timeLeftSeconds: number): string {
+     if (timeLeftSeconds < 60) return `${timeLeftSeconds}s left`;
+     if (timeLeftSeconds < 3600) return `${Math.floor(timeLeftSeconds / 60)}m left`;
+     if (timeLeftSeconds < 86400) return `${Math.floor(timeLeftSeconds / 3600)}h left`;
+     return `${Math.floor(timeLeftSeconds / 3600)}h left`;
+}
 
-     const hours = Math.floor(timeLeftSeconds / 3600);
-     const minutes = Math.floor((timeLeftSeconds % 3600) / 60);
-
-     if (hours > 0) return `${hours}h ${minutes}m left`;
-     return `${minutes}m left`;
-};
-
-const formatTimeAgo = (value?: Date | string) => {
+function formatTimeAgo(value?: Date | string): string {
      if (!value) return '';
-
      const createdTime = new Date(value).getTime();
      if (Number.isNaN(createdTime)) return '';
-
      const diffInSeconds = Math.max(0, Math.floor((Date.now() - createdTime) / 1000));
      if (diffInSeconds < 60) return `${diffInSeconds || 1} sec ago`;
-
      const diffInMinutes = Math.floor(diffInSeconds / 60);
      if (diffInMinutes < 60) return `${diffInMinutes} min ago`;
-
      const diffInHours = Math.floor(diffInMinutes / 60);
-     if (diffInHours < 24) return `${diffInHours}h ago`;
-
+     if (diffInHours < 24) return `${diffInHours} hour${diffInHours > 1 ? 's' : ''} ago`;
      const diffInDays = Math.floor(diffInHours / 24);
-     return `${diffInDays}d ago`;
-};
+     if (diffInDays < 7) return `${diffInDays} day${diffInDays > 1 ? 's' : ''} ago`;
+     const diffInWeeks = Math.floor(diffInDays / 7);
+     if (diffInWeeks < 5) return `${diffInWeeks} week${diffInWeeks > 1 ? 's' : ''} ago`;
+     const diffInMonths = Math.floor(diffInDays / 30);
+     if (diffInMonths < 12) return `${diffInMonths} month${diffInMonths > 1 ? 's' : ''} ago`;
+     const diffInYears = Math.floor(diffInDays / 365);
+     return `${diffInYears} year${diffInYears > 1 ? 's' : ''} ago`;
+}
 
 
 class PollService {
+     /**
+      * Get all active polls (not stream-specific)
+      */
+     static async getAllActivePolls() {
+          try {
+               const now = new Date();
+               const polls = await Poll.find({ isActive: true, endTime: { $gt: now } })
+                    .sort({ createdAt: -1 });
+               return polls.map((poll: any) => this.buildPollResponse(poll));
+          } catch (error) {
+               errorLogger.error('Get all active polls error', error);
+               throw error;
+          }
+     }
+
+     // Utility functions as static methods
+     static formatTimeLeftText(timeLeftSeconds: number): string {
+          if (timeLeftSeconds < 60) return `${timeLeftSeconds}s left`;
+          if (timeLeftSeconds < 3600) return `${Math.floor(timeLeftSeconds / 60)}m left`;
+          if (timeLeftSeconds < 86400) return `${Math.floor(timeLeftSeconds / 3600)}h left`;
+          return `${Math.floor(timeLeftSeconds / 3600)}h left`;
+     }
+
+     static formatTimeAgo(value?: Date | string): string {
+          if (!value) return '';
+          const createdTime = new Date(value).getTime();
+          if (Number.isNaN(createdTime)) return '';
+          const diffInSeconds = Math.max(0, Math.floor((Date.now() - createdTime) / 1000));
+          if (diffInSeconds < 60) return `${diffInSeconds || 1} sec ago`;
+          const diffInMinutes = Math.floor(diffInSeconds / 60);
+          if (diffInMinutes < 60) return `${diffInMinutes} min ago`;
+          const diffInHours = Math.floor(diffInMinutes / 60);
+          if (diffInHours < 24) return `${diffInHours} hour${diffInHours > 1 ? 's' : ''} ago`;
+          const diffInDays = Math.floor(diffInHours / 24);
+          if (diffInDays < 7) return `${diffInDays} day${diffInDays > 1 ? 's' : ''} ago`;
+          const diffInWeeks = Math.floor(diffInDays / 7);
+          if (diffInWeeks < 5) return `${diffInWeeks} week${diffInWeeks > 1 ? 's' : ''} ago`;
+          const diffInMonths = Math.floor(diffInDays / 30);
+          if (diffInMonths < 12) return `${diffInMonths} month${diffInMonths > 1 ? 's' : ''} ago`;
+          const diffInYears = Math.floor(diffInDays / 365);
+          return `${diffInYears} year${diffInYears > 1 ? 's' : ''} ago`;
+     }
 
           /**
            * Get all polls created by a user (with or without streamId)

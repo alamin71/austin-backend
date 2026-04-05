@@ -1,3 +1,14 @@
+
+// Get all active polls (not stream-specific)
+const getAllActivePolls = catchAsync(async (_req: Request, res: Response) => {
+     const polls = await PollService.getAllActivePolls();
+     sendResponse(res, {
+          statusCode: StatusCodes.OK,
+          success: true,
+          message: 'All active polls retrieved successfully',
+          data: polls,
+     });
+});
 // Get all polls created by the authenticated user (with or without streamId)
 const getMyPolls = catchAsync(async (req: Request, res: Response) => {
      const userId = (req.user as any)?._id || (req.user as any)?.id;
@@ -164,6 +175,7 @@ const PollController = {
      addOption,
      deleteOption,
      getMyPolls,
+     getAllActivePolls,
 };
 
 export default PollController;
