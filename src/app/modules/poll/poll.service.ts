@@ -42,7 +42,9 @@ class PollService {
            */
           static async getAllPolls() {
                try {
-                    const polls = await Poll.find().sort({ createdAt: -1 });
+                    const polls = await Poll.find()
+                        .populate('streamer', 'name userName image')
+                        .sort({ createdAt: -1 });
                     return polls.map((poll: any) => this.buildPollResponse(poll));
                } catch (error) {
                     errorLogger.error('Get all polls error', error);
@@ -176,11 +178,20 @@ class PollService {
                };
           });
 
+
+          // Ensure image is a full URL if present
+          let imageUrl = null;
+          if (rawPoll.streamer && typeof rawPoll.streamer === 'object' && rawPoll.streamer.image) {
+               // If already a full S3 URL, use as is. Otherwise, prepend your S3 bucket URL (adjust as needed)
+               imageUrl = rawPoll.streamer.image.startsWith('http')
+                    ? rawPoll.streamer.image
+                    : `${process.env.S3_BASE_URL || ''}/${rawPoll.streamer.image}`;
+          }
           const streamer = rawPoll.streamer && typeof rawPoll.streamer === 'object'
                ? {
                     ...rawPoll.streamer,
                     displayName: rawPoll.streamer.name || rawPoll.streamer.userName || '',
-                    photo: rawPoll.streamer.image || null,
+                    image: imageUrl,
                }
                : rawPoll.streamer;
 
