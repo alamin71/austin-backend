@@ -1,9 +1,3 @@
-// Get all polls (anyone can see)
-import PollController from './poll.controller.js';
-
-// This route will be registered as /api/v1/polls/ from the main router
-// So we need to export it as a separate router for /polls
-
 import express from 'express';
 const allPollsRouter = express.Router();
 allPollsRouter.get('/', PollController.getAllPolls);
