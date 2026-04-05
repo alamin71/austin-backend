@@ -97,6 +97,10 @@ router.post(
 // Get poll results
 router.get('/:pollId/results', PollController.getPollResults);
 
+
+// Get all active polls (not stream-specific)
+router.get('/active', PollController.getAllActivePolls);
+
 // Get active poll for stream
 router.get('/stream/:streamId/active', PollController.getActivePoll);
 
