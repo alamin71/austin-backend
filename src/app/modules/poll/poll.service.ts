@@ -73,6 +73,8 @@ class PollService {
                let duration = Number(pollData.duration) || POLL_DURATION_SECONDS;
                if (duration < 30) duration = 30;
                if (duration > 86400) duration = 86400;
+               const startTime = new Date();
+               const endTime = new Date(startTime.getTime() + duration * 1000);
                const poll = new Poll({
                     streamer: userId,
                     question: pollData.question?.trim(),
@@ -84,7 +86,8 @@ class PollService {
                     })),
                     duration,
                     allowMultipleVotes: Boolean(pollData.allowMultipleVotes),
-                    startTime: new Date(),
+                    startTime,
+                    endTime,
                });
                await poll.save();
                logger.info(`General poll created: ${poll._id}`);
