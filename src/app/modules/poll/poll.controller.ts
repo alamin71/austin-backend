@@ -1,3 +1,13 @@
+// Get all polls (anyone can see)
+const getAllPolls = catchAsync(async (_req: Request, res: Response) => {
+     const polls = await PollService.getAllPolls();
+     sendResponse(res, {
+          statusCode: StatusCodes.OK,
+          success: true,
+          message: 'All polls retrieved successfully',
+          data: polls,
+     });
+});
 
 // Get all active polls (not stream-specific)
 const getAllActivePolls = catchAsync(async (_req: Request, res: Response) => {
@@ -176,6 +186,7 @@ const PollController = {
      deleteOption,
      getMyPolls,
      getAllActivePolls,
+     getAllPolls,
 };
 
 export default PollController;

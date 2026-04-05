@@ -37,6 +37,18 @@ function formatTimeAgo(value?: Date | string): string {
 
 
 class PollService {
+          /**
+           * Get all polls (anyone can see)
+           */
+          static async getAllPolls() {
+               try {
+                    const polls = await Poll.find().sort({ createdAt: -1 });
+                    return polls.map((poll: any) => this.buildPollResponse(poll));
+               } catch (error) {
+                    errorLogger.error('Get all polls error', error);
+                    throw error;
+               }
+          }
      /**
       * Get all active polls (not stream-specific)
       */
