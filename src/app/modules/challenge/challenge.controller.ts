@@ -4,7 +4,21 @@ import sendResponse from '../../../shared/sendResponse.js';
 import { StatusCodes } from 'http-status-codes';
 import ChallengeService from './challenge.service.js';
 
+
 class ChallengeController {
+
+    /**
+     * Get top popular creators by followers
+     */
+    getPopularCreators = catchAsync(async (req: Request, res: Response) => {
+      const creators = await ChallengeService.getPopularCreators(5);
+      sendResponse(res, {
+        statusCode: 200,
+        success: true,
+        message: 'Popular creators fetched successfully',
+        data: creators,
+      });
+    });
   /**
    * Admin: Get challenges list for dashboard table.
    */

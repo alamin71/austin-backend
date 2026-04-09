@@ -62,4 +62,7 @@ router.delete(
   challengeController.deleteChallenge
 );
 
+// Public: Get top 5 popular creators by followers
+router.get('/popular-creators', challengeController.getPopularCreators);
+
 export default router;

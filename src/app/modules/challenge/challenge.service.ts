@@ -1,3 +1,4 @@
+import { User } from '../user/user.model.js';
 import AppError from '../../../errors/AppError.js';
 import { StatusCodes } from 'http-status-codes';
 import { Challenge, ChallengeProgress, ChallengeRanking } from './challenge.model.js';
@@ -8,6 +9,21 @@ import { Wallet } from '../wallet/wallet.model.js';
  * Based on Figma design (Explore > Challenges)
  */
 class ChallengeService {
+
+    /**
+     * Get top popular creators by followers
+     */
+    static async getPopularCreators(limit = 5) {
+      // followers is an array of user ObjectIds
+      const creators = await User.aggregate([
+        { $match: { role: { $in: ['STREAMER', 'USER'] }, isDeleted: false, status: 'active' } },
+        { $addFields: { followersCount: { $size: { $ifNull: ['$followers', []] } } } },
+        { $sort: { followersCount: -1 } },
+        { $limit: limit },
+        { $project: { name: 1, image: 1, followers: '$followersCount' } }
+      ]);
+      return creators;
+    }
   private readonly PROGRESS_WINDOW_MS = 24 * 60 * 60 * 1000;
 
   private parseBoolean(value: unknown, fallback: boolean) {
