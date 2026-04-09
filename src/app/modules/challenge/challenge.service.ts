@@ -13,7 +13,7 @@ class ChallengeService {
     /**
      * Get top popular creators by followers
      */
-    static async getPopularCreators(limit = 5) {
+    async getPopularCreators(limit = 5) {
       // followers is an array of user ObjectIds
       const creators = await User.aggregate([
         { $match: { role: { $in: ['STREAMER', 'USER'] }, isDeleted: false, status: 'active' } },
