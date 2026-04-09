@@ -450,34 +450,21 @@ class ChallengeService {
    */
   async getRankings(limit: number = 10) {
     const rankings = await ChallengeRanking.find()
-      .populate('userId', 'name userName image')
+      .populate('userId', 'name userName image country')
       .sort({ totalFeathersEarned: -1 })
       .limit(limit);
 
-    const withRank = rankings.map((item: any, index: number) => ({
-      ...item.toObject(),
+    const leaderboard = rankings.map((item: any, index: number) => ({
       rank: index + 1,
+      userId: item.userId?._id || item.userId,
+      name: item.userId?.name || item.userId?.userName || 'Unknown',
+      avatar: item.userId?.image || '',
+      feathers: item.totalFeathersEarned || 0,
+      country: item.userId?.country || '',
     }));
 
-    const toUiRow = (row: any) => ({
-      rank: row.rank,
-      userId: row.userId?._id || row.userId,
-      name: row.userId?.name || row.userId?.userName || 'Unknown',
-      avatar: row.userId?.image || '',
-      feathers: row.totalFeathersEarned || 0,
-      country: '',
-    });
-
-    const uiTopThree = withRank.slice(0, 3).map(toUiRow);
-    const uiLeaderboard = withRank.map(toUiRow);
-
     return {
-      topThree: withRank.slice(0, 3),
-      leaderboard: withRank,
-      ui: {
-        topThree: uiTopThree,
-        leaderboard: uiLeaderboard,
-      },
+      leaderboard
     };
   }
 
