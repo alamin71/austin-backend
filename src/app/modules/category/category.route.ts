@@ -1,3 +1,4 @@
+router.get('/:categoryId/livestreams', categoryController.getLiveStreamsByCategory);
 import express from 'express';
 import categoryController from './category.controller.js';
 

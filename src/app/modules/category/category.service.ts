@@ -1,9 +1,25 @@
+import { Stream } from '../stream/stream.model.js';
 import { StatusCodes } from 'http-status-codes';
 import AppError from '../../../errors/AppError.js';
 import { Category } from './category.model.js';
 import { logger, errorLogger } from '../../../shared/logger.js';
 
 class CategoryService {
+
+          /**
+           * Get live streams by category
+           */
+          static async getLiveStreamsByCategory(categoryId: string) {
+               try {
+                    const liveStreams = await Stream.find({
+                         category: categoryId,
+                         status: 'live',
+                    });
+                    return liveStreams;
+               } catch (error) {
+                    throw error;
+               }
+          }
      /**
       * Create a new category (Admin only)
       */

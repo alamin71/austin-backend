@@ -7,6 +7,18 @@ import AppError from '../../../errors/AppError.js';
 import { uploadFileToS3, deleteFileFromS3 } from '../../../helpers/s3Helper.js';
 
 class CategoryController {
+
+          getLiveStreamsByCategory = catchAsync(async (req: Request, res: Response) => {
+               const { categoryId } = req.params;
+               const streams = await CategoryService.getLiveStreamsByCategory(categoryId);
+
+               sendResponse(res, {
+                    statusCode: 200,
+                    success: true,
+                    message: 'Live streams fetched successfully',
+                    data: streams,
+               });
+          });
          createCategory = catchAsync(async (req: Request, res: Response) => {
               const categoryData: any = req.body;
 
