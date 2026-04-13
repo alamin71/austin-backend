@@ -55,7 +55,25 @@ const getUserProfileFromDB = async (user: any) => {
           throw new AppError(StatusCodes.NOT_FOUND, 'User not found');
      }
 
-     return userProfile;
+     // Friend status (self profile, always false)
+     const isFriend = false;
+
+     // Follow status (self profile, always false)
+     const isFollowing = false;
+
+     // Recent Streams (last 5)
+     const recentStreams = await Stream.find({ streamer: userId })
+          .sort({ createdAt: -1 })
+          .limit(5)
+          .select('title views duration createdAt thumbnail status')
+          .lean();
+
+     return {
+          ...userProfile.toObject(),
+          isFriend,
+          isFollowing,
+          recentStreams,
+     };
 };
 
 // get other user's profile (with block check)
