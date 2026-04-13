@@ -51,6 +51,7 @@ export type IUser = {
      isDeleted: boolean;
      stripeCustomerId: string;
      address?: string;
+     location?: string; // User location
      status: 'active' | 'inactive' | 'blocked';
      verified: boolean;
      // OAuth fields

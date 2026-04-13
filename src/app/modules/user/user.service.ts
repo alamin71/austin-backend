@@ -61,14 +61,16 @@ const getUserProfileFromDB = async (user: any) => {
      // Follow status (self profile, always false)
      const isFollowing = false;
 
-     // Recent Streams (last 5)
+     // Recent Streams (all)
      const recentStreams = await Stream.find({ streamer: userId })
           .sort({ createdAt: -1 })
           .select('title views duration createdAt thumbnail status recordingUrl')
           .lean();
 
+     // Include location in the response if present
      return {
           ...userProfile.toObject(),
+          location: userProfile.location || '',
           isFriend,
           isFollowing,
           recentStreams,
@@ -131,10 +133,16 @@ const updateProfileToDB = async (user: JwtPayload, payload: Partial<IUser>): Pro
           throw new AppError(StatusCodes.BAD_REQUEST, "User doesn't exist!");
      }
 
+     // If location is provided, allow updating it
+     const updatePayload = { ...payload };
+     if (payload.location !== undefined) {
+          updatePayload.location = payload.location;
+     }
+
      // S3 handles file storage now, no local unlink needed
      // Old avatar can be deleted from S3 if needed via deleteFileFromS3
 
-     const updateDoc = await User.findOneAndUpdate({ _id: id }, payload, {
+     const updateDoc = await User.findOneAndUpdate({ _id: id }, updatePayload, {
           new: true,
      }).select('-password -authentication -avatar');
 

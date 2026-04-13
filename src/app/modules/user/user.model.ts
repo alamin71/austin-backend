@@ -44,6 +44,10 @@ const userSchema = new Schema<IUser, UserModel>(
                type: String,
                default: '',
           },
+          location: {
+               type: String,
+               default: '',
+          },
           // OAuth fields
           authProvider: {
                type: String,
