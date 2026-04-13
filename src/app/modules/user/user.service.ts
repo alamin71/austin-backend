@@ -9,6 +9,7 @@ import { IUser } from './user.interface.js';
 import { User } from './user.model.js';
 import AppError from '../../../errors/AppError.js';
 import generateOTP from '../../../utils/generateOTP.js';
+import { Stream } from '../stream/stream.model.js';
 import { createToken } from '../../../utils/createToken.js';
 import { verifyToken } from '../../../utils/verifyToken.js';
 // create user
@@ -90,7 +91,6 @@ const getUserProfileById = async (requesterId: string, targetUserId: string) => 
      // Follow status
      const isFollowing = targetUser.followers?.some(
           (f) => f.toString() === requesterId,
-     ) || false;
 
      // Recent Streams (last 5)
      const Stream = require('../stream/stream.model.js').Stream;
