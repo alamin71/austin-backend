@@ -60,33 +60,52 @@ const getUserProfileFromDB = async (user: any) => {
 // get other user's profile (with block check)
 const getUserProfileById = async (requesterId: string, targetUserId: string) => {
      const targetUser = await User.findById(targetUserId).select('-password -authentication -avatar');
-
      if (!targetUser) {
           throw new AppError(StatusCodes.NOT_FOUND, 'User not found');
      }
 
-     // Check if requester is blocked by target user
+     // Block check
      const isBlocked = targetUser.blockedUsers?.some(
-          (b: any) => b.userId?.toString() === requesterId,
+          (b) => b.userId?.toString() === requesterId,
      );
-
      if (isBlocked) {
           throw new AppError(StatusCodes.FORBIDDEN, 'You cannot view this profile');
      }
 
-     // Check privacy settings
+     // Privacy check
      if (!targetUser.privacySettings?.publicProfile && requesterId !== targetUserId) {
-          // Check if they are friends
           const areFriends = targetUser.friends?.some(
-               (f: any) => f.toString() === requesterId,
+               (f) => f.toString() === requesterId,
           );
-
           if (!areFriends) {
                throw new AppError(StatusCodes.FORBIDDEN, 'This profile is private');
           }
      }
 
-     return targetUser;
+     // Friend status
+     const isFriend = targetUser.friends?.some(
+          (f) => f.toString() === requesterId,
+     ) || false;
+
+     // Follow status
+     const isFollowing = targetUser.followers?.some(
+          (f) => f.toString() === requesterId,
+     ) || false;
+
+     // Recent Streams (last 5)
+     const Stream = require('../stream/stream.model.js').Stream;
+     const recentStreams = await Stream.find({ streamer: targetUserId })
+          .sort({ createdAt: -1 })
+          .limit(5)
+          .select('title views duration createdAt thumbnail status')
+          .lean();
+
+     return {
+          ...targetUser.toObject(),
+          isFriend,
+          isFollowing,
+          recentStreams,
+     };
 };
 // update user profile
 const updateProfileToDB = async (user: JwtPayload, payload: Partial<IUser>): Promise<Partial<IUser | null>> => {
