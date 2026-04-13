@@ -466,9 +466,10 @@ class ChallengeService {
    */
   async getRankings(limit: number = 10) {
     const rankings = await ChallengeRanking.find()
-      .populate('userId', 'name userName image country')
+      .populate('userId', 'name userName image location')
       .sort({ totalFeathersEarned: -1 })
       .limit(limit);
+
 
     const leaderboard = rankings.map((item: any, index: number) => ({
       rank: index + 1,
@@ -476,7 +477,7 @@ class ChallengeService {
       name: item.userId?.name || item.userId?.userName || 'Unknown',
       avatar: item.userId?.image || '',
       feathers: item.totalFeathersEarned || 0,
-      country: item.userId?.country || '',
+      location: item.userId?.location || '',
     }));
 
     return {
