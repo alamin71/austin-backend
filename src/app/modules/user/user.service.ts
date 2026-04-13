@@ -88,12 +88,12 @@ const getUserProfileById = async (requesterId: string, targetUserId: string) => 
           (f) => f.toString() === requesterId,
      ) || false;
 
+
      // Follow status
      const isFollowing = targetUser.followers?.some(
           (f) => f.toString() === requesterId,
+     ) || false;
 
-     // Recent Streams (last 5)
-     const Stream = require('../stream/stream.model.js').Stream;
      const recentStreams = await Stream.find({ streamer: targetUserId })
           .sort({ createdAt: -1 })
           .limit(5)
