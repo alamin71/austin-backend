@@ -420,7 +420,7 @@ class StreamService {
                     streamer: userId,  // Only recordings by this user
                     recordingUrl: { $exists: true, $ne: '' } 
                })
-                    .select('recordingUrl status title streamer createdAt endedAt thumbnail')
+                    .select('recordingUrl status title streamer createdAt endedAt thumbnail views viewCount')
                     .populate('streamer', 'name image')
                     .sort({ endedAt: -1 })
                     .skip(skip)
