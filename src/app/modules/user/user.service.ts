@@ -64,7 +64,8 @@ const getUserProfileFromDB = async (user: any) => {
      // Recent Streams (all)
      const recentStreams = await Stream.find({ streamer: userId })
           .sort({ createdAt: -1 })
-          .select('title views viewCount duration createdAt thumbnail status recordingUrl')
+          .select('title views viewCount duration createdAt thumbnail status recordingUrl analytics')
+          .populate('analytics', 'totalViewers')
           .lean();
 
      // Include location in the response if present
@@ -115,7 +116,8 @@ const getUserProfileById = async (requesterId: string, targetUserId: string) => 
 
      const recentStreams = await Stream.find({ streamer: targetUserId })
           .sort({ createdAt: -1 })
-          .select('title views viewCount duration createdAt thumbnail status recordingUrl')
+          .select('title views viewCount duration createdAt thumbnail status recordingUrl analytics')
+          .populate('analytics', 'totalViewers')
           .lean();
 
      return {

@@ -420,8 +420,9 @@ class StreamService {
                     streamer: userId,  // Only recordings by this user
                     recordingUrl: { $exists: true, $ne: '' } 
                })
-                    .select('recordingUrl status title streamer createdAt endedAt thumbnail views viewCount')
+                    .select('recordingUrl status title streamer createdAt endedAt thumbnail analytics')
                     .populate('streamer', 'name image')
+                    .populate('analytics', 'totalViewers')
                     .sort({ endedAt: -1 })
                     .skip(skip)
                     .limit(limit),
@@ -430,9 +431,25 @@ class StreamService {
                     recordingUrl: { $exists: true, $ne: '' } 
                }),
           ]);
+            const mappedData = data.map((stream) => {
+                  const s = stream.toObject ? stream.toObject() : stream;
+                  let views = 0;
+                  if (
+                       s.analytics &&
+                       typeof s.analytics === 'object' &&
+                       s.analytics !== null &&
+                       typeof (s.analytics as any).totalViewers === 'number'
+                  ) {
+                       views = (s.analytics as any).totalViewers;
+                  }
+                  return {
+                       ...s,
+                       views,
+                  };
+            });
 
           return {
-               data,
+               data: mappedData,
                meta: {
                     page,
                     limit,

@@ -100,7 +100,7 @@ class StreamController {
           // Add thumbnail to each recording in response
           const dataWithThumb = Array.isArray(result.data)
                ? result.data.map((rec) => {
-                    const obj = typeof rec.toObject === 'function' ? rec.toObject() : rec;
+                    const obj = rec;
                     // Remove raw thumbnail field, keep only thumbnailUrl
                     const { thumbnail, ...rest } = obj;
                     return {
