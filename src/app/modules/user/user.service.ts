@@ -12,6 +12,7 @@ import generateOTP from '../../../utils/generateOTP.js';
 import { Stream } from '../stream/stream.model.js';
 import { createToken } from '../../../utils/createToken.js';
 import { verifyToken } from '../../../utils/verifyToken.js';
+import { FriendRequest } from '../friendRequest/friendRequest.model.js';
 // create user
 const createUserToDB = async (payload: IUser): Promise<IUser> => {
      //set role
@@ -85,6 +86,11 @@ const getUserProfileById = async (requesterId: string, targetUserId: string) => 
           throw new AppError(StatusCodes.NOT_FOUND, 'User not found');
      }
 
+     const requesterUser = await User.findById(requesterId).select('blockedUsers');
+     if (!requesterUser) {
+          throw new AppError(StatusCodes.NOT_FOUND, 'Requester user not found');
+     }
+
      // Block check
      const isBlocked = targetUser.blockedUsers?.some(
           (b) => b.userId?.toString() === requesterId,
@@ -108,6 +114,29 @@ const getUserProfileById = async (requesterId: string, targetUserId: string) => 
           (f) => f.toString() === requesterId,
      ) || false;
 
+     const isBlockedByRequester = requesterUser.blockedUsers?.some(
+          (b: any) => b.userId?.toString() === targetUserId,
+     ) || false;
+
+     let friendStatus: 'pending' | 'accepted' | 'rejected' | 'blocked' | null = null;
+
+     if (requesterId !== targetUserId) {
+          if (isBlocked || isBlockedByRequester) {
+               friendStatus = 'blocked';
+          } else if (isFriend) {
+               friendStatus = 'accepted';
+          } else {
+               const latestRequest = await FriendRequest.findOne({
+                    $or: [
+                         { sender: requesterId, receiver: targetUserId },
+                         { sender: targetUserId, receiver: requesterId },
+                    ],
+               }).sort({ updatedAt: -1, createdAt: -1 });
+
+               friendStatus = latestRequest?.status || null;
+          }
+     }
+
 
      // Follow status
      const isFollowing = targetUser.followers?.some(
@@ -123,6 +152,7 @@ const getUserProfileById = async (requesterId: string, targetUserId: string) => 
      return {
           ...targetUser.toObject(),
           isFriend,
+          friendStatus,
           isFollowing,
           recentStreams,
      };
