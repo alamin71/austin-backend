@@ -177,12 +177,12 @@ export class FriendRequestService {
                request._id.toString(),
           );
 
-          return request;
+          return request.populate(['sender', 'receiver']);
      }
 
      // Get friends list with pending requests
-     static async getFriendsList(userId: string) {
-          const user = await User.findById(userId).populate(
+     static async getFriendsList(currentUserId: string, targetUserId: string) {
+          const user = await User.findById(targetUserId).populate(
                'friends',
                'name userName image bio',
           );
@@ -193,15 +193,38 @@ export class FriendRequestService {
 
           // Get pending friend requests
           const pendingRequests = await FriendRequest.find({
-               receiver: userId,
+               receiver: targetUserId,
                status: 'pending',
           })
                .populate('sender', 'name userName image')
                .sort({ requestedAt: -1 });
 
+          const latestRequest = await FriendRequest.findOne({
+               $or: [
+                    { sender: currentUserId, receiver: targetUserId },
+                    { sender: targetUserId, receiver: currentUserId },
+               ],
+          }).sort({ updatedAt: -1, createdAt: -1 });
+
+          const isFriend = (user.friends || []).some(
+               (friend: any) => friend._id?.toString() === currentUserId,
+          );
+
+          const relationStatus = isFriend
+               ? 'accepted'
+               : latestRequest?.status || null;
+
           return {
-               friends: user.friends || [],
-               pendingRequests: pendingRequests || [],
+               relationStatus,
+               friends: (user.friends || []).map((friend: any) => ({
+                    ...friend.toObject(),
+                    status: 'accepted',
+               })),
+               pendingRequests:
+                    pendingRequests?.map((request) => ({
+                         ...request.toObject(),
+                         status: request.status,
+                    })) || [],
           };
      }
 

@@ -57,8 +57,12 @@ export const FriendRequestController = {
      }),
 
      getFriendsList: catchAsync(async (req: Request, res: Response) => {
-          const userId = req.params.userId || (req.user as any).id;
-          const result = await FriendRequestService.getFriendsList(userId);
+          const currentUserId = (req.user as any).id;
+          const targetUserId = req.params.userId || currentUserId;
+          const result = await FriendRequestService.getFriendsList(
+               currentUserId,
+               targetUserId,
+          );
 
           sendResponse(res, {
                statusCode: StatusCodes.OK,
