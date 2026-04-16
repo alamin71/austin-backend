@@ -56,6 +56,23 @@ export const FriendRequestController = {
           });
      }),
 
+     cancelFriendRequest: catchAsync(async (req: Request, res: Response) => {
+          const { requestId } = req.params;
+          const userId = (req.user as any).id;
+
+          const result = await FriendRequestService.cancelFriendRequest(
+               requestId,
+               userId,
+          );
+
+          sendResponse(res, {
+               statusCode: StatusCodes.OK,
+               success: true,
+               message: 'Friend request cancelled',
+               data: result,
+          });
+     }),
+
      getFriendsList: catchAsync(async (req: Request, res: Response) => {
           const currentUserId = (req.user as any).id;
           const targetUserId = req.params.userId || currentUserId;

@@ -118,7 +118,7 @@ const getUserProfileById = async (requesterId: string, targetUserId: string) => 
           (b: any) => b.userId?.toString() === targetUserId,
      ) || false;
 
-     let friendStatus: 'pending' | 'accepted' | 'rejected' | 'blocked' | null = null;
+     let friendStatus: 'pending' | 'accepted' | 'rejected' | 'cancelled' | 'blocked' | null = null;
 
      if (requesterId !== targetUserId) {
           if (isBlocked || isBlockedByRequester) {

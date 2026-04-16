@@ -16,7 +16,7 @@ const friendRequestSchema = new Schema<IFriendRequest, FriendRequestModel>(
           },
           status: {
                type: String,
-               enum: ['pending', 'accepted', 'rejected', 'blocked'],
+               enum: ['pending', 'accepted', 'rejected', 'cancelled', 'blocked'],
                default: 'pending',
           },
           requestedAt: {

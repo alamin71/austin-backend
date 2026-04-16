@@ -26,6 +26,13 @@ router.patch(
      FriendRequestController.rejectFriendRequest,
 );
 
+// Cancel sent friend request
+router.patch(
+     '/:requestId/request-cancel',
+     auth(USER_ROLES.USER),
+     FriendRequestController.cancelFriendRequest,
+);
+
 // Get friends list (for user or specific user)
 router.get(
      '/list/:userId?',

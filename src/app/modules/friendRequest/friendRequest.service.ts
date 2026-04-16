@@ -57,7 +57,7 @@ export class FriendRequestService {
           await FriendRequest.deleteOne({
                sender: senderId,
                receiver: receiverId,
-               status: { $in: ['rejected', 'accepted'] },
+               status: { $in: ['rejected', 'accepted', 'cancelled'] },
           });
 
           // Create new request
@@ -176,6 +176,35 @@ export class FriendRequestService {
                request.receiver.toString(),
                request._id.toString(),
           );
+
+          return request.populate(['sender', 'receiver']);
+     }
+
+     // Cancel sent friend request
+     static async cancelFriendRequest(requestId: string, userId: string) {
+          const request = await FriendRequest.findById(requestId);
+
+          if (!request) {
+               throw new AppError(StatusCodes.NOT_FOUND, 'Request not found');
+          }
+
+          if (request.sender.toString() !== userId) {
+               throw new AppError(
+                    StatusCodes.FORBIDDEN,
+                    'You can only cancel your sent request',
+               );
+          }
+
+          if (request.status !== 'pending') {
+               throw new AppError(
+                    StatusCodes.BAD_REQUEST,
+                    'Only pending requests can be cancelled',
+               );
+          }
+
+          request.status = 'cancelled';
+          request.respondedAt = new Date();
+          await request.save();
 
           return request.populate(['sender', 'receiver']);
      }
