@@ -8,6 +8,7 @@ export const createUserZodSchema = z.object({
           password: z.string({ required_error: 'Password is required' }).min(8, 'Password must be at least 8 characters long'),
           phone: string().default('').optional(),
           profile: z.string().optional(),
+          location: z.string().optional(),
      }),
 });
 
@@ -18,6 +19,7 @@ const createBusinessUserZodSchema = z.object({
           email: z.string({ required_error: 'Email is required' }).email('Invalid email address'),
           password: z.string({ required_error: 'Password is required' }).min(8, 'Password must be at least 8 characters long'),
           profile: z.string().optional(),
+          location: z.string().optional(),
      }),
 });
 
@@ -26,6 +28,7 @@ const updateUserZodSchema = z.object({
           name: z.string().optional(),
           contact: z.string().optional(),
           address: z.string().optional(),
+          location: z.string().optional(),
           email: z.string().email('Invalid email address').optional(),
           password: z.string().optional(),
           image: z.string().optional(),

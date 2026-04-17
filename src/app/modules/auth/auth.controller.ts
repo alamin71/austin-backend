@@ -15,6 +15,7 @@ const registerUser = catchAsync(async (req, res) => {
           userName: (payload.userName || '').trim().toLowerCase(),
           email: (payload.email || '').trim().toLowerCase(),
           bio: payload.bio || '',
+          location: payload.location || '',
           socialLinks: payload.socialLinks || { x: '', instagram: '', youtube: '' },
      };
 

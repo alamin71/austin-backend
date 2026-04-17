@@ -23,6 +23,7 @@ interface IRegisterData {
      password: string;
      confirmPassword: string;
      bio?: string;
+     location?: string;
      socialLinks?: {
           x?: string;
           instagram?: string;
@@ -38,6 +39,7 @@ const registerUserToDB = async (payload: IRegisterData, file?: any) => {
           const email = (normal.email || '').trim().toLowerCase();
           const password = normal.password;
           const bio = normal.bio || '';
+          const location = normal.location || '';
           const socialLinks = normal.socialLinks || { x: '', instagram: '', youtube: '' };
 
           console.log('🔍 registerUserToDB with:', { name, userName, email });
@@ -63,6 +65,7 @@ const registerUserToDB = async (payload: IRegisterData, file?: any) => {
                verified: false,
                authentication,
                bio,
+               location,
                image: imageUrl,
                socialLinks,
           } as const;
@@ -77,6 +80,7 @@ const registerUserToDB = async (payload: IRegisterData, file?: any) => {
                     verified: false,
                     authentication,
                     bio,
+                    location,
                     socialLinks,
                };
 
@@ -106,6 +110,7 @@ const registerUserToDB = async (payload: IRegisterData, file?: any) => {
                userName: user.userName,
                email: user.email,
                bio: user.bio,
+               location: user.location,
                image: user.image,
                socialLinks: user.socialLinks,
                role: user.role,

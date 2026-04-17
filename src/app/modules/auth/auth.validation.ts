@@ -35,6 +35,7 @@ const createRegisterZodSchema = z.object({
                image: z.string().url('Invalid image URL').optional(),
                confirmPassword: z.string({ required_error: 'Confirm Password is required' }),
                bio: z.string().optional(),
+               location: z.string().optional(),
                socialLinks: z
                     .object({
                          x: z.string().url('Invalid X URL').optional().or(z.literal('')),

@@ -119,6 +119,7 @@ const getUserProfileById = async (requesterId: string, targetUserId: string) => 
      ) || false;
 
      let friendStatus: 'pending' | 'accepted' | 'rejected' | 'cancelled' | 'blocked' | null = null;
+     let friendRequestId: string | null = null;
 
      if (requesterId !== targetUserId) {
           if (isBlocked || isBlockedByRequester) {
@@ -134,6 +135,7 @@ const getUserProfileById = async (requesterId: string, targetUserId: string) => 
                }).sort({ updatedAt: -1, createdAt: -1 });
 
                friendStatus = latestRequest?.status || null;
+               friendRequestId = latestRequest?._id?.toString() || null;
           }
      }
 
@@ -151,8 +153,10 @@ const getUserProfileById = async (requesterId: string, targetUserId: string) => 
 
      return {
           ...targetUser.toObject(),
+          location: targetUser.location || '',
           isFriend,
           friendStatus,
+          friendRequestId,
           isFollowing,
           recentStreams,
      };
