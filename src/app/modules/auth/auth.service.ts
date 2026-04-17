@@ -41,14 +41,20 @@ const registerUserToDB = async (payload: IRegisterData, file?: any) => {
           const socialLinks = normal.socialLinks || { x: '', instagram: '', youtube: '' };
 
           console.log('🔍 registerUserToDB with:', { name, userName, email });
+          const existingUser = await User.findOne({ email });
+
+          if (existingUser?.verified) {
+               throw new AppError(StatusCodes.BAD_REQUEST, 'Email already exists!');
+          }
+
           let imageUrl = '';
           if (file) {
                imageUrl = await uploadFileToS3(file, 'profile-images');
                console.log('📸 Image uploaded to S3:', imageUrl);
           }
-          //  duplicate key error
           const otp = generateOTP(6);
           const authentication = { oneTimeCode: otp, expireAt: new Date(Date.now() + 10 * 60000) };
+
           const userData = {
                name,
                userName,
@@ -59,11 +65,31 @@ const registerUserToDB = async (payload: IRegisterData, file?: any) => {
                bio,
                image: imageUrl,
                socialLinks,
-          };
+          } as const;
 
-          console.log('Creating user with:', userData);
-          const newUser = await User.create(userData);
-          console.log('User created:', newUser._id);
+          let user;
+          if (existingUser && !existingUser.verified) {
+               console.log('♻️ Existing unverified account found. Updating and resending OTP.');
+               const updatePayload: Record<string, unknown> = {
+                    name,
+                    userName,
+                    password,
+                    verified: false,
+                    authentication,
+                    bio,
+                    socialLinks,
+               };
+
+               if (imageUrl) {
+                    updatePayload.image = imageUrl;
+               }
+
+               user = await User.findByIdAndUpdate(existingUser._id, { $set: updatePayload }, { new: true, runValidators: true });
+          } else {
+               console.log('Creating user with:', userData);
+               user = await User.create(userData);
+               console.log('User created:', user._id);
+          }
 
           const value = { name, otp, email };
           const verificationEmail = emailTemplate.createAccount(value);
@@ -71,16 +97,16 @@ const registerUserToDB = async (payload: IRegisterData, file?: any) => {
           console.log('Email sent to:', email);
 
           return {
-               _id: newUser._id,
-               name: newUser.name,
-               userName: newUser.userName,
-               email: newUser.email,
-               bio: newUser.bio,
-               image: newUser.image,
-               socialLinks: newUser.socialLinks,
-               role: newUser.role,
-               status: newUser.status,
-               verified: newUser.verified,
+               _id: user._id,
+               name: user.name,
+               userName: user.userName,
+               email: user.email,
+               bio: user.bio,
+               image: user.image,
+               socialLinks: user.socialLinks,
+               role: user.role,
+               status: user.status,
+               verified: user.verified,
                otp,
           };
      } catch (err: any) {
