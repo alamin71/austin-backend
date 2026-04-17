@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="VidZo Streaming Logo">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#251742"/>
+      <stop offset="100%" stop-color="#4b2e7e"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#FDB940"/>
+      <stop offset="100%" stop-color="#ffd86b"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="104" fill="url(#bg)"/>
+  <circle cx="256" cy="176" r="92" fill="none" stroke="url(#accent)" stroke-width="18"/>
+  <path d="M212 150 L212 202 L252 176 Z" fill="url(#accent)"/>
+  <path d="M268 150 L268 202 L308 176 Z" fill="url(#accent)" opacity="0.92"/>
+  <rect x="166" y="260" width="180" height="20" rx="10" fill="url(#accent)"/>
+  <text x="256" y="360" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="72" font-weight="700" fill="#ffffff">VidZo</text>
+  <text x="256" y="408" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="28" letter-spacing="3" fill="#FDB940">STREAMING</text>
+</svg>

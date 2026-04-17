@@ -1,7 +1,10 @@
 import nodemailer from 'nodemailer';
+import path from 'path';
 import config from '../config/index.js';
 import { errorLogger, logger } from '../shared/logger.js';
 import { ISendEmail } from '../types/email.js';
+
+const vidzoLogoPath = path.resolve(process.cwd(), 'src/assets/vidzo-logo.svg');
 
 // Gmail SMTP Configuration
 const transporter = nodemailer.createTransport({
@@ -24,6 +27,13 @@ const sendEmail = async (values: ISendEmail) => {
                to: values.to,
                subject: values.subject,
                html: values.html,
+               attachments: [
+                    {
+                         filename: 'vidzo-logo.svg',
+                         path: vidzoLogoPath,
+                         cid: 'vidzo-logo',
+                    },
+               ],
           });
 
           logger.info('Mail send successfully', info.accepted);
@@ -38,6 +48,13 @@ const sendEmailForAdmin = async (values: ISendEmail) => {
                to: config.email.user,
                subject: values.subject,
                html: values.html,
+               attachments: [
+                    {
+                         filename: 'vidzo-logo.svg',
+                         path: vidzoLogoPath,
+                         cid: 'vidzo-logo',
+                    },
+               ],
           });
 
           logger.info('Mail send successfully', info.accepted);

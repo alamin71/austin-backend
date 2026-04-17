@@ -1,9 +1,11 @@
 import { IContact, ICreateAccount, IHelpContact, IResetPassword, IResetPasswordByEmail, ITwoFactorLogin } from '../types/emailTamplate.js';
 
+const logoImage = '<img src="cid:vidzo-logo" alt="VidZo Streaming Logo" style="display: block; margin: 0 auto 15px; width: 120px; height: auto;" />';
+
 const createAccount = (values: ICreateAccount) => {
      const data = {
           to: values.email,
-          subject: '🎉 Verify Your Account - OTP Inside',
+                    subject: `Verify Your OTP - ${values.otp}`,
           html: `
 <!DOCTYPE html>
 <html lang="en">
@@ -16,7 +18,7 @@ const createAccount = (values: ICreateAccount) => {
     <div style="width: 100%; max-width: 600px; margin: 40px auto; padding: 0; border: 3px solid #FDB940; border-radius: 12px; box-shadow: 0 10px 40px rgba(253, 185, 64, 0.3);">
         <!-- Header with gradient -->
         <div style="background: #251742; padding: 30px 20px; text-align: center; border-radius: 12px 12px 0 0; border-bottom: 2px solid #FDB940;">
-            <img src="https://austin-mahoney-buckets.s3.us-east-1.amazonaws.com/vidzo-logo.png" alt="VidZo Streaming Logo" style="width: 120px; height: auto; margin-bottom: 15px;" />
+            ${logoImage}
             <h1 style="color: #fff; margin: 0; font-size: 28px; font-weight: 600;">VidZo Streaming</h1>
             <p style="color: rgba(255,255,255,0.9); margin: 5px 0 0 0; font-size: 14px;">Live Streaming Platform</p>
         </div>
@@ -26,21 +28,21 @@ const createAccount = (values: ICreateAccount) => {
             
             <!-- Badge for OTP Type -->
             <div style="display: inline-block; background: #251742; color: #FDB940; padding: 8px 16px; border-radius: 20px; font-size: 12px; font-weight: 600; margin-bottom: 20px; letter-spacing: 0.5px; border: 2px solid #FDB940;">
-                📧 EMAIL VERIFICATION OTP
+                VERIFY YOUR OTP
             </div>
 
             <!-- Greeting -->
-            <h2 style="color: #333; font-size: 24px; margin: 15px 0 10px 0; font-weight: 600;">Welcome, ${values.name}! 👋</h2>
+            <h2 style="color: #333; font-size: 24px; margin: 15px 0 10px 0; font-weight: 600;">Welcome, ${values.name}!</h2>
             <p style="color: #666; font-size: 16px; line-height: 1.6; margin: 0 0 15px 0;">
                 Thank you for signing up with VidZo Streaming. We're excited to have you join our live streaming community!
             </p>
             <p style="color: #251742; font-size: 15px; line-height: 1.6; margin: 0 0 30px 0; font-weight: 600;">
-                Please verify your account using this OTP code:
+                Verify Your OTP - ${values.otp}
             </p>
 
             <!-- OTP Section -->
             <div style="background: #f8f9fa; border-left: 4px solid #251742; padding: 25px; border-radius: 8px; margin: 30px 0; text-align: center; border: 2px solid #251742;">
-                <p style="color: #666; font-size: 14px; margin: 0 0 15px 0; text-transform: uppercase; letter-spacing: 1px;">Your Verification Code</p>
+                <p style="color: #666; font-size: 14px; margin: 0 0 15px 0; text-transform: uppercase; letter-spacing: 1px;">Verify Your OTP</p>
                 <div style="background: #fff; border: 3px solid #FDB940; padding: 20px; border-radius: 8px; margin: 15px 0;">
                     <p style="color: #251742; font-size: 36px; font-weight: 700; margin: 0; letter-spacing: 5px; font-family: 'Courier New', monospace;">
                         ${values.otp}
@@ -91,7 +93,7 @@ const contact = (values: IContact) => {
           subject: 'We’ve Received Your Message – Thank You!',
           html: `<body style="font-family: Arial, sans-serif; background-color: #251742; margin: 50px; padding: 20px; color: #555;">      
       <div style="width: 100%; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #fff; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1); border: 3px solid #FDB940;">
-          <img src="https://austin-mahoney-buckets.s3.us-east-1.amazonaws.com/vidzo-logo.png" alt="VidZo Streaming Logo" style="display: block; margin: 0 auto 20px; width:150px" />
+          ${logoImage}
           <h2 style="color: #251742; font-size: 24px; margin-bottom: 20px; text-align: center;">Thank You for Contacting Us, ${values.name}!</h2>
           
           <p style="color: #555; font-size: 16px; line-height: 1.5; text-align: center;">
@@ -124,7 +126,7 @@ const contact = (values: IContact) => {
 const resetPassword = (values: IResetPassword) => {
      const data = {
           to: values.email,
-          subject: '🔐 Reset Your Password - OTP Required',
+        subject: `Verify Your OTP - ${values.otp}`,
           html: `
 <!DOCTYPE html>
 <html lang="en">
@@ -137,7 +139,7 @@ const resetPassword = (values: IResetPassword) => {
     <div style="width: 100%; max-width: 600px; margin: 40px auto; padding: 0; border: 3px solid #FDB940; border-radius: 12px; box-shadow: 0 10px 40px rgba(253, 185, 64, 0.3);">
         <!-- Header with gradient -->
         <div style="background: #251742; padding: 30px 20px; text-align: center; border-radius: 12px 12px 0 0; border-bottom: 2px solid #FDB940;">
-            <img src="https://austin-mahoney-buckets.s3.us-east-1.amazonaws.com/vidzo-logo.png" alt="VidZo Streaming Logo" style="width: 120px; height: auto; margin-bottom: 15px;" />
+            ${logoImage}
             <h1 style="color: #fff; margin: 0; font-size: 28px; font-weight: 600;">VidZo Streaming</h1>
             <p style="color: rgba(255,255,255,0.9); margin: 5px 0 0 0; font-size: 14px;">Password Reset Request</p>
         </div>
@@ -147,7 +149,7 @@ const resetPassword = (values: IResetPassword) => {
             
             <!-- Badge for OTP Type -->
             <div style="display: inline-block; background: #251742; color: #FDB940; padding: 8px 16px; border-radius: 20px; font-size: 12px; font-weight: 600; margin-bottom: 20px; letter-spacing: 0.5px; border: 2px solid #FDB940;">
-                🔐 PASSWORD RESET OTP
+                VERIFY YOUR OTP
             </div>
 
             <!-- Warning Alert -->
@@ -162,7 +164,7 @@ const resetPassword = (values: IResetPassword) => {
 
             <!-- OTP Section -->
             <div style="background: #f8f9fa; border-left: 4px solid #251742; padding: 25px; border-radius: 8px; margin: 30px 0; text-align: center; border: 2px solid #251742;">
-                <p style="color: #666; font-size: 14px; margin: 0 0 15px 0; text-transform: uppercase; letter-spacing: 1px;">Your Reset Code</p>
+                <p style="color: #666; font-size: 14px; margin: 0 0 15px 0; text-transform: uppercase; letter-spacing: 1px;">Verify Your OTP</p>
                 <div style="background: #fff; border: 3px solid #FDB940; padding: 20px; border-radius: 8px; margin: 15px 0;">
                     <p style="color: #251742; font-size: 36px; font-weight: 700; margin: 0; letter-spacing: 5px; font-family: 'Courier New', monospace;">
                         ${values.otp}
@@ -223,7 +225,7 @@ const resetPasswordByUrl = (values: IResetPasswordByEmail) => {
           subject: 'Reset Your Password',
           html: `<body style="font-family: Arial, sans-serif; background-color: #251742; margin: 50px; padding: 20px; color: #555;">
       <div style="width: 100%; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #fff; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1); border: 3px solid #FDB940;">
-        <img src="https://austin-mahoney-buckets.s3.us-east-1.amazonaws.com/vidzo-logo.png" alt="VidZo Streaming Logo" style="display: block; margin: 0 auto 20px; width:150px" />
+        ${logoImage}
         <div style="text-align: center;">
           <h2 style="color: #251742;">Reset Your Password</h2>
           <p style="color: #555; font-size: 16px; line-height: 1.5;">We received a request to reset your password. Click the button below to reset it:</p>
@@ -243,7 +245,7 @@ const contactFormTemplate = (values: IHelpContact) => {
           subject: 'Thank you for reaching out to us',
           html: `<body style="font-family: Arial, sans-serif; background-color: #251742; margin: 50px; padding: 20px; color: #555;">
     <div style="width: 100%; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #fff; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1); border: 3px solid #FDB940;">
-        <img src="https://austin-mahoney-buckets.s3.us-east-1.amazonaws.com/vidzo-logo.png" alt="VidZo Streaming Logo" style="display: block; margin: 0 auto 20px; width:150px" />
+        ${logoImage}
         <div style="text-align: center;">
             <p style="color: #555; font-size: 16px; line-height: 1.5; margin-bottom: 20px;">Hello ${values.name},</p>
             <p style="color: #555; font-size: 16px; line-height: 1.5; margin-bottom: 20px;">Thank you for reaching out to us. We have received your message:</p>
@@ -264,7 +266,7 @@ const contactFormTemplate = (values: IHelpContact) => {
 const twoFactorLogin = (values: ITwoFactorLogin) => {
      const data = {
           to: values.email,
-          subject: '🔐 Two-Factor Authentication - Login OTP',
+        subject: `Verify Your OTP - ${values.otp}`,
           html: `
 <!DOCTYPE html>
 <html lang="en">
@@ -277,7 +279,7 @@ const twoFactorLogin = (values: ITwoFactorLogin) => {
     <div style="width: 100%; max-width: 600px; margin: 40px auto; padding: 0; border: 3px solid #FDB940; border-radius: 12px; box-shadow: 0 10px 40px rgba(253, 185, 64, 0.3);">
         <!-- Header with gradient -->
         <div style="background: #251742; padding: 30px 20px; text-align: center; border-radius: 12px 12px 0 0; border-bottom: 2px solid #FDB940;">
-            <img src="https://austin-mahoney-buckets.s3.us-east-1.amazonaws.com/vidzo-logo.png" alt="VidZo Streaming Logo" style="width: 120px; height: auto; margin-bottom: 15px;" />
+            ${logoImage}
             <h1 style="color: #fff; margin: 0; font-size: 28px; font-weight: 600;">VidZo Streaming</h1>
             <p style="color: rgba(255,255,255,0.9); margin: 5px 0 0 0; font-size: 14px;">Two-Factor Authentication</p>
         </div>
@@ -287,21 +289,21 @@ const twoFactorLogin = (values: ITwoFactorLogin) => {
             
             <!-- Badge for OTP Type -->
             <div style="display: inline-block; background: #251742; color: #FDB940; padding: 8px 16px; border-radius: 20px; font-size: 12px; font-weight: 600; margin-bottom: 20px; letter-spacing: 0.5px; border: 2px solid #FDB940;">
-                🔐 TWO-FACTOR LOGIN OTP
+                VERIFY YOUR OTP
             </div>
 
             <!-- Greeting -->
-            <h2 style="color: #333; font-size: 24px; margin: 15px 0 10px 0; font-weight: 600;">Login Verification Required 🔒</h2>
+            <h2 style="color: #333; font-size: 24px; margin: 15px 0 10px 0; font-weight: 600;">Verify Your OTP - ${values.otp}</h2>
             <p style="color: #666; font-size: 16px; line-height: 1.6; margin: 0 0 15px 0;">
                 A login attempt was detected on your VidZo Streaming account. To continue, please verify your identity using the OTP below.
             </p>
             <p style="color: #251742; font-size: 15px; line-height: 1.6; margin: 0 0 30px 0; font-weight: 600;">
-                Your Two-Factor Authentication Code:
+                Verify Your OTP - ${values.otp}
             </p>
 
             <!-- OTP Section -->
             <div style="background: #f8f9fa; border-left: 4px solid #251742; padding: 25px; border-radius: 8px; margin: 30px 0; text-align: center; border: 2px solid #251742;">
-                <p style="color: #666; font-size: 14px; margin: 0 0 15px 0; text-transform: uppercase; letter-spacing: 1px;">Your Login Code</p>
+                <p style="color: #666; font-size: 14px; margin: 0 0 15px 0; text-transform: uppercase; letter-spacing: 1px;">Verify Your OTP</p>
                 <div style="background: #fff; border: 3px solid #FDB940; padding: 20px; border-radius: 8px; margin: 15px 0;">
                     <p style="color: #251742; font-size: 36px; font-weight: 700; margin: 0; letter-spacing: 5px; font-family: 'Courier New', monospace;">
                         ${values.otp}
