@@ -1,6 +1,6 @@
 import { IContact, ICreateAccount, IHelpContact, IResetPassword, IResetPasswordByEmail, ITwoFactorLogin } from '../types/emailTamplate.js';
 
-const logoImage = '<img src="cid:vidzo-logo" alt="VidZo Streaming Logo" style="display: block; margin: 0 auto 15px; width: 120px; height: auto;" />';
+const logoImage = '<img src="https://austin-mahoney-buckets.s3.us-east-1.amazonaws.com/vidzo-logo.png" alt="VidZo Streaming Logo" style="display: block; margin: 0 auto 15px; width: 120px; height: auto;" />';
 
 const createAccount = (values: ICreateAccount) => {
      const data = {
