@@ -96,6 +96,10 @@ const registerUserToDB = async (payload: IRegisterData, file?: any) => {
           await emailHelper.sendEmail(verificationEmail);
           console.log('Email sent to:', email);
 
+          if (!user) {
+               throw new AppError(StatusCodes.INTERNAL_SERVER_ERROR, 'Failed to create or update user');
+          }
+
           return {
                _id: user._id,
                name: user.name,
