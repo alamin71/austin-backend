@@ -20,7 +20,6 @@ import { CustomerSupportRouter } from '../app/modules/customerSupport/customerSu
 import { ReportRouter } from '../app/modules/report/report.route.js';
 import { MomentRouter } from '../app/modules/moment/moment.route.js';
 import { CommunityPulseRouter } from '../app/modules/communityPulse/communityPulse.route.js';
-import { allPollsRouter } from '../app/modules/poll/poll.route.js';
 
 const router = express.Router();
 const routes = [
@@ -67,10 +66,6 @@ const routes = [
      {
           path: '/poll',
           route: PollRouter,
-     },
-     {
-          path: '/polls',
-          route: allPollsRouter,
      },
      {
           path: '/friend',

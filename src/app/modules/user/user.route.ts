@@ -22,10 +22,30 @@ router
           auth(USER_ROLES.SUPER_ADMIN, USER_ROLES.ADMIN, USER_ROLES.USER),
           upload.single('image'),
           (req: Request, res: Response, next: NextFunction) => {
-               // Parse JSON data field
+               // Convert socialLinks[x] style fields into a nested socialLinks object.
+               const socialLinks: Record<string, string> = {};
+               Object.keys(req.body).forEach((key) => {
+                    if (key.startsWith('socialLinks[')) {
+                         const fieldName = key.match(/socialLinks\[(.*?)\]/)?.[1];
+                         if (fieldName) {
+                              socialLinks[fieldName] = req.body[key];
+                         }
+                         delete req.body[key];
+                    }
+               });
+
+               // Parse JSON from data while preserving other multipart fields.
                if (req.body.data) {
                     const data = JSON.parse(req.body.data);
-                    req.body = { ...data };
+                    delete req.body.data;
+                    req.body = { ...req.body, ...data };
+               }
+
+               if (Object.keys(socialLinks).length > 0) {
+                    req.body.socialLinks = {
+                         ...(req.body.socialLinks || {}),
+                         ...socialLinks,
+                    };
                }
                next();
           },

@@ -32,6 +32,13 @@ const updateUserZodSchema = z.object({
           email: z.string().email('Invalid email address').optional(),
           password: z.string().optional(),
           image: z.string().optional(),
+          socialLinks: z
+               .object({
+                    x: z.string().optional(),
+                    instagram: z.string().optional(),
+                    youtube: z.string().optional(),
+               })
+               .optional(),
      }),
 });
 
