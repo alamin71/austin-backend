@@ -9,7 +9,7 @@ const numberLikeSchema = z.preprocess((value) => {
     if (!Number.isNaN(parsed)) return parsed;
   }
   return value;
-}, z.number());
+}, z.number().positive('Price must be positive'));
 
 const booleanLikeSchema = z.preprocess((value) => {
   if (typeof value === 'boolean') return value;
@@ -32,7 +32,7 @@ const updateTierBodySchema = z
   .object({
     name: z.string().min(1, 'Tier name is required').optional(),
     slug: slugSchema.optional(),
-    price: numberLikeSchema.positive('Price must be positive').optional(),
+    price: numberLikeSchema.optional(),
     billingPeriod: z.enum(['monthly', 'yearly']).optional(),
     features: z.array(z.string()).optional(),
     badge: z
@@ -73,7 +73,7 @@ export const subscriptionValidation = {
     body: z.object({
       name: z.string().min(1, 'Tier name is required'),
       slug: slugSchema,
-      price: numberLikeSchema.positive('Price must be positive'),
+      price: numberLikeSchema,
       billingPeriod: z.enum(['monthly', 'yearly']).default('monthly'),
       features: z.array(z.string()).optional(),
       badge: z
