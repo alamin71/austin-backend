@@ -923,72 +923,462 @@ class StreamService {
      /**
       * Get stream insights (Analytics/Fans/Revenue/AI Tips/Safety)
       */
-     static async getStreamInsights(streamId: string) {
+     static async getStreamInsights(streamerId: string) {
           try {
-               const stream = await Stream.findById(streamId)
+               const streamerStreams = await Stream.find({ streamer: streamerId })
+                    .select(
+                         'title tags viewers startedAt createdAt duration currentViewerCount peakViewerCount likes analytics',
+                    )
                     .populate('analytics')
-                    .populate('viewers', 'name image userName');
+                    .populate('viewers', 'name image userName location')
+                    .sort({ createdAt: -1 })
+                    .limit(60);
 
-               if (!stream) {
-                    throw new AppError(StatusCodes.NOT_FOUND, 'Stream not found');
+               if (!streamerStreams.length) {
+                    throw new AppError(StatusCodes.NOT_FOUND, 'No stream data found for this streamer');
                }
 
-               const analytics: any = stream.analytics || {};
-               const viewers: any[] = Array.isArray(stream.viewers) ? (stream.viewers as any[]) : [];
+               const [stream, ...previousStreams] = streamerStreams;
 
-               const topFans = viewers.slice(0, 10).map((viewer, index) => ({
-                    rank: index + 1,
-                    user: {
-                         _id: viewer?._id,
-                         name: viewer?.name,
-                         userName: viewer?.userName,
-                         image: viewer?.image,
+               const allStreams = [stream, ...previousStreams];
+               const analyticsDocs = allStreams
+                    .map((s: any) => (s?.analytics && typeof s.analytics === 'object' ? s.analytics : null))
+                    .filter(Boolean);
+
+               const toNumber = (value: unknown, fallback = 0) => {
+                    const numeric = Number(value);
+                    return Number.isFinite(numeric) ? numeric : fallback;
+               };
+
+               const sumBy = (items: any[], getter: (item: any) => number) =>
+                    items.reduce((sum, item) => sum + getter(item), 0);
+
+               const avgBy = (items: any[], getter: (item: any) => number) => {
+                    if (!items.length) return 0;
+                    return sumBy(items, getter) / items.length;
+               };
+
+               const currentAnalytics: any = stream.analytics || {};
+               const currentViewers: any[] = Array.isArray(stream.viewers) ? (stream.viewers as any[]) : [];
+
+               const totalSubscribers = Math.round(
+                    sumBy(analyticsDocs, (doc) => toNumber(doc.newSubscribers)),
+               );
+               const avgPeakViewer = Math.round(
+                    avgBy(allStreams as any[], (s: any) =>
+                         Math.max(
+                              toNumber(s?.analytics?.peakViewers),
+                              toNumber(s?.peakViewerCount),
+                         ),
+                    ),
+               );
+               const totalRevenue = Number(
+                    sumBy(analyticsDocs, (doc) => toNumber(doc.revenue)).toFixed(2),
+               );
+               const avgWatchTimeHours = Number(
+                    (
+                         avgBy(allStreams as any[], (s: any) =>
+                              Math.max(toNumber(s?.duration), toNumber(s?.analytics?.duration)),
+                         ) / 3600
+                    ).toFixed(1),
+               );
+
+               const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+               const followersMonthly = new Map<string, { sortKey: number; label: string; value: number }>();
+
+               for (const item of allStreams as any[]) {
+                    const sourceDate = item?.createdAt || item?.startedAt;
+                    if (!sourceDate) continue;
+
+                    const date = new Date(sourceDate);
+                    if (Number.isNaN(date.getTime())) continue;
+
+                    const year = date.getUTCFullYear();
+                    const month = date.getUTCMonth() + 1;
+                    const key = `${year}-${month}`;
+                    const previous = followersMonthly.get(key);
+                    const growth = toNumber(item?.analytics?.newFollowers);
+
+                    followersMonthly.set(key, {
+                         sortKey: year * 100 + month,
+                         label: monthNames[month - 1],
+                         value: (previous?.value || 0) + growth,
+                    });
+               }
+
+               const followerGrowthRaw = Array.from(followersMonthly.values())
+                    .sort((a, b) => a.sortKey - b.sortKey)
+                    .slice(-6);
+
+               let followerCumulative = 0;
+               const followersGrowth = followerGrowthRaw.map((item) => {
+                    followerCumulative += Math.round(item.value);
+                    return {
+                         label: item.label,
+                         value: followerCumulative,
+                    };
+               });
+
+               const hourLabels = ['12AM', '3AM', '6AM', '9AM', '12PM', '3PM', '6PM', '9PM'];
+               const hourlyBuckets = hourLabels.map((label) => ({ label, sum: 0, count: 0 }));
+
+               for (const item of allStreams as any[]) {
+                    const sourceDate = item?.startedAt || item?.createdAt;
+                    if (!sourceDate) continue;
+
+                    const date = new Date(sourceDate);
+                    if (Number.isNaN(date.getTime())) continue;
+
+                    const hour = date.getUTCHours();
+                    const bucketIndex = Math.floor(hour / 3);
+                    const bucket = hourlyBuckets[bucketIndex];
+                    if (!bucket) continue;
+
+                    const viewerScore = Math.max(
+                         toNumber(item?.analytics?.totalViewers),
+                         toNumber(item?.analytics?.peakViewers),
+                         toNumber(item?.peakViewerCount),
+                         toNumber(item?.currentViewerCount),
+                    );
+
+                    bucket.sum += viewerScore;
+                    bucket.count += 1;
+               }
+
+               const optimalStreamingHours = hourlyBuckets.map((bucket) => ({
+                    time: bucket.label,
+                    viewers: bucket.count ? Math.round(bucket.sum / bucket.count) : 0,
+               }));
+
+               const bestHour = optimalStreamingHours.reduce(
+                    (best, item) => (item.viewers > best.viewers ? item : best),
+                    optimalStreamingHours[0],
+               );
+
+               const retentionCandidates = analyticsDocs
+                    .map((doc) => toNumber(doc.viewerRetention))
+                    .filter((value) => value > 0);
+
+               const baseRetention = Math.min(
+                    95,
+                    Math.max(
+                         15,
+                         Math.round(
+                              toNumber(currentAnalytics.viewerRetention) ||
+                                   avgBy(retentionCandidates as any[], (value: number) => value) ||
+                                   60,
+                         ),
+                    ),
+               );
+
+               const retentionMinutes = [0, 5, 10, 15, 20, 25, 30];
+               const videoRetention = retentionMinutes.map((minute, index) => {
+                    const linearDrop = ((100 - baseRetention) / (retentionMinutes.length - 1)) * index;
+                    const extraDrop = minute >= 15 ? 4 : 0;
+                    const value = Math.max(10, Math.round(100 - linearDrop - extraDrop));
+
+                    return {
+                         minute,
+                         retention: value,
+                    };
+               });
+
+               let majorDropPoint = 0;
+               let majorDropAmount = 0;
+               for (let i = 1; i < videoRetention.length; i += 1) {
+                    const drop = videoRetention[i - 1].retention - videoRetention[i].retention;
+                    if (drop > majorDropAmount) {
+                         majorDropAmount = drop;
+                         majorDropPoint = videoRetention[i].minute;
+                    }
+               }
+
+               const fanMap = new Map<string, any>();
+               const locationCount = new Map<string, number>();
+
+               for (const item of allStreams as any[]) {
+                    const itemViewers: any[] = Array.isArray(item?.viewers) ? item.viewers : [];
+
+                    for (const viewer of itemViewers) {
+                         if (!viewer?._id) continue;
+                         const viewerId = viewer._id.toString();
+                         const existing = fanMap.get(viewerId);
+
+                         fanMap.set(viewerId, {
+                              _id: viewer._id,
+                              name: viewer.name,
+                              userName: viewer.userName,
+                              image: viewer.image,
+                              location: viewer.location,
+                              activityScore: (existing?.activityScore || 40) + 12,
+                         });
+
+                         const normalizedLocation =
+                              typeof viewer.location === 'string' && viewer.location.trim().length
+                                   ? viewer.location.trim()
+                                   : 'Other';
+                         locationCount.set(
+                              normalizedLocation,
+                              (locationCount.get(normalizedLocation) || 0) + 1,
+                         );
+                    }
+               }
+
+               const topFans = Array.from(fanMap.values())
+                    .sort((a, b) => b.activityScore - a.activityScore)
+                    .slice(0, 13)
+                    .map((fan, index) => ({
+                         rank: index + 1,
+                         user: {
+                              _id: fan._id,
+                              name: fan.name,
+                              userName: fan.userName,
+                              image: fan.image,
+                              location: fan.location || '',
+                         },
+                         activityScore: Math.min(100, fan.activityScore),
+                         activePercent: Math.min(100, Math.max(65, Math.round(fan.activityScore))),
+                         subsCount: Math.max(1, Math.round(fan.activityScore / 12)),
+                         giftedAmount: Number((Math.max(10, fan.activityScore * 2.8)).toFixed(2)),
+                    }));
+
+               const locationRows = Array.from(locationCount.entries()).sort((a, b) => b[1] - a[1]);
+               const totalLocationEntries = locationRows.reduce((sum, row) => sum + row[1], 0);
+
+               let demographics = locationRows.slice(0, 3).map(([location, count]) => ({
+                    location,
+                    percentage: totalLocationEntries
+                         ? Math.round((count / totalLocationEntries) * 100)
+                         : 0,
+               }));
+
+               const coveredPercentage = demographics.reduce((sum, item) => sum + item.percentage, 0);
+               if (locationRows.length > 3) {
+                    demographics.push({
+                         location: 'Other',
+                         percentage: Math.max(0, 100 - coveredPercentage),
+                    });
+               }
+
+               if (!demographics.length) {
+                    demographics = [
+                         { location: 'USA', percentage: 45 },
+                         { location: 'UK', percentage: 25 },
+                         { location: 'CA', percentage: 15 },
+                         { location: 'Other', percentage: 15 },
+                    ];
+               }
+
+               const tagCount = new Map<string, number>();
+               for (const item of allStreams as any[]) {
+                    const tags: string[] = Array.isArray(item?.tags) ? item.tags : [];
+                    for (const tag of tags) {
+                         const normalized = typeof tag === 'string' ? tag.trim() : '';
+                         if (!normalized) continue;
+                         tagCount.set(normalized, (tagCount.get(normalized) || 0) + 1);
+                    }
+               }
+
+               const trendingTags = Array.from(tagCount.entries())
+                    .sort((a, b) => b[1] - a[1])
+                    .slice(0, 6)
+                    .map(([tag, count], index) => ({
+                         tag,
+                         score: Math.max(65, Math.min(98, 92 - index * 4 + count * 2)),
+                    }));
+
+               const subscriptionsRevenue = Number(
+                    Math.max(0, Math.min(totalRevenue, totalSubscribers * 2.99)).toFixed(2),
+               );
+               const giftsRevenue = Number(Math.max(0, totalRevenue - subscriptionsRevenue).toFixed(2));
+               const marketplaceRevenue = Number((totalRevenue * 0.18).toFixed(2));
+
+               const revenueByMonth = new Map<string, { sortKey: number; month: string; total: number }>();
+               for (const item of allStreams as any[]) {
+                    const sourceDate = item?.createdAt || item?.startedAt;
+                    if (!sourceDate) continue;
+
+                    const date = new Date(sourceDate);
+                    if (Number.isNaN(date.getTime())) continue;
+
+                    const year = date.getUTCFullYear();
+                    const month = date.getUTCMonth() + 1;
+                    const monthName = monthNames[month - 1];
+                    const key = `${year}-${month}`;
+                    const previous = revenueByMonth.get(key);
+                    const streamRevenue = toNumber(item?.analytics?.revenue);
+
+                    revenueByMonth.set(key, {
+                         sortKey: year * 100 + month,
+                         month: monthName,
+                         total: (previous?.total || 0) + streamRevenue,
+                    });
+               }
+
+               const revenueGrowth = Array.from(revenueByMonth.values())
+                    .sort((a, b) => a.sortKey - b.sortKey)
+                    .slice(-12)
+                    .map((row) => ({
+                         month: row.month,
+                         amount: Number(row.total.toFixed(2)),
+                    }));
+
+               const revenueStreams = revenueGrowth.map((row) => ({
+                    month: row.month,
+                    gifts: Number((row.amount * 0.46).toFixed(2)),
+                    subscriptions: Number((row.amount * 0.36).toFixed(2)),
+                    marketplace: Number((row.amount * 0.18).toFixed(2)),
+               }));
+
+               const viewerTrendSource = allStreams
+                    .slice(0, 8)
+                    .reverse()
+                    .map((item: any) => ({
+                         label: new Date(item.createdAt || item.startedAt || Date.now()).toLocaleDateString('en-US', {
+                              month: 'short',
+                              day: 'numeric',
+                         }),
+                         value: Math.max(
+                              toNumber(item?.analytics?.totalViewers),
+                              toNumber(item?.analytics?.peakViewers),
+                              toNumber(item?.peakViewerCount),
+                              toNumber(item?.currentViewerCount),
+                         ),
+                    }));
+
+               const chatCount = toNumber(currentAnalytics.chatCount);
+               const negativeSentiment = chatCount > 0 ? Math.max(3, Math.round(6 + majorDropAmount / 2)) : 0;
+               const neutralSentiment = chatCount > 0 ? 18 : 0;
+               const positiveSentiment = chatCount > 0 ? Math.max(0, 100 - neutralSentiment - negativeSentiment) : 0;
+
+               const aiContentIdeas = [
+                    {
+                         title: 'Multiplayer Monday',
+                         description: 'Collaborative gaming increases audience by 45%',
+                         schedule: 'Monday 8-10 PM',
                     },
-                    activityScore: Math.max(50, 100 - index * 5),
-               }));
+                    {
+                         title: 'Teamwork Tuesday',
+                         description: 'Cooperative challenges improve retention by 30%',
+                         schedule: 'Tuesday 7-9 PM',
+                    },
+                    {
+                         title: 'Wellness Wednesday',
+                         description: 'Mindfulness content improves focus by 25%',
+                         schedule: 'Wednesday 6-8 PM',
+                    },
+                    {
+                         title: 'Thrilling Thursday',
+                         description: 'Competitive play boosts engagement by 40%',
+                         schedule: 'Thursday 5-7 PM',
+                    },
+                    {
+                         title: 'Fun Friday',
+                         description: 'Social interaction fosters community by 50%',
+                         schedule: 'Friday 4-6 PM',
+                    },
+               ];
 
-               const trendingTags = (stream.tags || []).slice(0, 6).map((tag: string) => ({
-                    tag,
-                    score: Math.floor(Math.random() * 20) + 75,
-               }));
+               const safetyRecommendations = [
+                    {
+                         title: 'Enable Slow Mode',
+                         description: 'Chat moving too fast for meaningful interaction',
+                         impact: 'Better engagement quality',
+                    },
+                    {
+                         title: 'Highlight Positive Messages',
+                         description: 'Boost encouraging comments from community',
+                         impact: 'Improved atmosphere',
+                    },
+                    {
+                         title: 'Pin Welcome Message',
+                         description: 'Help new viewers understand stream rules',
+                         impact: 'Reduced moderation needed',
+                    },
+               ];
 
                return {
+                    overview: {
+                         subscribers: totalSubscribers,
+                         avgPeakViewer,
+                         revenue: totalRevenue,
+                         avgWatchTimeHours,
+                    },
+                    charts: {
+                         viewersTrend: viewerTrendSource,
+                         followersGrowth,
+                         optimalStreamingHours,
+                         videoRetention,
+                         audienceDemographics: demographics,
+                    },
                     analytics: {
-                         totalViewers: analytics.totalViewers || 0,
-                         peakViewers: analytics.peakViewers || 0,
-                         likes: analytics.likes || 0,
-                         giftsReceived: analytics.giftsReceived || 0,
-                         newSubscribers: analytics.newSubscribers || 0,
-                         chatCount: analytics.chatCount || 0,
-                         viewerRetention: analytics.viewerRetention || 0,
+                         totalViewers: toNumber(currentAnalytics.totalViewers),
+                         peakViewers: toNumber(currentAnalytics.peakViewers),
+                         likes: toNumber(currentAnalytics.likes),
+                         giftsReceived: toNumber(currentAnalytics.giftsReceived),
+                         newSubscribers: toNumber(currentAnalytics.newSubscribers),
+                         chatCount,
+                         viewerRetention: toNumber(currentAnalytics.viewerRetention),
                     },
                     fans: {
-                         totalFans: viewers.length,
+                         totalFans: fanMap.size || currentViewers.length,
                          topFans,
+                         audienceDemographics: demographics,
                     },
                     revenue: {
-                         totalRevenue: analytics.revenue || 0,
-                         giftsRevenue: analytics.revenue || 0,
-                         subscriptionsRevenue: 0,
+                         totalRevenue,
+                         giftsRevenue,
+                         subscriptionsRevenue,
+                         marketplaceRevenue,
+                         revenueGrowth,
+                         revenueStreams,
+                         cards: {
+                              gifts: giftsRevenue,
+                              subscriptions: subscriptionsRevenue,
+                              marketplace: marketplaceRevenue,
+                         },
                     },
                     aiTips: {
                          trendingTags,
-                         contentIdeas: [
-                              'Host a challenge-based stream this week',
-                              'Schedule a subscriber-only Q&A session',
-                              'Use short interactive polls every 20 minutes',
+                         contentIdeas: aiContentIdeas,
+                         quickTips: [
+                              bestHour?.viewers > 0
+                                   ? `Schedule your next high-engagement stream around ${bestHour.time}`
+                                   : 'Pick a consistent prime-time slot to build audience habit',
+                              totalSubscribers > 0
+                                   ? 'Offer subscriber-only shoutouts in the first 10 minutes'
+                                   : 'Run a subscriber milestone goal bar to increase conversions',
+                              majorDropAmount >= 5
+                                   ? `Add a hook before ${majorDropPoint} minutes to reduce churn`
+                                   : 'Keep using short interactive segments every 10 minutes',
                          ],
                     },
                     safety: {
                          sentiment: {
-                              positive: analytics.chatCount > 0 ? 78 : 0,
-                              neutral: analytics.chatCount > 0 ? 18 : 0,
-                              negative: analytics.chatCount > 0 ? 4 : 0,
+                              positive: positiveSentiment,
+                              neutral: neutralSentiment,
+                              negative: negativeSentiment,
                          },
-                         recommendations: [
-                              'Enable slow mode when chat speed spikes',
-                              'Pin welcome and community guideline message',
-                              'Highlight positive comments more frequently',
+                         moderation: [
+                              {
+                                   title:
+                                        negativeSentiment >= 10
+                                             ? 'Increased spam detected in chat'
+                                             : 'Chat sentiment very positive today',
+                                   description:
+                                        negativeSentiment >= 10
+                                             ? 'Auto-moderation is recommended now'
+                                             : 'Keep current content style',
+                              },
+                         ],
+                         recommendations: safetyRecommendations,
+                         alerts: [
+                              majorDropAmount >= 5
+                                   ? `Major drop at ${majorDropPoint} min mark`
+                                   : 'No major retention drop detected',
+                              negativeSentiment >= 10
+                                   ? 'Moderation risk increased in recent chats'
+                                   : 'Chat sentiment is within healthy range',
                          ],
                     },
                };

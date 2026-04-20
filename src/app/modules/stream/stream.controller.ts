@@ -357,9 +357,13 @@ class StreamController {
      });
 
      getStreamInsights = catchAsync(async (req: Request, res: Response) => {
-          const { streamId } = req.params;
+          const userId = (req.user as any)?._id || (req.user as any)?.id;
 
-          const insights = await StreamService.getStreamInsights(streamId);
+          if (!userId) {
+               throw new AppError(StatusCodes.UNAUTHORIZED, 'User not authenticated');
+          }
+
+          const insights = await StreamService.getStreamInsights(userId.toString());
 
           sendResponse(res, {
                statusCode: StatusCodes.OK,

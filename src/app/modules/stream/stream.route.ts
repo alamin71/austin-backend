@@ -47,8 +47,6 @@ router.get(
      streamController.checkRecordingStatus,
 );
 
-router.get('/:streamId', streamController.getStreamDetails);
-
 // Protected routes (authenticated users only)
 router.post(
      '/start',
@@ -116,9 +114,11 @@ router.get(
      streamController.getStreamAnalytics,
 );
 router.get(
-     '/:streamId/insights',
+     '/insights',
      auth(USER_ROLES.USER),
      streamController.getStreamInsights,
 );
+
+router.get('/:streamId', streamController.getStreamDetails);
 
 export const StreamRouter = router;
