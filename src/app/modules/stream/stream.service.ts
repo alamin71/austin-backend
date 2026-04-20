@@ -931,8 +931,7 @@ class StreamService {
                     )
                     .populate('analytics')
                     .populate('viewers', 'name image userName location')
-                    .sort({ createdAt: -1 })
-                    .limit(60);
+                    .sort({ createdAt: -1 });
 
                if (!streamerStreams.length) {
                     throw new AppError(StatusCodes.NOT_FOUND, 'No stream data found for this streamer');
