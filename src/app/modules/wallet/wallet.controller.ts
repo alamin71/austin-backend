@@ -3,13 +3,22 @@ import { StatusCodes } from 'http-status-codes';
 import catchAsync from '../../../shared/catchAsync.js';
 import sendResponse from '../../../shared/sendResponse.js';
 import WalletService from './wallet.service.js';
+import AppError from '../../../errors/AppError.js';
 
 class WalletController {
+  private getRequestUserId(req: Request): string {
+    const userId = (req.user as any)?.id || (req.user as any)?._id;
+    if (!userId) {
+      throw new AppError(StatusCodes.UNAUTHORIZED, 'You are not authorized !!');
+    }
+    return userId;
+  }
+
   /**
    * Get account progression
    */
   getAccountProgression = catchAsync(async (req: Request, res: Response) => {
-    const userId = (req.user as any)._id;
+    const userId = this.getRequestUserId(req);
     const result = await WalletService.getAccountProgression(userId);
 
     sendResponse(res, {
@@ -24,7 +33,7 @@ class WalletController {
    * Get wallet balance
    */
   getWalletBalance = catchAsync(async (req: Request, res: Response) => {
-    const userId = (req.user as any)._id;
+    const userId = this.getRequestUserId(req);
     const result = await WalletService.getWalletBalance(userId);
 
     sendResponse(res, {
@@ -39,7 +48,7 @@ class WalletController {
    * Get transaction history
    */
   getTransactionHistory = catchAsync(async (req: Request, res: Response) => {
-    const userId = (req.user as any)._id;
+    const userId = this.getRequestUserId(req);
     const page = parseInt(req.query.page as string) || 1;
     const limit = parseInt(req.query.limit as string) || 20;
     const type = req.query.type as string;
@@ -83,7 +92,7 @@ class WalletController {
    * Convert feathers to dollars (1200 feathers = $1)
    */
   convertFeathers = catchAsync(async (req: Request, res: Response) => {
-    const userId = (req.user as any)._id;
+    const userId = this.getRequestUserId(req);
     const { featherAmount } = req.body;
 
     const result = await WalletService.convertFeathersToDollars(
@@ -103,7 +112,7 @@ class WalletController {
    * Create withdrawal request
    */
   createWithdrawal = catchAsync(async (req: Request, res: Response) => {
-    const userId = (req.user as any)._id;
+    const userId = this.getRequestUserId(req);
     const {
       amount,
       payoutMethod = 'bank_transfer',
