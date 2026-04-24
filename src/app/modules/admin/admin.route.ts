@@ -206,6 +206,12 @@ router.get(
 );
 
 router.get(
+  '/stream/active/:streamId/preview',
+  auth(USER_ROLES.ADMIN, USER_ROLES.SUPER_ADMIN),
+  AdminController.getActiveStreamPreviewSession,
+);
+
+router.get(
   '/stream/monitoring',
   auth(USER_ROLES.ADMIN, USER_ROLES.SUPER_ADMIN),
   AdminController.getStreamMonitoring,

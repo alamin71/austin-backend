@@ -18,6 +18,7 @@ import { logger, errorLogger } from '../../../shared/logger.js';
 import generateOTP from '../../../utils/generateOTP.js';
 import { verifyToken } from '../../../utils/verifyToken.js';
 import { createToken } from '../../../utils/createToken.js';
+import StreamService from '../stream/stream.service.js';
 
 const MONTH_LABELS = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
 
@@ -273,6 +274,45 @@ const getSingleActiveStream = async (streamId: string) => {
      }
 
      return stream;
+};
+
+const getActiveStreamPreviewSession = async (streamId: string) => {
+     const stream = await Stream.findOne({ _id: streamId, status: 'live' })
+          .populate('streamer', 'name userName image email')
+          .populate('category', 'name');
+
+     if (!stream) {
+          throw new AppError(StatusCodes.NOT_FOUND, 'Active stream not found');
+     }
+
+     const channelName = stream.agora?.channelName;
+     if (!channelName) {
+          throw new AppError(
+               StatusCodes.BAD_REQUEST,
+               'Stream channel is not available for preview',
+          );
+     }
+
+     const uid = Math.floor(Math.random() * 100000);
+     const viewerToken = StreamService.generateAgoraToken(
+          channelName,
+          uid,
+          'subscriber',
+     );
+
+     return {
+          stream: {
+               _id: stream._id,
+               title: stream.title,
+               status: stream.status,
+               streamer: stream.streamer,
+               category: stream.category,
+          },
+          playback: {
+               channelName,
+               viewerToken,
+          },
+     };
 };
 
 const getStreamMonitoring = async () => {
@@ -1349,6 +1389,7 @@ export const AdminService = {
      adminResendOtpToDB,
      getActiveStreams,
      getSingleActiveStream,
+     getActiveStreamPreviewSession,
      getStreamMonitoring,
      getSingleStreamMonitoring,
      warnStreamer,

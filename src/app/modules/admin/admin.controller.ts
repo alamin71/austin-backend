@@ -170,6 +170,18 @@ const getSingleActiveStream = catchAsync(async (req: Request, res: Response) => 
      });
 });
 
+const getActiveStreamPreviewSession = catchAsync(async (req: Request, res: Response) => {
+     const { streamId } = req.params;
+     const result = await AdminService.getActiveStreamPreviewSession(streamId);
+
+     sendResponse(res, {
+          statusCode: StatusCodes.OK,
+          success: true,
+          message: 'Active stream preview session retrieved',
+          data: result,
+     });
+});
+
 const getStreamMonitoring = catchAsync(async (req: Request, res: Response) => {
      const result = await AdminService.getStreamMonitoring();
 
@@ -361,6 +373,7 @@ export const AdminController = {
      adminResendOtp,
      getActiveStreams,
      getSingleActiveStream,
+     getActiveStreamPreviewSession,
      getStreamMonitoring,
      getSingleStreamMonitoring,
      warnStreamer,
