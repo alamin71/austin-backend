@@ -1,8 +1,6 @@
 import { StatusCodes } from 'http-status-codes';
 import AppError from '../../../errors/AppError.js';
 import { Wallet, WalletTransaction, FeatherPackage } from './wallet.model.js';
-import { User } from '../user/user.model.js';
-import { Subscription } from '../subscription/subscription.model.js';
 import { ChallengeProgress } from '../challenge/challenge.model.js';
 import { logger, errorLogger } from '../../../shared/logger.js';
 
@@ -164,6 +162,7 @@ class WalletService {
 
       const dailyProgress = Math.max(0, Math.floor(dailyEarnedRows[0]?.total || 0));
       const coinBalance = Math.floor(currentFeathers / FEATHER_TO_COIN_RATE);
+      const featherConvertBalance = currentFeathers / FEATHER_TO_COIN_RATE;
 
       return {
         tierName: activeTier.name,
@@ -172,6 +171,8 @@ class WalletService {
         dailyProgress,
         dailyTarget: DAILY_FEATHER_TARGET,
         coinBalance,
+        featherConvertBalance,
+        cashBalance: wallet.cashBalance,
       };
     } catch (error) {
       errorLogger.error('Get account progression error', error);
@@ -241,7 +242,7 @@ class WalletService {
    */
 
   /**
-   * Send gift (deduct feathers from sender, add to receiver)
+   * Send gift (deduct feathers from sender, add feathers to receiver)
    */
   static async sendGift(
     senderId: string,
@@ -260,21 +261,6 @@ class WalletService {
         );
       }
 
-      // Check if sender is subscribed to receiver
-      const isSubscribed = await Subscription.findOne({
-        userId: senderId,
-        streamerId: receiverId,
-        status: 'active',
-        currentPeriodEnd: { $gt: new Date() },
-      });
-
-      if (!isSubscribed) {
-        throw new AppError(
-          StatusCodes.FORBIDDEN,
-          'You must be subscribed to this streamer to send gifts'
-        );
-      }
-
       // Deduct from sender
       senderWallet.featherBalance -= featherAmount;
       senderWallet.totalFeathersSpent += featherAmount;
@@ -284,17 +270,14 @@ class WalletService {
       senderWallet.totalSpent = senderWallet.totalFeathersSpent;
       await senderWallet.save();
 
-      // Add to receiver
+      // Add feathers to receiver
       const receiverWallet = await this.getOrCreateWallet(receiverId);
-      const platformFee = giftValue * 0.15; // 15% commission
-      const streamerEarnings = giftValue - platformFee;
-
-      receiverWallet.cashBalance += streamerEarnings;
-      receiverWallet.totalCashEarned += streamerEarnings;
+      receiverWallet.featherBalance += featherAmount;
+      receiverWallet.totalFeathersEarned += featherAmount;
 
       // Legacy compatibility fields
-      receiverWallet.balance = receiverWallet.cashBalance;
-      receiverWallet.totalEarned = receiverWallet.totalCashEarned;
+      receiverWallet.balance = receiverWallet.featherBalance;
+      receiverWallet.totalEarned = receiverWallet.totalFeathersEarned;
       await receiverWallet.save();
 
       // Record transactions
@@ -309,52 +292,28 @@ class WalletService {
           streamerId: receiverId,
           transactionId,
           status: 'completed',
-          metadata: { unit: 'feather', giftValue, platformFee },
+          metadata: { unit: 'feather', giftValue },
         },
         {
           userId: receiverId,
           type: 'gift_received',
-          amount: streamerEarnings,
-          description: `Gift received from viewer ($${streamerEarnings.toFixed(2)})`,
+          amount: featherAmount,
+          description: `Gift received from viewer (${featherAmount} feathers)`,
           streamerId: senderId,
           transactionId,
           status: 'completed',
-          metadata: { unit: 'usd', featherAmount, platformFee },
+          metadata: { unit: 'feather', featherAmount, giftValue },
         },
       ]);
 
-      // Create platform commission transaction and auto-credit admin
-      const adminUser = await User.findOne({
-        role: { $in: ['ADMIN', 'SUPER_ADMIN'] },
-      }).select('_id');
-
-      if (adminUser) {
-        await WalletTransaction.create({
-          userId: adminUser._id,
-          type: 'platform_commission',
-          amount: platformFee,
-          description: `Platform commission from gift ($${platformFee.toFixed(2)})`,
-          status: 'completed',
-          metadata: {
-            streamerId: receiverId,
-            senderId: senderId,
-            source: 'gift',
-            giftValue,
-          },
-        });
-
-        // Auto-credit admin cashBalance
-        await this.autoCreditAdminOnCommission(adminUser._id.toString(), platformFee);
-      }
-
       logger.info(
-        `✓ Gift sent: ${senderId} → ${receiverId} (${featherAmount} feathers, $${giftValue})`
+        `✓ Gift sent: ${senderId} → ${receiverId} (${featherAmount} feathers)`
       );
 
       return {
         senderBalance: senderWallet.featherBalance,
-        streamerEarnings,
-        platformFee,
+        receiverFeatherBalance: receiverWallet.featherBalance,
+        transferredFeathers: featherAmount,
       };
     } catch (error) {
       errorLogger.error('Send gift error', error);

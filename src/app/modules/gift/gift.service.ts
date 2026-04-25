@@ -6,7 +6,6 @@ import { Stream } from '../stream/stream.model.js';
 import { StreamAnalytics } from '../stream/streamAnalytics.model.js';
 import { IGift } from './gift.interface.js';
 import WalletService from '../wallet/wallet.service.js';
-import { Subscription } from '../subscription/subscription.model.js';
 import ChallengeService from '../challenge/challenge.service.js';
 
 class GiftService {
@@ -185,21 +184,6 @@ class GiftService {
                     );
                }
 
-               // ✅ NEW: Check if sender is subscribed to streamer
-               const isSubscribed = await Subscription.findOne({
-                    userId: senderId,
-                    streamerId: stream.streamer,
-                    status: 'active',
-                    currentPeriodEnd: { $gt: new Date() },
-               });
-
-               if (!isSubscribed) {
-                    throw new AppError(
-                         StatusCodes.FORBIDDEN,
-                         'You must be subscribed to this streamer to send gifts',
-                    );
-               }
-
                // Get gift details
                const gift = await this.getGiftById(giftData.giftId);
 
@@ -305,20 +289,6 @@ class GiftService {
 
                if (!stream.allowGifts) {
                     throw new AppError(StatusCodes.BAD_REQUEST, 'Gifts are disabled for this stream');
-               }
-
-               const isSubscribed = await Subscription.findOne({
-                    userId: senderId,
-                    streamerId: stream.streamer,
-                    status: 'active',
-                    currentPeriodEnd: { $gt: new Date() },
-               });
-
-               if (!isSubscribed) {
-                    throw new AppError(
-                         StatusCodes.FORBIDDEN,
-                         'You must be subscribed to this streamer to send gifts',
-                    );
                }
 
                const gift = await this.getOrCreateFeatherTransferGift();
