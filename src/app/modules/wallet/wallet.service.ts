@@ -161,7 +161,6 @@ class WalletService {
       ]);
 
       const dailyProgress = Math.max(0, Math.floor(dailyEarnedRows[0]?.total || 0));
-      const coinBalance = Math.floor(currentFeathers / FEATHER_TO_COIN_RATE);
       const featherConvertBalance = currentFeathers / FEATHER_TO_COIN_RATE;
 
       return {
@@ -170,7 +169,6 @@ class WalletService {
         nextTierTarget: activeTier.nextTarget,
         dailyProgress,
         dailyTarget: DAILY_FEATHER_TARGET,
-        coinBalance,
         featherConvertBalance,
         cashBalance: wallet.cashBalance,
       };
