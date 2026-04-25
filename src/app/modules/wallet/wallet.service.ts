@@ -460,18 +460,19 @@ class WalletService {
   static async convertFeathersToDollars(userId: string, featherAmount: number) {
     try {
       const FEATHER_TO_DOLLAR_RATE = 1200; // 1200 feathers = $1
+      const MINIMUM_FEATHER_CONVERSION = 200;
 
-      if (featherAmount < FEATHER_TO_DOLLAR_RATE) {
+      if (!Number.isInteger(featherAmount) || featherAmount <= 0) {
         throw new AppError(
           StatusCodes.BAD_REQUEST,
-          `Minimum conversion is ${FEATHER_TO_DOLLAR_RATE} feathers ($1)`
+          'Feather amount must be a positive integer'
         );
       }
 
-      if (featherAmount % FEATHER_TO_DOLLAR_RATE !== 0) {
+      if (featherAmount < MINIMUM_FEATHER_CONVERSION) {
         throw new AppError(
           StatusCodes.BAD_REQUEST,
-          `Feather amount must be a multiple of ${FEATHER_TO_DOLLAR_RATE}`
+          `Minimum conversion is ${MINIMUM_FEATHER_CONVERSION} feathers`
         );
       }
 
