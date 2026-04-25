@@ -109,6 +109,82 @@ class WalletService {
   static async getWalletBalance(userId: string) {
     try {
       const wallet = await this.getOrCreateWallet(userId);
+      const earningTransactions = await WalletTransaction.find({
+        userId,
+        status: 'completed',
+        amount: { $gt: 0 },
+        type: {
+          $in: [
+            'gift_received',
+            'subscription',
+            'subscription_earning',
+            'subscription_commission',
+          ],
+        },
+      }).select('type amount description metadata');
+
+      const round2 = (value: number) => Number(value.toFixed(2));
+      const revenue = {
+        gifts: 0,
+        subscriptions: 0,
+        vidzoStore: 0,
+      };
+
+      for (const txn of earningTransactions) {
+        const source = String(txn.metadata?.source || '').toLowerCase();
+        const description = String(txn.description || '').toLowerCase();
+
+        if (txn.type === 'gift_received') {
+          const isFeatherUnit = txn.metadata?.unit === 'feather';
+          const giftValue = isFeatherUnit
+            ? Number(txn.amount) / FEATHER_TO_COIN_RATE
+            : Number(txn.amount);
+          revenue.gifts += giftValue;
+          continue;
+        }
+
+        if (txn.type === 'subscription' || txn.type === 'subscription_earning') {
+          revenue.subscriptions += Number(txn.amount);
+          continue;
+        }
+
+        const isStoreCommission =
+          txn.type === 'subscription_commission' ||
+          source.includes('marketplace') ||
+          source.includes('store') ||
+          description.includes('marketplace') ||
+          description.includes('store');
+
+        if (isStoreCommission) {
+          revenue.vidzoStore += Number(txn.amount);
+        }
+      }
+
+      const totalRevenue = revenue.gifts + revenue.subscriptions + revenue.vidzoStore;
+      const baseCash = Math.max(0, Number(wallet.cashBalance || 0));
+      const toPercentOfCash = (value: number) =>
+        baseCash > 0 ? round2((value / baseCash) * 100) : 0;
+
+      const revenueBreakdown = {
+        fethergifts: {
+          amount: round2(revenue.gifts),
+          percentOfCashBalance: toPercentOfCash(revenue.gifts),
+        },
+        gifts: {
+          amount: round2(revenue.gifts),
+          percentOfCashBalance: toPercentOfCash(revenue.gifts),
+        },
+        subscriptions: {
+          amount: round2(revenue.subscriptions),
+          percentOfCashBalance: toPercentOfCash(revenue.subscriptions),
+        },
+        vidzoStore: {
+          amount: round2(revenue.vidzoStore),
+          percentOfCashBalance: toPercentOfCash(revenue.vidzoStore),
+        },
+        cashBalance: round2(baseCash),
+      };
+
       return {
         featherBalance: wallet.featherBalance,
         cashBalance: wallet.cashBalance,
@@ -118,9 +194,9 @@ class WalletService {
         totalCashEarned: wallet.totalCashEarned,
         totalCashSpent: wallet.totalCashSpent,
         totalCashWithdrawn: wallet.totalCashWithdrawn,
+        revenueBreakdown,
         // Legacy compatibility fields
         balance: wallet.cashBalance,
-        totalEarned: wallet.totalCashEarned,
         totalSpent: wallet.totalCashSpent,
         totalWithdrawn: wallet.totalCashWithdrawn,
       };
