@@ -3,6 +3,15 @@ import catchAsync from '../../../shared/catchAsync.js';
 import sendResponse from '../../../shared/sendResponse.js';
 import { StatusCodes } from 'http-status-codes';
 import GiftService from './gift.service.js';
+import AppError from '../../../errors/AppError.js';
+
+const getRequestUserId = (req: Request): string => {
+     const userId = (req.user as any)?.id || (req.user as any)?._id;
+     if (!userId) {
+          throw new AppError(StatusCodes.UNAUTHORIZED, 'You are not authorized !!');
+     }
+     return userId;
+};
 
 // Create gift (Admin only)
 const createGift = catchAsync(async (req: Request, res: Response) => {
@@ -84,7 +93,7 @@ const deleteGift = catchAsync(async (req: Request, res: Response) => {
 // Send gift to streamer
 const sendGift = catchAsync(async (req: Request, res: Response) => {
      const { streamId } = req.params;
-     const userId = (req.user as any)?._id;
+     const userId = getRequestUserId(req);
 
      const transaction = await GiftService.sendGift(streamId, userId, req.body);
 
@@ -99,7 +108,7 @@ const sendGift = catchAsync(async (req: Request, res: Response) => {
 // Send custom feather amount to streamer
 const sendFeatherGift = catchAsync(async (req: Request, res: Response) => {
      const { streamId } = req.params;
-     const userId = (req.user as any)?._id;
+     const userId = getRequestUserId(req);
 
      const result = await GiftService.sendFeatherGift(streamId, userId, req.body);
 
@@ -126,7 +135,7 @@ const getStreamGifts = catchAsync(async (req: Request, res: Response) => {
 
 // Get streamer gifts
 const getStreamerGifts = catchAsync(async (req: Request, res: Response) => {
-     const streamerId = (req.user as any)?._id;
+     const streamerId = getRequestUserId(req);
      const gifts = await GiftService.getStreamerGifts(streamerId);
 
      sendResponse(res, {
