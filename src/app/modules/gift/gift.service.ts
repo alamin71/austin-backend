@@ -237,12 +237,7 @@ class GiftService {
                // Add to stream gifts array
                await Stream.findByIdAndUpdate(streamId, {
                     $push: {
-                         gifts: {
-                              user: senderId,
-                              gift: gift._id,
-                              quantity: giftData.quantity,
-                              timestamp: new Date(),
-                         },
+                         gifts: gift._id,
                     },
                });
 
@@ -335,12 +330,7 @@ class GiftService {
 
                await Stream.findByIdAndUpdate(streamId, {
                     $push: {
-                         gifts: {
-                              user: senderId,
-                              gift: gift._id,
-                              quantity: 1,
-                              timestamp: new Date(),
-                         },
+                         gifts: gift._id,
                     },
                });
 
