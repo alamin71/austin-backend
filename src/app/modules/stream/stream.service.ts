@@ -74,6 +74,15 @@ class StreamService {
           streamData: Partial<any>,
      ) {
           try {
+               const existingLiveStream = await Stream.findOne({
+                    streamer: streamerId,
+                    status: 'live',
+               });
+
+               if (existingLiveStream) {
+                    throw new AppError(StatusCodes.BAD_REQUEST, 'You are already live');
+               }
+
                // Generate Agora credentials
                const channelName = `stream_${streamerId}_${Date.now()}`;
                const uid = Math.floor(Math.random() * 100000);

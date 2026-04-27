@@ -6,6 +6,8 @@ import PollService from '../poll/poll.service.js';
 
 class StreamSocketHandler {
      static setupStreamHandlers(io: Server) {
+          const hostStreamBySocket = new Map<string, string>();
+
           io.on('connection', (socket: Socket) => {
                logger.info(`Socket connected: ${socket.id}`);
 
@@ -16,14 +18,23 @@ class StreamSocketHandler {
                          try {
                               const { streamId, userId } = data;
 
+                              // Load stream before adding viewer so we can detect the broadcaster.
+                              const stream = await StreamService.getStreamDetails(
+                                   streamId,
+                              );
+
                               // Add socket to stream room
                               socket.join(`stream_${streamId}`);
 
                               // Add viewer to stream
                               await StreamService.addViewer(streamId, userId);
 
+                              if (String(stream.streamer) === String(userId)) {
+                                   hostStreamBySocket.set(socket.id, streamId);
+                              }
+
                               // Get current viewer count
-                              const stream = await StreamService.getStreamDetails(
+                              const updatedStream = await StreamService.getStreamDetails(
                                    streamId,
                               );
 
@@ -33,7 +44,7 @@ class StreamSocketHandler {
                                    {
                                         userId,
                                         streamId,
-                                        viewerCount: stream.currentViewerCount,
+                                        viewerCount: updatedStream.currentViewerCount,
                                    },
                               );
 
@@ -56,6 +67,10 @@ class StreamSocketHandler {
 
                               // Remove viewer from stream
                               await StreamService.removeViewer(streamId, userId);
+
+                              if (hostStreamBySocket.get(socket.id) === streamId) {
+                                   hostStreamBySocket.delete(socket.id);
+                              }
 
                               // Leave room
                               socket.leave(`stream_${streamId}`);
@@ -426,7 +441,23 @@ class StreamSocketHandler {
                );
 
                // Disconnect
-               socket.on('disconnect', () => {
+               socket.on('disconnect', async () => {
+                    const hostStreamId = hostStreamBySocket.get(socket.id);
+
+                    if (hostStreamId) {
+                         hostStreamBySocket.delete(socket.id);
+
+                         try {
+                              await StreamService.endStream(hostStreamId);
+                              io.to(`stream_${hostStreamId}`).emit('stream:ended', {
+                                   streamId: hostStreamId,
+                                   timestamp: new Date(),
+                              });
+                         } catch (error) {
+                              errorLogger.error('Auto end stream on disconnect error', error);
+                         }
+                    }
+
                     logger.info(`Socket disconnected: ${socket.id}`);
                });
           });
