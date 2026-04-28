@@ -3,6 +3,7 @@ import AppError from '../../../errors/AppError.js';
 import { Wallet, WalletTransaction, FeatherPackage } from './wallet.model.js';
 import { ChallengeProgress } from '../challenge/challenge.model.js';
 import { logger, errorLogger } from '../../../shared/logger.js';
+import { User } from '../user/user.model.js';
 
 const FEATHER_TO_COIN_RATE = 1200;
 const DAILY_FEATHER_TARGET = 200;
@@ -391,6 +392,172 @@ class WalletService {
       };
     } catch (error) {
       errorLogger.error('Send gift error', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Send cash tip/gift (deduct cash from sender, add cash to receiver)
+   */
+  static async sendCashGift(
+    senderId: string,
+    receiverId: string,
+    cashAmount: number,
+    giftValue?: number
+  ) {
+    try {
+      const normalizedAmount = Number(cashAmount);
+
+      if (!Number.isFinite(normalizedAmount) || normalizedAmount <= 0) {
+        throw new AppError(StatusCodes.BAD_REQUEST, 'cashAmount must be a positive number');
+      }
+
+      const senderWallet = await this.getOrCreateWallet(senderId);
+      if (senderWallet.cashBalance < normalizedAmount) {
+        throw new AppError(StatusCodes.BAD_REQUEST, 'Insufficient cash balance');
+      }
+
+      const receiverWallet = await this.getOrCreateWallet(receiverId);
+
+      senderWallet.cashBalance -= normalizedAmount;
+      senderWallet.totalCashSpent += normalizedAmount;
+      senderWallet.balance = senderWallet.cashBalance;
+      senderWallet.totalSpent = senderWallet.totalCashSpent;
+      await senderWallet.save();
+
+      receiverWallet.cashBalance += normalizedAmount;
+      receiverWallet.totalCashEarned += normalizedAmount;
+      receiverWallet.balance = receiverWallet.cashBalance;
+      receiverWallet.totalEarned = receiverWallet.totalCashEarned;
+      await receiverWallet.save();
+
+      const transactionId = `cash_gift_${Date.now()}`;
+
+      await WalletTransaction.create([
+        {
+          userId: senderId,
+          type: 'gift_sent',
+          amount: -normalizedAmount,
+          description: `Cash gift sent to streamer ($${normalizedAmount.toFixed(2)})`,
+          streamerId: receiverId,
+          transactionId,
+          status: 'completed',
+          metadata: { unit: 'cash', giftValue: giftValue ?? normalizedAmount },
+        },
+        {
+          userId: receiverId,
+          type: 'gift_received',
+          amount: normalizedAmount,
+          description: `Cash gift received from viewer ($${normalizedAmount.toFixed(2)})`,
+          streamerId: senderId,
+          transactionId,
+          status: 'completed',
+          metadata: { unit: 'cash', cashAmount: normalizedAmount, giftValue: giftValue ?? normalizedAmount },
+        },
+      ]);
+
+      logger.info(`✓ Cash gift sent: ${senderId} → ${receiverId} ($${normalizedAmount.toFixed(2)})`);
+
+      return {
+        senderBalance: senderWallet.cashBalance,
+        receiverCashBalance: receiverWallet.cashBalance,
+        transferredCash: normalizedAmount,
+      };
+    } catch (error) {
+      errorLogger.error('Send cash gift error', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Direct tip to a streamer without requiring a live stream
+   */
+  static async sendDirectTip(
+    senderId: string,
+    receiverId: string,
+    featherAmount: number,
+    message?: string,
+    isAnonymous: boolean = false
+  ) {
+    try {
+      if (!Number.isInteger(featherAmount) || featherAmount <= 0) {
+        throw new AppError(StatusCodes.BAD_REQUEST, 'featherAmount must be a positive integer');
+      }
+
+      if (senderId === receiverId) {
+        throw new AppError(StatusCodes.BAD_REQUEST, 'You cannot tip yourself');
+      }
+
+      const receiverUser = await User.findById(receiverId).select('_id name image');
+      if (!receiverUser) {
+        throw new AppError(StatusCodes.NOT_FOUND, 'Streamer not found');
+      }
+
+      const senderWallet = await this.getOrCreateWallet(senderId);
+      if (senderWallet.featherBalance < featherAmount) {
+        throw new AppError(StatusCodes.BAD_REQUEST, 'Insufficient feather balance');
+      }
+
+      const receiverWallet = await this.getOrCreateWallet(receiverId);
+
+      senderWallet.featherBalance -= featherAmount;
+      senderWallet.totalFeathersSpent += featherAmount;
+      senderWallet.balance = senderWallet.featherBalance;
+      senderWallet.totalSpent = senderWallet.totalFeathersSpent;
+      await senderWallet.save();
+
+      receiverWallet.featherBalance += featherAmount;
+      receiverWallet.totalFeathersEarned += featherAmount;
+      receiverWallet.balance = receiverWallet.featherBalance;
+      receiverWallet.totalEarned = receiverWallet.totalFeathersEarned;
+      await receiverWallet.save();
+
+      const transactionId = `tip_${Date.now()}`;
+
+      await WalletTransaction.create([
+        {
+          userId: senderId,
+          type: 'gift_sent',
+          amount: -featherAmount,
+          description: `Direct tip sent to streamer (${featherAmount} feathers)`,
+          streamerId: receiverId,
+          transactionId,
+          status: 'completed',
+          metadata: {
+            unit: 'feather',
+            directTip: true,
+            message: message || '',
+            isAnonymous,
+          },
+        },
+        {
+          userId: receiverId,
+          type: 'gift_received',
+          amount: featherAmount,
+          description: `Direct tip received from viewer (${featherAmount} feathers)`,
+          streamerId: senderId,
+          transactionId,
+          status: 'completed',
+          metadata: {
+            unit: 'feather',
+            directTip: true,
+            featherAmount,
+            message: message || '',
+            isAnonymous,
+          },
+        },
+      ]);
+
+      logger.info(`✓ Direct tip sent: ${senderId} → ${receiverId} (${featherAmount} feathers)`);
+
+      return {
+        senderBalance: senderWallet.featherBalance,
+        receiverFeatherBalance: receiverWallet.featherBalance,
+        transferredFeathers: featherAmount,
+        streamerId: receiverId,
+      };
+    } catch (error) {
+      errorLogger.error('Send direct tip error', error);
       throw error;
     }
   }

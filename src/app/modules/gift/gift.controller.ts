@@ -120,6 +120,21 @@ const sendFeatherGift = catchAsync(async (req: Request, res: Response) => {
      });
 });
 
+// Send cash amount to streamer
+const sendCashGift = catchAsync(async (req: Request, res: Response) => {
+     const { streamId } = req.params;
+     const userId = getRequestUserId(req);
+
+     const result = await GiftService.sendCashGift(streamId, userId, req.body);
+
+     sendResponse(res, {
+          statusCode: StatusCodes.CREATED,
+          success: true,
+          message: 'Cash gift sent successfully',
+          data: result,
+     });
+});
+
 // Get stream gifts
 const getStreamGifts = catchAsync(async (req: Request, res: Response) => {
      const { streamId } = req.params;
@@ -155,6 +170,7 @@ const GiftController = {
      deleteGift,
      sendGift,
      sendFeatherGift,
+     sendCashGift,
      getStreamGifts,
      getStreamerGifts,
 };

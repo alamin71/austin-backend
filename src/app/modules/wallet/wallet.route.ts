@@ -40,6 +40,13 @@ router.post(
   walletController.convertFeathers
 );
 
+// Tip a streamer directly from feather balance
+router.post(
+  '/tip',
+  auth(USER_ROLES.USER),
+  walletController.tipStreamer
+);
+
 // Create withdrawal request
 router.post(
   '/withdraw',

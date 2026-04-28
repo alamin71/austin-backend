@@ -28,6 +28,25 @@ class GiftService {
           return gift;
      }
 
+     private static async getOrCreateCashTransferGift() {
+          const GIFT_NAME = '__cash_amount_transfer__';
+
+          let gift = await Gift.findOne({ name: GIFT_NAME });
+          if (!gift) {
+               gift = await Gift.create({
+                    name: GIFT_NAME,
+                    description: 'System gift for direct cash amount transfer',
+                    image: 'https://dummyimage.com/512x512/1d4ed8/ffffff.png&text=Cash',
+                    price: 1,
+                    category: 'basic',
+                    isActive: false,
+                    order: 10000,
+               });
+          }
+
+          return gift;
+     }
+
      /**
       * Create a new gift (Admin only)
       */
@@ -351,6 +370,101 @@ class GiftService {
                };
           } catch (error) {
                errorLogger.error('Send feather gift error', error);
+               throw error;
+          }
+     }
+
+     /**
+      * Send direct cash amount to streamer
+      */
+     static async sendCashGift(
+          streamId: string,
+          senderId: string,
+          payload: {
+               dollarAmount: number;
+               isAnonymous?: boolean;
+          },
+     ) {
+          try {
+               const dollarAmount = Number(payload.dollarAmount || 0);
+               if (!Number.isFinite(dollarAmount) || dollarAmount <= 0) {
+                    throw new AppError(StatusCodes.BAD_REQUEST, 'dollarAmount must be greater than 0');
+               }
+
+               const stream = await Stream.findById(streamId);
+               if (!stream) {
+                    throw new AppError(StatusCodes.NOT_FOUND, 'Stream not found');
+               }
+
+               if (stream.status !== 'live') {
+                    throw new AppError(StatusCodes.BAD_REQUEST, 'Stream is not currently live');
+               }
+
+               if (!stream.allowGifts) {
+                    throw new AppError(StatusCodes.BAD_REQUEST, 'Gifts are disabled for this stream');
+               }
+
+               const gift = await this.getOrCreateCashTransferGift();
+
+               const walletResult = await WalletService.sendCashGift(
+                    senderId,
+                    stream.streamer._id.toString(),
+                    dollarAmount,
+               );
+
+               const transaction = new GiftTransaction({
+                    sender: senderId,
+                    receiver: stream.streamer,
+                    stream: streamId,
+                    gift: gift._id,
+                    quantity: 1,
+                    totalAmount: dollarAmount,
+                    isAnonymous: payload.isAnonymous ?? false,
+                    status: 'completed',
+                    metadata: {
+                         unit: 'cash',
+                         dollarAmount,
+                    },
+               });
+
+               await transaction.save();
+
+               ChallengeService.updateProgress(senderId, 'gift_giver', 1).catch((challengeError) => {
+                    errorLogger.error('Challenge progress update failed (send-cash)', challengeError);
+               });
+
+               if (stream.analytics) {
+                    await StreamAnalytics.findByIdAndUpdate(stream.analytics, {
+                         $inc: {
+                              giftsReceived: 1,
+                              revenue: dollarAmount,
+                         },
+                    });
+               }
+
+               await Stream.findByIdAndUpdate(streamId, {
+                    $push: {
+                         gifts: gift._id,
+                    },
+               });
+
+               logger.info(
+                    `✓ Cash gift sent: $${dollarAmount} to stream ${streamId}`,
+               );
+
+               const populatedTxn = await transaction.populate([
+                    { path: 'sender', select: 'name image' },
+                    { path: 'receiver', select: 'name image' },
+                    { path: 'gift' },
+               ]);
+
+               return {
+                    transaction: populatedTxn,
+                    giftedCash: dollarAmount,
+                    availableCash: walletResult.senderBalance,
+               };
+          } catch (error) {
+               errorLogger.error('Send cash gift error', error);
                throw error;
           }
      }

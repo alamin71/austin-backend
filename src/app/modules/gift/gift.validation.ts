@@ -40,3 +40,10 @@ export const sendFeatherGiftSchema = z.object({
           isAnonymous: z.coerce.boolean().optional().default(false),
      }),
 });
+
+export const sendCashGiftSchema = z.object({
+     body: z.object({
+          dollarAmount: z.coerce.number().positive(),
+          isAnonymous: z.coerce.boolean().optional().default(false),
+     }),
+});

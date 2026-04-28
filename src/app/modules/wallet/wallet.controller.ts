@@ -109,6 +109,29 @@ class WalletController {
   });
 
   /**
+   * Tip a streamer directly from feather balance
+   */
+  tipStreamer = catchAsync(async (req: Request, res: Response) => {
+    const userId = this.getRequestUserId(req);
+    const { streamerId, featherAmount, message, isAnonymous = false } = req.body;
+
+    const result = await WalletService.sendDirectTip(
+      userId,
+      streamerId,
+      Number(featherAmount),
+      message,
+      Boolean(isAnonymous)
+    );
+
+    sendResponse(res, {
+      statusCode: StatusCodes.CREATED,
+      success: true,
+      message: 'Tip sent successfully',
+      data: result,
+    });
+  });
+
+  /**
    * Create withdrawal request
    */
   createWithdrawal = catchAsync(async (req: Request, res: Response) => {
