@@ -4,6 +4,8 @@ import { User } from '../user/user.model.js';
 import AppError from '../../../errors/AppError.js';
 import { StatusCodes } from 'http-status-codes';
 import { errorLogger } from '../../../shared/logger.js';
+import { USER_ROLES } from '../../../enums/user.js';
+import { v4 as uuidv4 } from 'uuid';
 
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
@@ -38,6 +40,20 @@ interface AppleTokenPayload {
 }
 
 class OAuthService {
+  private static async buildUniqueUserName(baseUserName: string) {
+    const normalizedBase = baseUserName.trim().toLowerCase().replace(/[^a-z0-9_@.-]/g, '') || 'user';
+
+    let candidate = normalizedBase;
+    let counter = 0;
+
+    while (await User.findOne({ userName: candidate })) {
+      counter += 1;
+      candidate = `${normalizedBase}_${uuidv4().slice(0, 6)}${counter > 1 ? `_${counter}` : ''}`;
+    }
+
+    return candidate;
+  }
+
   /**
    * Google OAuth - Verify token and create/update user
    */
@@ -58,12 +74,15 @@ class OAuthService {
       let user = await User.findOne({ email: payload.email });
 
       if (!user) {
+        const userName = await this.buildUniqueUserName(payload.email.split('@')[0] || payload.sub);
+
         user = await User.create({
           email: payload.email,
           name: payload.name || `${payload.given_name} ${payload.family_name}`,
-          avatar: payload.picture,
+          userName,
+          image: payload.picture,
           isEmailVerified: payload.email_verified,
-          role: 'user',
+          role: USER_ROLES.USER,
           authProvider: 'google',
           authProviderId: payload.sub,
           password: undefined, // No password for OAuth users
