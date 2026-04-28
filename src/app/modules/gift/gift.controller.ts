@@ -135,6 +135,19 @@ const sendCashGift = catchAsync(async (req: Request, res: Response) => {
      });
 });
 
+// Get amount of gifts received for a stream
+const getStreamGiftSummary = catchAsync(async (req: Request, res: Response) => {
+     const { streamId } = req.params;
+     const summary = await GiftService.getStreamGiftSummary(streamId);
+
+     sendResponse(res, {
+          statusCode: StatusCodes.OK,
+          success: true,
+          message: 'Stream gift summary retrieved successfully',
+          data: summary,
+     });
+});
+
 // Get stream gifts
 const getStreamGifts = catchAsync(async (req: Request, res: Response) => {
      const { streamId } = req.params;
@@ -171,6 +184,7 @@ const GiftController = {
      sendGift,
      sendFeatherGift,
      sendCashGift,
+     getStreamGiftSummary,
      getStreamGifts,
      getStreamerGifts,
 };

@@ -487,6 +487,83 @@ class GiftService {
      }
 
      /**
+      * Get gift summary for a stream
+      */
+     static async getStreamGiftSummary(streamId: string) {
+          try {
+               const summaryRows = await GiftTransaction.aggregate([
+                    {
+                         $match: {
+                              stream: new (await import('mongoose')).Types.ObjectId(streamId),
+                              status: 'completed',
+                         },
+                    },
+                    {
+                         $group: {
+                              _id: null,
+                              totalGiftCount: { $sum: 1 },
+                              featherGiftCount: {
+                                   $sum: {
+                                        $cond: [
+                                             { $eq: ['$metadata.unit', 'feather'] },
+                                             1,
+                                             0,
+                                        ],
+                                   },
+                              },
+                              cashGiftCount: {
+                                   $sum: {
+                                        $cond: [
+                                             { $eq: ['$metadata.unit', 'cash'] },
+                                             1,
+                                             0,
+                                        ],
+                                   },
+                              },
+                              totalFeatherAmount: {
+                                   $sum: {
+                                        $cond: [
+                                             { $eq: ['$metadata.unit', 'feather'] },
+                                             '$metadata.featherAmount',
+                                             0,
+                                        ],
+                                   },
+                              },
+                              totalCashAmount: {
+                                   $sum: {
+                                        $cond: [
+                                             { $eq: ['$metadata.unit', 'cash'] },
+                                             '$metadata.dollarAmount',
+                                             0,
+                                        ],
+                                   },
+                              },
+                         },
+                    },
+               ]);
+
+               const summary = summaryRows[0] || {
+                    totalGiftCount: 0,
+                    featherGiftCount: 0,
+                    cashGiftCount: 0,
+                    totalFeatherAmount: 0,
+                    totalCashAmount: 0,
+               };
+
+               return {
+                    totalGiftCount: Number(summary.totalGiftCount || 0),
+                    featherGiftCount: Number(summary.featherGiftCount || 0),
+                    cashGiftCount: Number(summary.cashGiftCount || 0),
+                    totalFeatherAmount: Number(summary.totalFeatherAmount || 0),
+                    totalCashAmount: Number(summary.totalCashAmount || 0),
+               };
+          } catch (error) {
+               errorLogger.error('Get stream gift summary error', error);
+               throw error;
+          }
+     }
+
+     /**
       * Get gift transactions received by streamer
       */
      static async getStreamerGifts(streamerId: string) {

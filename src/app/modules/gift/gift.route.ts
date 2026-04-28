@@ -53,6 +53,11 @@ router.post(
      GiftController.sendCashGift,
 );
 router.get(
+     '/stream/:streamId/summary',
+     auth(USER_ROLES.USER, USER_ROLES.ADMIN),
+     GiftController.getStreamGiftSummary,
+);
+router.get(
      '/stream/:streamId/list',
      auth(USER_ROLES.USER, USER_ROLES.ADMIN),
      GiftController.getStreamGifts,
