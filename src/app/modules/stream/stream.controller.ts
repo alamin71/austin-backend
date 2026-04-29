@@ -81,10 +81,10 @@ class StreamController {
 
           const endedStream = await StreamService.endStream(streamId);
 
-          // Notify all viewers that stream has ended
-          const io = (req as any).io;
-          if (io) {
-               io.to(streamId).emit('stream_ended', {
+          // Notify all viewers that stream has ended using global socket instance
+          if (isSocketInitialized()) {
+               const io = getSocketInstance();
+               io.to(`stream_${streamId}`).emit('stream:ended', {
                     streamId,
                     message: 'Stream has ended',
                     timestamp: new Date(),
