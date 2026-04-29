@@ -233,6 +233,17 @@ const endStream = catchAsync(async (req: Request, res: Response) => {
 
      const result = await AdminService.endStream(adminId, streamId, reason);
 
+     // Notify all viewers that stream has ended
+     const io = (req as any).io;
+     if (io) {
+          io.to(streamId).emit('stream_ended', {
+               streamId,
+               message: 'Stream has ended by admin',
+               reason: reason || 'No reason provided',
+               timestamp: new Date(),
+          });
+     }
+
      sendResponse(res, {
           statusCode: StatusCodes.OK,
           success: true,

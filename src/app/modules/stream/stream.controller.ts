@@ -63,14 +63,38 @@ class StreamController {
 
      endStream = catchAsync(async (req: Request, res: Response) => {
           const { streamId } = req.params;
+          const userId = (req.user as any)?._id || (req.user as any)?.id;
 
-          const stream = await StreamService.endStream(streamId);
+          if (!userId) {
+               throw new AppError(StatusCodes.UNAUTHORIZED, 'User not authenticated');
+          }
+
+          // Verify user is the stream owner
+          const stream = await Stream.findById(streamId).populate('streamer');
+          if (!stream) {
+               throw new AppError(StatusCodes.NOT_FOUND, 'Stream not found');
+          }
+          if (stream.streamer._id.toString() !== userId.toString()) {
+               throw new AppError(StatusCodes.FORBIDDEN, 'Only stream owner can end the stream');
+          }
+
+          const endedStream = await StreamService.endStream(streamId);
+
+          // Notify all viewers that stream has ended
+          const io = (req as any).io;
+          if (io) {
+               io.to(streamId).emit('stream_ended', {
+                    streamId,
+                    message: 'Stream has ended',
+                    timestamp: new Date(),
+               });
+          }
 
           sendResponse(res, {
                statusCode: StatusCodes.OK,
                success: true,
                message: 'Stream ended successfully',
-               data: stream,
+               data: endedStream,
           });
      });
 
