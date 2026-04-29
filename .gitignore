@@ -9,3 +9,9 @@ winston/
 .env.*.local
 .env
 .env.local
+
+# Firebase credentials - NEVER commit these!
+**/firebase-adminsdk-*.json
+**/firebase-service-account.json
+src/config/*firebase*.json
+!src/config/firebase-service-account.example.json
