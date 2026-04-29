@@ -5,7 +5,7 @@ import { AdminRoutes } from '../app/modules/admin/admin.route.js';
 import { StreamRouter } from '../app/modules/stream/stream.route.js';
 import { CategoryRouter } from '../app/modules/category/category.route.js';
 import GiftRouter from '../app/modules/gift/gift.route.js';
-import PollRouter from '../app/modules/poll/poll.route.js';
+import PollRouter, { allPollsRouter } from '../app/modules/poll/poll.route.js';
 import { TestRouter } from '../app/modules/test/test.route.js';
 import AnalyticsRouter from '../app/modules/stream/analytics.route.js';
 import SubscriptionRouter from '../app/modules/subscription/subscription.route.js';
@@ -62,6 +62,10 @@ const routes = [
      {
           path: '/gift',
           route: GiftRouter,
+     },
+     {
+          path: '/polls',
+          route: allPollsRouter,
      },
      {
           path: '/poll',
