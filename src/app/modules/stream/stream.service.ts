@@ -550,59 +550,54 @@ class StreamService {
 
                const msgKey = clientMessageId || `${userId}_${streamId}_${Date.now()}`;
 
-               let result: any;
-               try {
-                    // Atomic upsert: prevents duplicate documents under concurrent requests.
-                    result = await (Message as any)
-                         .findOneAndUpdate(
-                              { clientMessageId: msgKey },
-                              {
-                                   $setOnInsert: {
-                                        stream: streamId,
-                                        sender: userId,
-                                        content: normalizedContent,
-                                        type,
-                                        clientMessageId: msgKey,
-                                        isModerated: false,
-                                        isPinned: false,
-                                   },
-                              },
-                              {
-                                   upsert: true,
-                                   new: true,
-                                   rawResult: true,
-                              },
-                         )
-                         .populate('sender', 'name userName image');
-               } catch (upsertError: any) {
-                    // Race condition fallback: if duplicate key occurs, return existing.
-                    if (upsertError?.code === 11000) {
-                         const existing = await Message.findOne({ clientMessageId: msgKey })
-                              .populate('sender', 'name userName image');
+               const existingMessage = await Message.findOne({ clientMessageId: msgKey }).populate(
+                    'sender',
+                    'name userName image',
+               );
 
-                         if (existing) {
+               if (existingMessage) {
+                    return {
+                         message: existingMessage,
+                         isNew: false,
+                    };
+               }
+
+               let message;
+               try {
+                    message = await Message.create({
+                         stream: streamId,
+                         sender: userId,
+                         content: normalizedContent,
+                         type,
+                         clientMessageId: msgKey,
+                         isModerated: false,
+                         isPinned: false,
+                    });
+               } catch (createError: any) {
+                    if (createError?.code === 11000) {
+                         const duplicateMessage = await Message.findOne({ clientMessageId: msgKey }).populate(
+                              'sender',
+                              'name userName image',
+                         );
+
+                         if (duplicateMessage) {
                               return {
-                                   message: existing,
+                                   message: duplicateMessage,
                                    isNew: false,
                               };
                          }
                     }
 
-                    throw upsertError;
+                    throw createError;
                }
 
-               const isNew: boolean = !result.lastErrorObject?.updatedExisting;
-               const message = result.value;
+               message = await Message.findById(message._id).populate(
+                    'sender',
+                    'name userName image',
+               );
 
                if (!message) {
                     throw new AppError(StatusCodes.INTERNAL_SERVER_ERROR, 'Failed to save message');
-               }
-
-               if (!isNew) {
-                    return {
-                         message,
-                         isNew: false,
-                    };
                }
 
                stream.chat.push(message._id);
