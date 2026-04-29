@@ -548,12 +548,21 @@ class StreamService {
 
                const normalizedContent = content.trim();
 
-               const msgKey = clientMessageId || `${userId}_${streamId}_${Date.now()}`;
+               const duplicateWindowMs = 2000;
+               const duplicateCutoff = new Date(Date.now() - duplicateWindowMs);
 
-               const existingMessage = await Message.findOne({ clientMessageId: msgKey }).populate(
-                    'sender',
-                    'name userName image',
-               );
+               const existingMessage = clientMessageId
+                    ? await Message.findOne({ clientMessageId }).populate(
+                         'sender',
+                         'name userName image',
+                    )
+                    : await Message.findOne({
+                         stream: streamId,
+                         sender: userId,
+                         content: normalizedContent,
+                         type,
+                         createdAt: { $gte: duplicateCutoff },
+                    }).populate('sender', 'name userName image');
 
                if (existingMessage) {
                     return {
@@ -569,13 +578,13 @@ class StreamService {
                          sender: userId,
                          content: normalizedContent,
                          type,
-                         clientMessageId: msgKey,
+                         ...(clientMessageId ? { clientMessageId } : {}),
                          isModerated: false,
                          isPinned: false,
                     });
                } catch (createError: any) {
-                    if (createError?.code === 11000) {
-                         const duplicateMessage = await Message.findOne({ clientMessageId: msgKey }).populate(
+                    if (createError?.code === 11000 && clientMessageId) {
+                         const duplicateMessage = await Message.findOne({ clientMessageId }).populate(
                               'sender',
                               'name userName image',
                          );
