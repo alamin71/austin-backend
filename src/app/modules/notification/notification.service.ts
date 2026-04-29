@@ -1,6 +1,8 @@
 import { Types } from 'mongoose';
 import { Notification } from './notification.model.js';
 import { isSocketInitialized, getSocketInstance } from '../../../helpers/socketInstance.js';
+import DeviceTokenService from './deviceToken.service.js';
+import { errorLogger } from '../../../shared/logger.js';
 
 export class NotificationService {
      static async createNotification(
@@ -11,6 +13,7 @@ export class NotificationService {
           relatedId?: string,
           actionUrl?: string,
           icon?: string,
+          sendPushNotification: boolean = true,
      ) {
           try {
                const notification = await Notification.create({
@@ -44,6 +47,23 @@ export class NotificationService {
                          read: false,
                     });
                     io.to(userId).emit('unread_count', { unreadCount });
+               }
+
+               // Send push notification (non-blocking)
+               if (sendPushNotification) {
+                    DeviceTokenService.sendNotificationToUser(
+                         userId,
+                         type,
+                         content,
+                         {
+                              notificationId: notification._id.toString(),
+                              type,
+                              actionUrl: actionUrl || '',
+                         },
+                         icon,
+                    ).catch((error) => {
+                         errorLogger.error('Push notification error:', error);
+                    });
                }
 
                return notification;

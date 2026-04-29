@@ -11,6 +11,7 @@ import { setupProcessHandlers } from './DB/processHandlers.js';
 import { setupSecurity } from './DB/security.js';
 import { setupCluster } from './DB/cluster.js';
 import { emailHelper } from './helpers/emailHelper.js';
+import FirebaseHelper from './helpers/firebaseHelper.js';
 
 // Define the types for the servers
 let httpServer: HttpServer;
@@ -21,6 +22,8 @@ export async function startServer() {
      try {
           // Validate config
           validateConfig();
+          // Initialize Firebase for push notifications
+          FirebaseHelper.initialize();
           // Connect to the database
           await connectToDatabase();
           

@@ -51,6 +51,13 @@ export default {
      aws_secret_access_key: process.env.AWS_SECRET_ACCESS_KEY,
      aws_s3_bucket_name: process.env.AWS_S3_BUCKET_NAME,
 
+     firebase: {
+          service_account_path: process.env.FIREBASE_SERVICE_ACCOUNT_PATH,
+          database_url: process.env.FIREBASE_DATABASE_URL,
+          project_id: process.env.FIREBASE_PROJECT_ID,
+          vapid_key: process.env.FIREBASE_VAPID_KEY,
+     },
+
      express_sessoin: process.env.EXPRESS_SESSION_SECRET_KEY,
      social: {
           google_client_id: process.env.GOOGLE_CLIENT_ID,
