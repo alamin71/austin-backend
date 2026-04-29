@@ -443,14 +443,8 @@ const endStream = async (adminId: string, streamId: string, reason?: string) => 
           );
      }
 
-     const endedStream = await Stream.findByIdAndUpdate(
-          streamId,
-          {
-               status: 'ended',
-               endedAt: new Date(),
-          },
-          { new: true },
-     );
+     // Use proper stream service to end stream (handles recording, analytics, category counts)
+     const endedStream = await StreamService.endStream(streamId);
 
      // If reason provided, create a warning
      if (reason) {
