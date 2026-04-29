@@ -3,6 +3,7 @@ import { StatusCodes } from 'http-status-codes';
 import catchAsync from '../../../shared/catchAsync.js';
 import sendResponse from '../../../shared/sendResponse.js';
 import StreamService from './stream.service.js';
+import { Stream } from './stream.model.js';
 import AppError from '../../../errors/AppError.js';
 import { uploadFileToS3 } from '../../../helpers/s3Helper.js';
 import { getSocketInstance, isSocketInitialized } from '../../../helpers/socketInstance.js';
