@@ -26,11 +26,28 @@ class StreamSocketHandler {
                               // Add socket to stream room
                               socket.join(`stream_${streamId}`);
 
+                              // Debug logs: record socket rooms and current room members
+                              try {
+                                   logger.info(
+                                        `Socket ${socket.id} joined rooms: ${Array.from(
+                                             socket.rooms,
+                                        ).join(',')}`,
+                                   );
+
+                                   const members = await io.in(`stream_${streamId}`).allSockets();
+                                   logger.info(
+                                        `stream_${streamId} members: ${[...members].join(',')}`,
+                                   );
+                              } catch (logError) {
+                                   errorLogger.error('Error logging stream room members', logError);
+                              }
+
                               // Add viewer to stream
                               await StreamService.addViewer(streamId, userId);
 
                               if (String(stream.streamer) === String(userId)) {
                                    hostStreamBySocket.set(socket.id, streamId);
+                                       logger.info(`Registered host mapping: socket ${socket.id} -> stream ${streamId}`);
                               }
 
                               // Get current viewer count
@@ -131,7 +148,17 @@ class StreamSocketHandler {
 
                               // sender বাদে room-এ শুধু নতুন message broadcast.
                               if (isNew) {
-                                   socket.to(`stream_${streamId}`).emit('stream:message', payload);
+                                  try {
+                                       logger.info(
+                                            `Broadcasting stream:message for stream_${streamId} from socket ${socket.id}`,
+                                       );
+                                       const members = await io.in(`stream_${streamId}`).allSockets();
+                                       logger.info(`stream_${streamId} members before broadcast: ${[...members].join(',')}`);
+                                  } catch (logError) {
+                                       errorLogger.error('Error fetching members before broadcast', logError);
+                                  }
+
+                                  socket.to(`stream_${streamId}`).emit('stream:message', payload);
                               }
 
                               // sender-কে always acknowledge, duplicate হলে flag থাকবে.
