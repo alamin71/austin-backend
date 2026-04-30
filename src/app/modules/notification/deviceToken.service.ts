@@ -109,15 +109,22 @@ class DeviceTokenService {
           imageUrl?: string,
      ) {
           try {
+               logger.info(`🔍 Fetching device tokens for user: ${userId}`);
                const tokens = await this.getUserDeviceTokens(userId);
 
                if (tokens.length === 0) {
-                    logger.info(`No active device tokens for user ${userId}`);
-                    return { success: true, sentTo: 0 };
+                    logger.warn(`⚠️  No active device tokens found for user ${userId}`);
+                    return { success: true, sentTo: 0, message: 'No active devices' };
                }
 
+               logger.info(
+                    `📨 Found ${tokens.length} active device(s) for user ${userId}`,
+               );
                const deviceTokens = tokens.map((token) => token.deviceToken);
 
+               logger.info(
+                    `🚀 Sending FCM message: title="${title}", body="${body}", devices=${tokens.length}`,
+               );
                const result = await FirebaseHelper.sendToMultipleDevices(
                     deviceTokens,
                     title,
@@ -126,10 +133,17 @@ class DeviceTokenService {
                     imageUrl,
                );
 
+               logger.info(
+                    `📊 FCM Result - Success: ${result.successCount}, Failed: ${result.failureCount}`,
+               );
+
                // Remove failed tokens
                if (result.responses) {
                     for (let i = 0; i < result.responses.length; i++) {
                          if (!result.responses[i].success) {
+                              logger.warn(
+                                   `⚠️  Deactivating failed token: ${deviceTokens[i]}`,
+                              );
                               await DeviceToken.findOneAndUpdate(
                                    { deviceToken: deviceTokens[i] },
                                    { isActive: false },
@@ -138,9 +152,12 @@ class DeviceTokenService {
                     }
                }
 
-               return { success: true, sentTo: result.successCount };
+               return { success: true, sentTo: result.successCount, result };
           } catch (error) {
-               errorLogger.error('Send notification to user error:', error);
+               errorLogger.error(
+                    `❌ Send notification to user error for ${userId}:`,
+                    error,
+               );
                return { success: false, error };
           }
      }

@@ -13,11 +13,12 @@ class FirebaseHelper {
                     const serviceAccountPath = config.firebase?.service_account_path;
 
                     if (!serviceAccountPath) {
-                         errorLogger.error('Firebase service account path not configured');
+                         errorLogger.error('🚨 Firebase service account path not configured');
                          return;
                     }
 
                     const absolutePath = resolve(process.cwd(), serviceAccountPath);
+                    logger.info(`📂 Loading Firebase credentials from: ${absolutePath}`);
                     const serviceAccount = JSON.parse(readFileSync(absolutePath, 'utf8'));
 
                     if (!admin.apps.length) {
@@ -25,14 +26,14 @@ class FirebaseHelper {
                               credential: admin.credential.cert(serviceAccount),
                               databaseURL: config.firebase?.database_url,
                          });
+                         logger.info('✅ Firebase Admin SDK initialized successfully');
                     } else {
                          this.instance = admin.app();
+                         logger.info('ℹ️  Firebase Admin SDK already initialized');
                     }
-
-                    logger.info('Firebase initialized successfully');
                }
           } catch (error) {
-               errorLogger.error('Firebase initialization error:', error);
+               errorLogger.error('🚨 Firebase initialization error:', error);
           }
      }
 
@@ -161,8 +162,22 @@ class FirebaseHelper {
                const response = await admin.messaging().sendEachForMulticast(message);
 
                logger.info(
-                    `Multicast notification sent. Success: ${response.successCount}, Failed: ${response.failureCount}`,
+                    `✅ Multicast notification sent to ${response.successCount} device(s), ${response.failureCount} failed`,
                );
+
+               if (response.failureCount > 0) {
+                    logger.warn(
+                         `⚠️  Some devices failed: ${JSON.stringify(
+                              response.responses
+                                   .map((r, i) => ({
+                                        index: i,
+                                        success: r.success,
+                                        error: r.error?.message,
+                                   }))
+                                   .filter((r) => !r.success),
+                         )}`,
+                    );
+               }
 
                return {
                     success: true,
@@ -171,7 +186,7 @@ class FirebaseHelper {
                     responses: response.responses,
                };
           } catch (error) {
-               errorLogger.error('Send to multiple devices error:', error);
+               errorLogger.error('❌ Send to multiple devices error:', error);
                return { success: false, error };
           }
      }

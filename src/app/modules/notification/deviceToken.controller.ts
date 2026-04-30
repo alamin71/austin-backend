@@ -114,6 +114,39 @@ class DeviceTokenController {
                data: result,
           });
      });
+
+     /**
+      * TEST ENDPOINT: Send test FCM push notification
+      * POST /notification/device/test-push
+      */
+     testSendPush = catchAsync(async (req: Request, res: Response) => {
+          const userId = (req.user as any)?._id || (req.user as any)?.id;
+
+          if (!userId) {
+               throw new AppError(StatusCodes.UNAUTHORIZED, 'User not authenticated');
+          }
+
+          const { title = 'Test Notification', body = 'This is a test FCM notification' } = req.body;
+
+          const result = await DeviceTokenService.sendNotificationToUser(
+               userId,
+               title,
+               body,
+               {
+                    type: 'test',
+                    message: 'FCM Test Push',
+               },
+          );
+
+          sendResponse(res, {
+               statusCode: StatusCodes.OK,
+               success: result.success,
+               message: result.success
+                    ? `Test push sent to ${result.sentTo} device(s)`
+                    : 'Test push failed',
+               data: result,
+          });
+     });
 }
 
 export default new DeviceTokenController();

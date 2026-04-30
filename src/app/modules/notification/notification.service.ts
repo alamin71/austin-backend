@@ -2,7 +2,7 @@ import { Types } from 'mongoose';
 import { Notification } from './notification.model.js';
 import { isSocketInitialized, getSocketInstance } from '../../../helpers/socketInstance.js';
 import DeviceTokenService from './deviceToken.service.js';
-import { errorLogger } from '../../../shared/logger.js';
+import { errorLogger, logger } from '../../../shared/logger.js';
 
 export class NotificationService {
      static async createNotification(
@@ -51,6 +51,9 @@ export class NotificationService {
 
                // Send push notification (non-blocking)
                if (sendPushNotification) {
+                    logger.info(
+                         `📱 Triggering FCM push notification for user ${userId}, type: ${type}`,
+                    );
                     DeviceTokenService.sendNotificationToUser(
                          userId,
                          type,
@@ -61,9 +64,18 @@ export class NotificationService {
                               actionUrl: actionUrl || '',
                          },
                          icon,
-                    ).catch((error) => {
-                         errorLogger.error('Push notification error:', error);
-                    });
+                    )
+                         .then((result) => {
+                              logger.info(
+                                   `✅ FCM push sent to user ${userId}: ${JSON.stringify(result)}`,
+                              );
+                         })
+                         .catch((error) => {
+                              errorLogger.error(
+                                   `❌ FCM push failed for user ${userId}:`,
+                                   error,
+                              );
+                         });
                }
 
                return notification;

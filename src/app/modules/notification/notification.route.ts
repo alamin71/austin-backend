@@ -78,4 +78,11 @@ router.delete(
      deviceTokenController.deleteDeviceToken,
 );
 
+// TEST ENDPOINT: Send test FCM push
+router.post(
+     '/device/test-push',
+     auth(USER_ROLES.USER),
+     deviceTokenController.testSendPush,
+);
+
 export const notificationRoutes = router;
