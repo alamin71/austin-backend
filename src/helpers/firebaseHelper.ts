@@ -6,6 +6,8 @@ import config from '../config/index.js';
 
 class FirebaseHelper {
      private static instance: admin.app.App | undefined;
+     // Cache the resolved absolute service account path used to initialize Firebase
+     private static resolvedServiceAccountPath: string | undefined;
 
      static initialize() {
           try {
@@ -18,6 +20,8 @@ class FirebaseHelper {
                     }
 
                     const absolutePath = resolve(process.cwd(), serviceAccountPath);
+                    // cache resolved path so later send calls don't rely on config lookup
+                    this.resolvedServiceAccountPath = absolutePath;
                     logger.info(`📂 Loading Firebase credentials from: ${absolutePath}`);
                          // Verify file exists
                          try {
@@ -50,11 +54,19 @@ class FirebaseHelper {
 
      static getInstance() {
           if (!this.instance) {
-               this.initialize();
+               // Try to initialize once more using cached path or config
+               try {
+                    this.initialize();
+               } catch (e) {
+                    // fallthrough to error below
+               }
           }
-              if (!this.instance) {
-                   throw new Error('Firebase failed to initialize. Check service account credentials.');
-              }
+
+          if (!this.instance) {
+               const usedPath = this.resolvedServiceAccountPath || config.firebase?.service_account_path || 'undefined';
+               throw new Error(`Firebase failed to initialize. serviceAccountPath=${usedPath}`);
+          }
+
           return this.instance;
      }
 
