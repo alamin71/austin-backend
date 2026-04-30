@@ -8,6 +8,10 @@ class FirebaseHelper {
      private static instance: admin.app.App | undefined;
      // Cache the resolved absolute service account path used to initialize Firebase
      private static resolvedServiceAccountPath: string | undefined;
+     // Fallback: directly resolve from environment variable if present
+     private static envServiceAccountPath: string | undefined = process.env.FIREBASE_SERVICE_ACCOUNT_PATH
+          ? resolve(process.cwd(), process.env.FIREBASE_SERVICE_ACCOUNT_PATH)
+          : undefined;
 
      static initialize() {
           try {
@@ -19,10 +23,16 @@ class FirebaseHelper {
                          return;
                     }
 
-                    const absolutePath = resolve(process.cwd(), serviceAccountPath);
-                    // cache resolved path so later send calls don't rely on config lookup
-                    this.resolvedServiceAccountPath = absolutePath;
-                    logger.info(`📂 Loading Firebase credentials from: ${absolutePath}`);
+                         // final path resolution: prefer config, then cached, then env
+                         const finalPathCandidate = serviceAccountPath || this.resolvedServiceAccountPath || process.env.FIREBASE_SERVICE_ACCOUNT_PATH || FirebaseHelper.envServiceAccountPath;
+                         if (!finalPathCandidate) {
+                              errorLogger.error('🚨 Firebase service account path not configured (no config value or env var)');
+                              return;
+                         }
+                         const absolutePath = resolve(process.cwd(), finalPathCandidate);
+                         // cache resolved path so later send calls don't rely on config lookup
+                         this.resolvedServiceAccountPath = absolutePath;
+                         logger.info(`📂 Loading Firebase credentials from: ${absolutePath}`);
                          // Verify file exists
                          try {
                               readFileSync(absolutePath, 'utf8');
