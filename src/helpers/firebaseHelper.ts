@@ -69,14 +69,14 @@ class FirebaseHelper {
           imageUrl?: string,
      ) {
           try {
-                   // Ensure Firebase is initialized before sending
-                   this.getInstance();
-                   logger.info(`📊 Firebase Admin SDK Loaded:`, {
-                        hasCredential: !!admin.credential,
-                        hasApp: !!admin.app,
-                        hasApps: !!admin.apps,
-                        hasMessaging: !!admin.messaging,
-                   });
+               // Ensure Firebase is initialized before sending
+               logger.info(`🔎 sendToDevice - current instance: ${Boolean(this.instance)}, serviceAccountPath: ${config.firebase?.service_account_path}`);
+               try {
+                    this.getInstance();
+               } catch (e) {
+                    errorLogger.error('Firebase not initialized at sendToDevice:', e);
+                    throw e;
+               }
 
                const message: admin.messaging.Message = {
                     token: deviceToken,
@@ -143,7 +143,13 @@ class FirebaseHelper {
      ) {
           try {
                    // Ensure Firebase is initialized before sending
-                   this.getInstance();
+                   logger.info(`🔎 sendToMultipleDevices - current instance: ${Boolean(this.instance)}, serviceAccountPath: ${config.firebase?.service_account_path}`);
+                   try {
+                        this.getInstance();
+                   } catch (e) {
+                        errorLogger.error('Firebase not initialized at sendToMultipleDevices:', e);
+                        return { success: false, error: e };
+                   }
 
                const message: admin.messaging.MulticastMessage = {
                     tokens: deviceTokens,
