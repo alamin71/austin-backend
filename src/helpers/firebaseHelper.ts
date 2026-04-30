@@ -1,11 +1,11 @@
-import * as admin from 'firebase-admin';
+import admin from 'firebase-admin';
 import { readFileSync } from 'fs';
 import { resolve } from 'path';
 import { errorLogger, logger } from '../shared/logger.js';
 import config from '../config/index.js';
 
 class FirebaseHelper {
-     private static instance: admin.app.App;
+     private static instance: admin.app.App | undefined;
 
      static initialize() {
           try {
@@ -19,14 +19,24 @@ class FirebaseHelper {
 
                     const absolutePath = resolve(process.cwd(), serviceAccountPath);
                     logger.info(`📂 Loading Firebase credentials from: ${absolutePath}`);
+                         // Verify file exists
+                         try {
+                              readFileSync(absolutePath, 'utf8');
+                         } catch (fileError) {
+                              errorLogger.error(`🚨 Firebase credentials file not found: ${absolutePath}`);
+                              return;
+                         }
                     const serviceAccount = JSON.parse(readFileSync(absolutePath, 'utf8'));
 
-                    if (!admin.apps.length) {
+                        // Safely check if apps exist
+                        const existingApps = admin.apps || [];
+                        if (!existingApps.length) {
                          this.instance = admin.initializeApp({
                               credential: admin.credential.cert(serviceAccount),
                               databaseURL: config.firebase?.database_url,
                          });
                          logger.info('✅ Firebase Admin SDK initialized successfully');
+                              logger.info(`📊 Firebase Project: ${serviceAccount.project_id}`);
                     } else {
                          this.instance = admin.app();
                          logger.info('ℹ️  Firebase Admin SDK already initialized');
@@ -34,6 +44,7 @@ class FirebaseHelper {
                }
           } catch (error) {
                errorLogger.error('🚨 Firebase initialization error:', error);
+                   this.instance = undefined;
           }
      }
 
@@ -41,6 +52,9 @@ class FirebaseHelper {
           if (!this.instance) {
                this.initialize();
           }
+              if (!this.instance) {
+                   throw new Error('Firebase failed to initialize. Check service account credentials.');
+              }
           return this.instance;
      }
 
@@ -55,6 +69,15 @@ class FirebaseHelper {
           imageUrl?: string,
      ) {
           try {
+                   // Ensure Firebase is initialized before sending
+                   this.getInstance();
+                   logger.info(`📊 Firebase Admin SDK Loaded:`, {
+                        hasCredential: !!admin.credential,
+                        hasApp: !!admin.app,
+                        hasApps: !!admin.apps,
+                        hasMessaging: !!admin.messaging,
+                   });
+
                const message: admin.messaging.Message = {
                     token: deviceToken,
                     notification: {
@@ -119,6 +142,9 @@ class FirebaseHelper {
           imageUrl?: string,
      ) {
           try {
+                   // Ensure Firebase is initialized before sending
+                   this.getInstance();
+
                const message: admin.messaging.MulticastMessage = {
                     tokens: deviceTokens,
                     notification: {
@@ -187,6 +213,14 @@ class FirebaseHelper {
                };
           } catch (error) {
                errorLogger.error('❌ Send to multiple devices error:', error);
+                   // Extract meaningful error message
+                   let errorMessage = 'Unknown error';
+                   if (error instanceof Error) {
+                        errorMessage = error.message;
+                   } else if (typeof error === 'object' && error !== null) {
+                        errorMessage = JSON.stringify(error);
+                   }
+                   logger.error(`📊 Firebase Error Details: ${errorMessage}`);
                return { success: false, error };
           }
      }
@@ -202,6 +236,9 @@ class FirebaseHelper {
           imageUrl?: string,
      ) {
           try {
+                   // Ensure Firebase is initialized before sending
+                   this.getInstance();
+
                const message: admin.messaging.Message = {
                     topic,
                     notification: {
