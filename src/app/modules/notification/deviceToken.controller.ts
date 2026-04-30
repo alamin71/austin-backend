@@ -138,13 +138,20 @@ class DeviceTokenController {
                },
           );
 
+          // Ensure error is serializable for clients
+          const responseData: any = { ...result };
+          if (!result.success && result.error) {
+               const err: any = result.error;
+               responseData.errorMessage = err?.message || JSON.stringify(err);
+          }
+
           sendResponse(res, {
                statusCode: StatusCodes.OK,
                success: result.success,
                message: result.success
                     ? `Test push sent to ${result.sentTo} device(s)`
                     : 'Test push failed',
-               data: result,
+               data: responseData,
           });
      });
 }
