@@ -133,6 +133,19 @@ class DeviceTokenService {
                     imageUrl,
                );
 
+               // Handle FCM error response
+               if (!result.success) {
+                    errorLogger.error(
+                         `❌ Firebase send failed: ${JSON.stringify(result.error)}`,
+                    );
+                    return {
+                         success: false,
+                         sentTo: 0,
+                         message: 'Firebase send failed',
+                         error: result.error,
+                    };
+               }
+
                logger.info(
                     `📊 FCM Result - Success: ${result.successCount}, Failed: ${result.failureCount}`,
                );
