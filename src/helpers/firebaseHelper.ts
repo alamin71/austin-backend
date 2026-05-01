@@ -13,6 +13,27 @@ class FirebaseHelper {
           ? resolve(process.cwd(), process.env.FIREBASE_SERVICE_ACCOUNT_PATH)
           : undefined;
 
+     private static sanitizeImageUrl(imageUrl?: string) {
+          if (!imageUrl) {
+               return undefined;
+          }
+
+          const trimmed = imageUrl.trim();
+          if (!trimmed) {
+               return undefined;
+          }
+
+          try {
+               const parsed = new URL(trimmed);
+               if (parsed.protocol !== 'https:') {
+                    return undefined;
+               }
+               return parsed.toString();
+          } catch {
+               return undefined;
+          }
+     }
+
      static initialize() {
           try {
                if (!this.instance) {
@@ -100,12 +121,14 @@ class FirebaseHelper {
                     throw e;
                }
 
+               const safeImageUrl = this.sanitizeImageUrl(imageUrl);
+
                const message: admin.messaging.Message = {
                     token: deviceToken,
                     notification: {
                          title,
                          body,
-                         imageUrl,
+                         ...(safeImageUrl ? { imageUrl: safeImageUrl } : {}),
                     },
                     data: data || {},
                     android: {
@@ -113,10 +136,10 @@ class FirebaseHelper {
                          notification: {
                               title,
                               body,
-                              imageUrl,
                               channelId: 'default',
                               sound: 'default',
                               clickAction: 'FLUTTER_NOTIFICATION_CLICK',
+                              ...(safeImageUrl ? { imageUrl: safeImageUrl } : {}),
                          },
                     },
                     apns: {
@@ -135,7 +158,7 @@ class FirebaseHelper {
                          notification: {
                               title,
                               body,
-                              icon: imageUrl,
+                              ...(safeImageUrl ? { icon: safeImageUrl } : {}),
                               badge: 'https://example.com/badge.png',
                               tag: 'notification',
                               requireInteraction: false,
@@ -173,12 +196,14 @@ class FirebaseHelper {
                         return { success: false, error: e };
                    }
 
+               const safeImageUrl = this.sanitizeImageUrl(imageUrl);
+
                const message: admin.messaging.MulticastMessage = {
                     tokens: deviceTokens,
                     notification: {
                          title,
                          body,
-                         imageUrl,
+                         ...(safeImageUrl ? { imageUrl: safeImageUrl } : {}),
                     },
                     data: data || {},
                     android: {
@@ -186,9 +211,9 @@ class FirebaseHelper {
                          notification: {
                               title,
                               body,
-                              imageUrl,
                               channelId: 'default',
                               sound: 'default',
+                              ...(safeImageUrl ? { imageUrl: safeImageUrl } : {}),
                          },
                     },
                     apns: {
@@ -206,7 +231,7 @@ class FirebaseHelper {
                          notification: {
                               title,
                               body,
-                              icon: imageUrl,
+                              ...(safeImageUrl ? { icon: safeImageUrl } : {}),
                               badge: 'https://example.com/badge.png',
                          },
                          data: data || {},
