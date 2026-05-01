@@ -10,7 +10,9 @@ export interface INotification {
           | 'subscription_purchased'
           | 'gift_received'
           | 'stream_live'
+          | 'stream_started'
           | 'new_follower'
+          | 'message'
           | 'comment';
      content: string;
      relatedUser?: Types.ObjectId; // The user who triggered the notification (sender of request, gifter, etc)
