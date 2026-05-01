@@ -7,6 +7,8 @@ import { StreamAnalytics } from '../stream/streamAnalytics.model.js';
 import { IGift } from './gift.interface.js';
 import WalletService from '../wallet/wallet.service.js';
 import ChallengeService from '../challenge/challenge.service.js';
+import { User } from '../user/user.model.js';
+import { NotificationService } from '../notification/notification.service.js';
 
 class GiftService {
      private static async getOrCreateFeatherTransferGift() {
@@ -264,6 +266,24 @@ class GiftService {
                     `✓ Gift sent: ${gift.name} x${giftData.quantity} (${featherCost} feathers, $${usdValue}) to stream ${streamId}`,
                );
 
+               // Notify streamer about gift (non-blocking)
+               try {
+                    const senderInfo = await User.findById(senderId).select('name userName');
+                    Promise.resolve(
+                         NotificationService.createNotification(
+                              stream.streamer._id.toString(),
+                              'gift_received',
+                              `${senderInfo?.name} sent you a gift`,
+                              senderId,
+                              transaction._id.toString(),
+                              `/stream/${streamId}`,
+                              'gift',
+                         ),
+                    ).catch((e) => errorLogger.error('Gift notification error', e));
+               } catch (e) {
+                    errorLogger.error('Gift notification lookup error', e);
+               }
+
                return transaction.populate([
                     { path: 'sender', select: 'name image' },
                     { path: 'receiver', select: 'name image' },
@@ -363,7 +383,25 @@ class GiftService {
                     { path: 'gift' },
                ]);
 
-               return {
+                    // Notify streamer about the feather gift (non-blocking)
+                    try {
+                         const senderInfo = await User.findById(senderId).select('name userName');
+                         Promise.resolve(
+                              NotificationService.createNotification(
+                                   stream.streamer._id.toString(),
+                                   'gift_received',
+                                   `${senderInfo?.name} sent you a gift`,
+                                   senderId,
+                                   transaction._id.toString(),
+                                   `/stream/${streamId}`,
+                                   'gift',
+                              ),
+                         ).catch((e) => errorLogger.error('Feather gift notification error', e));
+                    } catch (e) {
+                         errorLogger.error('Feather gift notification lookup error', e);
+                    }
+
+                    return {
                     transaction: populatedTxn,
                     giftedFeathers: featherAmount,
                     availableFeathers: walletResult.senderBalance,

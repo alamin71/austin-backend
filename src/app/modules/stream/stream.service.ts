@@ -13,6 +13,7 @@ import { uploadFileToS3 } from '../../../helpers/s3Helper.js';
 import { generateAndUploadThumbnail } from '../../../helpers/videoThumbnailHelper.js';
 import AgoraRecordingHelper from '../../../helpers/agoraRecordingHelper.js';
 import ChallengeService from '../challenge/challenge.service.js';
+import { NotificationService } from '../notification/notification.service.js';
 
 
 class StreamService {
@@ -174,6 +175,29 @@ class StreamService {
                }
 
                logger.info(`Stream started: ${stream._id}`);
+
+               // Notify followers about stream start (non-blocking)
+               try {
+                    const streamerDoc = await User.findById(streamerId).select('followers name userName');
+                    const followerIds = (streamerDoc?.followers || []).map((f: any) => f.toString());
+                    if (followerIds.length) {
+                         Promise.allSettled(
+                              followerIds.map((fid: string) =>
+                                   NotificationService.createNotification(
+                                        fid,
+                                        'stream_started',
+                                        `${streamerDoc?.name} started a live stream`,
+                                        streamerId,
+                                        stream._id.toString(),
+                                        `/stream/${stream._id}`,
+                                        'video',
+                                   ),
+                              ),
+                         ).catch((e) => logger.warn('notify followers error', e));
+                    }
+               } catch (e) {
+                    logger.warn('Failed to notify followers about stream start', e);
+               }
 
                return stream.populate('streamer', 'name image');
           } catch (error) {

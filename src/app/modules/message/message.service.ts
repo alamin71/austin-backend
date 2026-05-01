@@ -2,6 +2,7 @@ import { StatusCodes } from 'http-status-codes';
 import AppError from '../../../errors/AppError.js';
 import { User } from '../user/user.model.js';
 import { Message } from './message.model.js';
+import { NotificationService } from '../notification/notification.service.js';
 
 export class MessageService {
      // Send message
@@ -72,6 +73,24 @@ export class MessageService {
                isRead: false,
                replyTo: replyToId || null,
           });
+
+          // Notify receiver about new message (non-blocking)
+          try {
+               const senderInfo = await User.findById(senderId).select('name userName');
+               Promise.resolve(
+                    NotificationService.createNotification(
+                         receiverId,
+                         'message',
+                         `${senderInfo?.name} sent you a message`,
+                         senderId,
+                         message._id.toString(),
+                         `/messages/${senderId}`,
+                         'message',
+                    ),
+               ).catch((e) => {});
+          } catch (e) {
+               // don't block message send on notification failure
+          }
 
           return message.populate(['sender', 'receiver', 'replyTo']);
      }
