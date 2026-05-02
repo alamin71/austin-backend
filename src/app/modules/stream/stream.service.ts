@@ -493,6 +493,48 @@ class StreamService {
      }
 
      /**
+      * Delete a recording by recording ID (stream ID)
+      */
+     static async deleteRecording(recordingId: string, userId: string) {
+          try {
+               // Find the stream recording
+               const stream = await Stream.findById(recordingId);
+
+               if (!stream) {
+                    throw new AppError(StatusCodes.NOT_FOUND, 'Recording not found');
+               }
+
+               // Verify user is the stream owner
+               if (stream.streamer.toString() !== userId.toString()) {
+                    throw new AppError(StatusCodes.FORBIDDEN, 'You are not authorized to delete this recording');
+               }
+
+               // Verify this is a recording (has recordingUrl)
+               if (!stream.recordingUrl) {
+                    throw new AppError(StatusCodes.BAD_REQUEST, 'This stream does not have a recording');
+               }
+
+               // Delete the recording data from the stream
+               stream.recordingUrl = '';
+               stream.recordingResourceId = '';
+               stream.recordingSid = '';
+               stream.thumbnail = '';
+
+               await stream.save();
+
+               return {
+                    _id: stream._id,
+                    message: 'Recording deleted successfully',
+               };
+          } catch (error) {
+               if (error instanceof AppError) {
+                    throw error;
+               }
+               throw new AppError(StatusCodes.INTERNAL_SERVER_ERROR, 'Error deleting recording');
+          }
+     }
+
+     /**
       * Add viewer to stream
       */
      static async addViewer(streamId: string, userId: string) {

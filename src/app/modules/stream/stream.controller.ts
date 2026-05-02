@@ -143,6 +143,24 @@ class StreamController {
           });
      });
 
+     deleteRecording = catchAsync(async (req: Request, res: Response) => {
+          const userId = (req.user as any)?._id || (req.user as any)?.id;
+          const { recordingId } = req.params;
+
+          if (!userId) {
+               throw new AppError(StatusCodes.UNAUTHORIZED, 'User not authenticated');
+          }
+
+          const result = await StreamService.deleteRecording(recordingId, userId);
+
+          sendResponse(res, {
+               statusCode: StatusCodes.OK,
+               success: true,
+               message: 'Recording deleted successfully',
+               data: result,
+          });
+     });
+
      handleRecordingWebhook = catchAsync(async (req: Request, res: Response) => {
           const result = await StreamService.handleRecordingWebhook(req.body);
 

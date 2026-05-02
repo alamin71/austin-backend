@@ -40,6 +40,9 @@ router.post('/recording/webhook', streamController.handleRecordingWebhook);
 // Get user's recordings (requires auth)
 router.get('/recordings', auth(USER_ROLES.USER), streamController.getAllRecordings);
 
+// Delete a specific recording (requires auth)
+router.delete('/recordings/:recordingId', auth(USER_ROLES.USER), streamController.deleteRecording);
+
 // Recording status check (must be before /:streamId to avoid route conflict)
 router.get(
      '/:streamId/recording/status',
